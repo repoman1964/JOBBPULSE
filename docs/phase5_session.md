@@ -1,6 +1,6 @@
 # Phase 5 session handoff — Human Review
 
-**Status:** Phase 5 is **complete** on `main` (`137e95d`). For the next session, use **[`docs/phase6_session.md`](phase6_session.md)**.
+**Status:** Phase 5 is **complete** on `main` (`137e95d`). Phase 6 is also complete (`a407d35`). For the next session, use **[`docs/phase7_session.md`](phase7_session.md)**.
 
 | Check | Detail |
 |---|---|
