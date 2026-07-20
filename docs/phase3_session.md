@@ -1,12 +1,13 @@
 # Phase 3 session handoff — Voice & Transcription
 
-**Status of prior work:** Phase 2 is **complete**, tests green, committed and pushed.
+**Status:** Phase 3 is **complete** (see commit `a8caa03` on `origin/main`).  
+**Next session:** [`docs/phase4_session.md`](phase4_session.md)
 
 | Check | Detail |
 |---|---|
-| Commit | `5141db3` — *Implement Phase 2 job capture with optional before photos.* |
+| Phase 3 commit | `a8caa03` — *Implement Phase 3 voice capture with mock transcription.* |
 | Remote | `origin/main` on https://github.com/repoman1964/JOBPULSE.git |
-| Tests | `make api-test` → **23 passed** (as of handoff) |
+| Tests | `make api-test` → **28 passed** |
 | Greenfield only | Work in `api/`, `mobile_app/`, `directory/` — **`legacy/` is reference only** (untracked; do not extend) |
 
 ---
