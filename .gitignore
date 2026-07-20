@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.mypy_cache/
+
+# Node
+node_modules/
+.nuxt/
+.output/
+dist/
+*.log
+
+# Env / secrets
+.env
+.env.local
+*.pem
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Data / uploads
+*.db
+uploads/
+
+# Docker volumes (local)
+infra/data/

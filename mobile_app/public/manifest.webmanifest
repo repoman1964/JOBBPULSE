@@ -1,0 +1,10 @@
+{
+  "name": "JobPulse",
+  "short_name": "JobPulse",
+  "description": "Turn completed jobs into marketing",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#185FA5",
+  "orientation": "portrait"
+}
