@@ -20,6 +20,7 @@ from app.db.models import (
     MediaProcessingStatus,
     MediaStageLabel,
     MembershipRole,
+    VoiceSummary,
 )
 from app.modules.jobs import state as job_state
 from app.modules.jobs.schemas import (
@@ -101,7 +102,10 @@ async def list_jobs(
     stmt = (
         select(Job)
         .where(Job.company_id == company_id)
-        .options(selectinload(Job.media_assets))
+        .options(
+            selectinload(Job.media_assets),
+            selectinload(Job.voice_summary).selectinload(VoiceSummary.audio_asset),
+        )
         .order_by(Job.updated_at.desc())
         .limit(min(limit, 100))
         .offset(max(offset, 0))
@@ -116,7 +120,10 @@ async def get_job(db: AsyncSession, company_id: UUID, job_id: UUID) -> Job:
     result = await db.execute(
         select(Job)
         .where(Job.id == job_id, Job.company_id == company_id)
-        .options(selectinload(Job.media_assets))
+        .options(
+            selectinload(Job.media_assets),
+            selectinload(Job.voice_summary).selectinload(VoiceSummary.audio_asset),
+        )
     )
     job = result.scalar_one_or_none()
     if job is None:
@@ -190,12 +197,12 @@ def serialize_photo_counts(job: Job) -> dict:
 
 def serialize_next_action(job: Job) -> dict:
     counts = job_state.count_photos(_ready_media(job))
-    return job_state.compute_next_action(job, counts).as_dict()
+    return job_state.compute_next_action(job, counts, job.voice_summary).as_dict()
 
 
 def serialize_timeline(job: Job) -> list[dict]:
     counts = job_state.count_photos(_ready_media(job))
-    return job_state.compute_timeline(job, counts)
+    return job_state.compute_timeline(job, counts, job.voice_summary)
 
 
 def serialize_media(media: MediaAsset, *, include_url: bool = True) -> dict:
@@ -253,6 +260,11 @@ def serialize_job_detail(job: Job) -> dict:
         ],
         key=lambda m: (m.display_order, m.created_at),
     )
+    voice_payload = None
+    if job.voice_summary is not None:
+        from app.modules.jobs.voice import serialize_voice
+
+        voice_payload = serialize_voice(job.voice_summary)
     return {
         "id": job.id,
         "company_id": job.company_id,
@@ -272,6 +284,7 @@ def serialize_job_detail(job: Job) -> dict:
         "next_action": serialize_next_action(job),
         "timeline": serialize_timeline(job),
         "media": [serialize_media(m) for m in ready],
+        "voice": voice_payload,
         "created_at": job.created_at,
         "updated_at": job.updated_at,
         "job_started_at": job.job_started_at,
@@ -281,7 +294,7 @@ def serialize_job_detail(job: Job) -> dict:
 
 async def _sync_job_status(db: AsyncSession, job: Job) -> None:
     counts = job_state.count_photos(_ready_media(job))
-    new_status = job_state.recompute_capture_status(job, counts)
+    new_status = job_state.recompute_capture_status(job, counts, job.voice_summary)
     if new_status != job.status:
         job.status = new_status
         await db.flush()

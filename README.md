@@ -85,15 +85,24 @@ See `jobpulse_agent_build_spec.md` §32 and the session plan. High level:
 
 0. Bootstrap — **done**  
 1. Auth + company — **done**  
-2. Job capture + photos — **done** (`5141db3` on `main`)  
-3. Voice + transcription — **next** → see [`docs/phase3_session.md`](docs/phase3_session.md)  
-4. AI generation  
+2. Job capture + photos — **done**  
+3. Voice + transcription — **done** (mock STT; real vendor is a config swap)  
+4. AI generation — **next**  
 5. Human review  
 6. Directory publish  
-7. Social publish  
+7. Social publish (third-party poster vendor)  
 8. Pilot hardening  
 
-## Phase 1–2 (try it)
+### Third-party vendors (replaceable)
+
+See PRD **§14.1**. MVP uses mocks; production plugs in:
+
+| Role | Env | Notes |
+|---|---|---|
+| Voice → text | `TRANSCRIPTION_PROVIDER` | Mock now; Whisper/Deepgram/etc. later |
+| Social poster | `PUBLISHING_PROVIDER` | Phase 7; e.g. Blotato-class distributor |
+
+## Phase 1–3 (try it)
 
 ```bash
 make infra-up
@@ -106,15 +115,16 @@ make mobile-dev       # terminal 2 — http://localhost:3000
 2. Create account (user + company + owner role)  
 3. Complete short onboarding  
 4. Tap **Create Job** → **required private job name** (e.g. “Johnson / Oak St” — only you see it)  
-5. **Before photos optional** (recommended). **After photos required.** Then a **voice summary** (Phase 3) completes the job.  
-6. Forgot befores? Still finish with afters + voice. Reorder photos with ↑↓.  
-7. Leave and return → **Your jobs** shows Continue + next step + timeline  
+5. **Before photos optional** (recommended). **After photos required.**  
+6. **Record voice summary** on the job (mic → upload → mock transcript appears).  
+7. **Edit the transcript** if needed → Save. Next action becomes **Generate content** (Phase 4).  
+8. Forgot befores? Still finish with afters + voice. Leave and return → **Your jobs** shows Continue + timeline.  
 
 **Workflow:** Create job → (optional befores) → work → **afters (required)** → **voice (required)** → AI → review → publish.
 
-**Privacy:** Job name is contractor-only. It is never sent to AI, social, or the public directory. AI will invent public titles later.
+**Privacy:** Job name is contractor-only. It is never sent to AI, social, or the public directory. AI will invent public titles later. Edited transcript is preferred for generation.
 
-**Apps:** Contractor app (`mobile_app`) = jobs + capture. Public directory (`directory`) = local SEO pages; contractor analytics/admin on the directory side comes later (not a third product). 
+**Apps:** Contractor app (`mobile_app`) = jobs + capture. Public directory (`directory`) = local SEO pages; contractor analytics/admin on the directory side comes later (not a third product).
 
 ## Tests
 

@@ -679,6 +679,22 @@ JobPulse should initially use a third-party publishing platform rather than buil
 
 The publishing layer should be replaceable so JobPulse is not permanently dependent on one provider.
 
+### 14.1 Third-party vendor inventory
+
+JobPulse depends on a small number of **replaceable third-party vendors**. Integrations use provider interfaces and environment configuration. Local/dev defaults to **mock** providers; production vendors are a swap, not a rewrite.
+
+| Vendor role | Purpose | Config (example) | When |
+|---|---|---|---|
+| **Voice → text (transcription)** | Turn contractor voice notes into editable transcripts | `TRANSCRIPTION_PROVIDER` | Voice capture (Phase 3+) |
+| **Social poster / distributor** | Connect accounts and publish approved posts to social networks without building every direct network API in MVP | `PUBLISHING_PROVIDER` | Social publish (Phase 7) |
+
+**Notes:**
+
+- Candidate transcription vendors include Whisper-compatible APIs, Deepgram, AssemblyAI, or similar — choose later; do not hardcode one vendor in core job logic.
+- Candidate social distributors include Blotato or similar multi-network publishers — same replaceable-adapter rule (see above).
+- **AI content generation** may also use a provider (`AI_PROVIDER`) but is a separate generation concern, not a distribution vendor.
+- The **JobPulse local directory** is first-party owned infrastructure, not a third-party social vendor.
+
 ---
 
 ## 15. Onboarding Requirements

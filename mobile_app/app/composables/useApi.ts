@@ -117,5 +117,33 @@ export const useApi = () => {
         method: 'POST',
         body: JSON.stringify({ media_ids: mediaIds }),
       }),
+
+    // Voice
+    requestVoiceUploadUrl: (jobId: string, payload: Record<string, unknown>) =>
+      request(`/api/v1/jobs/${jobId}/voice/upload-url`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    completeVoiceUpload: (jobId: string, payload: Record<string, unknown>) =>
+      request(`/api/v1/jobs/${jobId}/voice/complete`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    uploadVoiceDirect: async (jobId: string, file: Blob | File, filename = 'voice.webm') => {
+      const form = new FormData()
+      form.append('file', file, filename)
+      return request(`/api/v1/jobs/${jobId}/voice/upload`, {
+        method: 'POST',
+        body: form,
+      })
+    },
+    getVoice: (jobId: string) => request(`/api/v1/jobs/${jobId}/voice`),
+    updateVoiceTranscript: (jobId: string, transcriptEdited: string) =>
+      request(`/api/v1/jobs/${jobId}/voice/transcript`, {
+        method: 'PATCH',
+        body: JSON.stringify({ transcript_edited: transcriptEdited }),
+      }),
+    retranscribeVoice: (jobId: string) =>
+      request(`/api/v1/jobs/${jobId}/voice/retranscribe`, { method: 'POST' }),
   }
 }

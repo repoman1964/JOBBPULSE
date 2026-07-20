@@ -3,7 +3,7 @@
 Contractor workflow (product rule):
 - Before photos: optional (recommended)
 - After photos: required to complete capture
-- Voice summary: required to complete job (Phase 3 implements recording)
+- Voice summary: required (usable transcript) before generation
 
 Forgetting befores must not block finishing a job with afters + voice.
 """
@@ -13,7 +13,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable, Optional
 
-from app.db.models import Job, JobStatus, MediaAsset, MediaAssetType, MediaStageLabel
+from app.db.models import (
+    Job,
+    JobStatus,
+    MediaAsset,
+    MediaAssetType,
+    MediaStageLabel,
+    TranscriptionStatus,
+    VoiceSummary,
+)
 
 CAPTURE_STATUSES = {
     JobStatus.draft,
@@ -22,8 +30,8 @@ CAPTURE_STATUSES = {
     JobStatus.ready_for_summary,
 }
 
+# Statuses that recompute_capture_status must not rewrite downward.
 LOCKED_STATUSES = {
-    JobStatus.ready_to_generate,
     JobStatus.generating,
     JobStatus.awaiting_review,
     JobStatus.revision_requested,
@@ -83,15 +91,40 @@ def count_photos(media: Iterable[MediaAsset]) -> PhotoCounts:
     return counts
 
 
-def recompute_capture_status(job: Job, counts: PhotoCounts) -> JobStatus:
-    """
-    Capture-phase status from media.
+def usable_transcript_text(voice: Optional[VoiceSummary]) -> Optional[str]:
+    """Prefer edited transcript over raw when transcription completed."""
+    if voice is None:
+        return None
+    if voice.transcription_status != TranscriptionStatus.completed:
+        return None
+    edited = (voice.transcript_edited or "").strip()
+    if edited:
+        return edited
+    raw = (voice.transcript_raw or "").strip()
+    return raw or None
 
-    ≥1 after photo → ready_for_summary (voice next), even with zero befores.
+
+def has_usable_transcript(voice: Optional[VoiceSummary]) -> bool:
+    return usable_transcript_text(voice) is not None
+
+
+def recompute_capture_status(
+    job: Job,
+    counts: PhotoCounts,
+    voice: Optional[VoiceSummary] = None,
+) -> JobStatus:
+    """
+    Capture-phase status from media + voice.
+
+    ≥1 after + usable transcript → ready_to_generate
+    ≥1 after, no transcript → ready_for_summary
     """
     if job.status in LOCKED_STATUSES:
         return job.status
 
+    # ready_to_generate is still recomputed so deleting voice can step back.
+    if counts.after >= 1 and has_usable_transcript(voice):
+        return JobStatus.ready_to_generate
     if counts.after >= 1:
         return JobStatus.ready_for_summary
     if counts.before >= 1:
@@ -99,11 +132,16 @@ def recompute_capture_status(job: Job, counts: PhotoCounts) -> JobStatus:
     return JobStatus.draft
 
 
-def compute_next_action(job: Job, counts: PhotoCounts) -> NextAction:
+def compute_next_action(
+    job: Job,
+    counts: PhotoCounts,
+    voice: Optional[VoiceSummary] = None,
+) -> NextAction:
     """
     Priority:
     1. After photos required
-    2. Voice summary required (Phase 3)
+    2. Voice summary / usable transcript required
+    3. Generate content (Phase 4 implements the action)
     Soft tip when no before photos — never a hard gate.
     """
     if job.status == JobStatus.archived:
@@ -135,7 +173,7 @@ def compute_next_action(job: Job, counts: PhotoCounts) -> NextAction:
             reason="Generated content needs your attention.",
         )
 
-    if job.status in {JobStatus.generating, JobStatus.ready_to_generate}:
+    if job.status == JobStatus.generating:
         return NextAction(
             action="wait_generation",
             label="Generating content",
@@ -145,7 +183,6 @@ def compute_next_action(job: Job, counts: PhotoCounts) -> NextAction:
 
     # --- Capture phase ---
 
-    # After photos are required to complete the job story.
     if counts.after == 0:
         tip = OPTIONAL_BEFORE_TIP if counts.before == 0 else None
         if counts.before == 0 and counts.total == 0:
@@ -167,32 +204,65 @@ def compute_next_action(job: Job, counts: PhotoCounts) -> NextAction:
             optional_tip=tip,
         )
 
-    # After present → voice is required (Phase 3). Soft tip if no before.
     tip = None
     if counts.before == 0:
         tip = "No before photos — you can still finish. " + OPTIONAL_BEFORE_TIP
 
+    if not has_usable_transcript(voice):
+        # In-progress transcription
+        if voice is not None and voice.transcription_status in {
+            TranscriptionStatus.pending,
+            TranscriptionStatus.processing,
+        }:
+            return NextAction(
+                action="record_voice_summary",
+                label="Transcribing voice…",
+                cta="Open job",
+                reason="Your voice note is being transcribed. This usually takes a few seconds.",
+                optional_tip=tip,
+            )
+        if voice is not None and voice.transcription_status == TranscriptionStatus.failed:
+            return NextAction(
+                action="record_voice_summary",
+                label="Retry voice summary",
+                cta="Record again",
+                reason="Transcription failed. Re-record or try retranscribe.",
+                optional_tip=tip,
+            )
+        return NextAction(
+            action="record_voice_summary",
+            label="Record work summary",
+            cta="Record summary",
+            reason="After photos are in. Record a short voice description to complete this job.",
+            optional_tip=tip,
+        )
+
+    # After + usable transcript → ready for Phase 4 generation
     return NextAction(
-        action="record_voice_summary",
-        label="Record work summary",
-        cta="Record summary",
-        reason="After photos are in. Record a short voice description to complete this job.",
+        action="generate_content",
+        label="Generate content",
+        cta="Generate content",
+        reason="Voice summary is ready. Generate marketing content from this job.",
         optional_tip=tip,
     )
 
 
-def compute_timeline(job: Job, counts: PhotoCounts) -> list[dict]:
+def compute_timeline(
+    job: Job,
+    counts: PhotoCounts,
+    voice: Optional[VoiceSummary] = None,
+) -> list[dict]:
     """
     Visual steps: Created → Before (optional) → After (required) → Voice (required) → Review
 
     Before is never a blocking current step; empty jobs highlight After as required.
     """
-    action = compute_next_action(job, counts).action
+    action = compute_next_action(job, counts, voice).action
+    voice_done = has_usable_transcript(voice)
 
     def step(key: str, label: str, status: str) -> dict:
         return {"key": key, "label": label, "status": status}
 
-    # Current step index: 0 create, 1 before (optional), 2 after, 3 voice, 4 review
     if action in {"review_content", "view_published"} or job.status in {
         JobStatus.awaiting_review,
         JobStatus.revision_requested,
@@ -201,10 +271,13 @@ def compute_timeline(job: Job, counts: PhotoCounts) -> list[dict]:
         JobStatus.published,
     }:
         current = 4
-    elif action in {"record_voice_summary", "wait_generation"} or job.status in {
+    elif action == "generate_content" or job.status in {
         JobStatus.ready_to_generate,
         JobStatus.generating,
     }:
+        # Voice complete; review/generation is next (Phase 4–5)
+        current = 4 if action == "generate_content" else 3
+    elif action == "record_voice_summary" or job.status == JobStatus.ready_for_summary:
         current = 3
     elif action == "add_after_photos" or counts.after == 0:
         current = 2
@@ -215,8 +288,11 @@ def compute_timeline(job: Job, counts: PhotoCounts) -> list[dict]:
         current = 3
     elif action == "add_after_photos":
         current = 2
-    elif action in {"wait_generation"}:
-        current = 3
+    elif action == "generate_content":
+        # Stay on review step as "next"; voice is complete
+        current = 4
+    elif action == "wait_generation":
+        current = 4
     elif action in {"review_content", "view_published"}:
         current = 4
     elif action == "none":
@@ -248,28 +324,16 @@ def compute_timeline(job: Job, counts: PhotoCounts) -> list[dict]:
             else:
                 status = "upcoming"
         elif key == "voice":
-            if action == "wait_generation":
-                status = "current"
-            elif action in {"review_content", "view_published"} or job.status in {
+            if voice_done or job.status in {
                 JobStatus.ready_to_generate,
                 JobStatus.generating,
                 JobStatus.awaiting_review,
+                JobStatus.revision_requested,
                 JobStatus.approved,
+                JobStatus.scheduled,
                 JobStatus.published,
             }:
-                # Voice done once past ready_for_summary into generation/review
-                if job.status in {
-                    JobStatus.ready_to_generate,
-                    JobStatus.generating,
-                    JobStatus.awaiting_review,
-                    JobStatus.revision_requested,
-                    JobStatus.approved,
-                    JobStatus.scheduled,
-                    JobStatus.published,
-                }:
-                    status = "complete" if action != "wait_generation" else "current"
-                else:
-                    status = "complete"
+                status = "complete"
             elif current == 3:
                 status = "current"
             elif current < 3:
@@ -277,10 +341,19 @@ def compute_timeline(job: Job, counts: PhotoCounts) -> list[dict]:
             else:
                 status = "upcoming"
         else:  # review
-            if current == 4:
+            if action == "generate_content":
+                # Phase 4 not built yet — show as current next step
                 status = "current"
-            elif current > 4:
+            elif current == 4 and action in {
+                "wait_generation",
+                "review_content",
+                "view_published",
+            }:
+                status = "current"
+            elif current > 4 or action in {"view_published"}:
                 status = "complete"
+            elif voice_done and action == "generate_content":
+                status = "current"
             else:
                 status = "locked"
 
@@ -291,6 +364,8 @@ def compute_timeline(job: Job, counts: PhotoCounts) -> list[dict]:
                 status = "complete" if counts.before else "skipped"
             elif key == "after":
                 status = "complete" if counts.after else "upcoming"
+            elif key == "voice":
+                status = "complete" if voice_done else "locked"
             else:
                 status = "locked"
 

@@ -74,6 +74,13 @@ class MediaProcessingStatus(str, enum.Enum):
     failed = "failed"
 
 
+class TranscriptionStatus(str, enum.Enum):
+    pending = "pending"
+    processing = "processing"
+    completed = "completed"
+    failed = "failed"
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -256,6 +263,11 @@ class Job(Base):
     media_assets: Mapped[list["MediaAsset"]] = relationship(
         back_populates="job", cascade="all, delete-orphan"
     )
+    voice_summary: Mapped[Optional["VoiceSummary"]] = relationship(
+        back_populates="job",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
 
 class MediaAsset(Base):
@@ -314,3 +326,54 @@ class MediaAsset(Base):
     )
 
     job: Mapped[Job] = relationship(back_populates="media_assets")
+    voice_summary: Mapped[Optional["VoiceSummary"]] = relationship(
+        back_populates="audio_asset",
+        uselist=False,
+    )
+
+
+class VoiceSummary(Base):
+    """One current voice summary per job (MVP). Audio file lives in media_assets."""
+
+    __tablename__ = "voice_summaries"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    job_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        unique=True,
+        index=True,
+        nullable=False,
+    )
+    audio_asset_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("media_assets.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    transcript_raw: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    transcript_edited: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    language: Mapped[str] = mapped_column(String(16), default="en", nullable=False)
+    transcription_status: Mapped[TranscriptionStatus] = mapped_column(
+        Enum(
+            TranscriptionStatus,
+            name="transcription_status",
+            values_callable=lambda x: [e.value for e in x],
+        ),
+        default=TranscriptionStatus.pending,
+        index=True,
+        nullable=False,
+    )
+    transcription_provider: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    transcription_error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    job: Mapped[Job] = relationship(back_populates="voice_summary")
+    audio_asset: Mapped[Optional[MediaAsset]] = relationship(
+        back_populates="voice_summary",
+        foreign_keys=[audio_asset_id],
+    )

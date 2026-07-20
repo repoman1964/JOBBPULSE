@@ -24,6 +24,20 @@ ALLOWED_IMAGE_MIME_TYPES = {
     "image/heif",
 }
 
+ALLOWED_AUDIO_MIME_TYPES = {
+    "audio/webm",
+    "audio/mp4",
+    "audio/mpeg",
+    "audio/mp3",
+    "audio/wav",
+    "audio/x-wav",
+    "audio/ogg",
+    "audio/opus",
+    "audio/m4a",
+    "audio/x-m4a",
+    "video/webm",  # MediaRecorder often tags webm audio as video/webm
+}
+
 MIME_TO_EXT = {
     "image/jpeg": "jpg",
     "image/jpg": "jpg",
@@ -31,6 +45,17 @@ MIME_TO_EXT = {
     "image/webp": "webp",
     "image/heic": "heic",
     "image/heif": "heif",
+    "audio/webm": "webm",
+    "video/webm": "webm",
+    "audio/mp4": "m4a",
+    "audio/mpeg": "mp3",
+    "audio/mp3": "mp3",
+    "audio/wav": "wav",
+    "audio/x-wav": "wav",
+    "audio/ogg": "ogg",
+    "audio/opus": "opus",
+    "audio/m4a": "m4a",
+    "audio/x-m4a": "m4a",
 }
 
 
@@ -146,6 +171,18 @@ def public_or_signed_url(storage_key: str, *, signed: bool = True) -> str:
 
 def is_allowed_image_mime(mime_type: str) -> bool:
     return mime_type.lower() in ALLOWED_IMAGE_MIME_TYPES
+
+
+def is_allowed_audio_mime(mime_type: str) -> bool:
+    return mime_type.lower().split(";")[0].strip() in ALLOWED_AUDIO_MIME_TYPES
+
+
+def get_object_bytes(storage_key: str) -> bytes:
+    """Download object body (used for transcription)."""
+    settings = get_settings()
+    client = get_s3_client()
+    response = client.get_object(Bucket=settings.s3_bucket, Key=storage_key)
+    return response["Body"].read()
 
 
 def rewrite_presigned_for_browser(url: str) -> str:

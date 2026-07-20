@@ -57,6 +57,22 @@ export type MediaAsset = {
   created_at: string
 }
 
+export type VoiceSummary = {
+  id: string
+  job_id: string
+  audio_asset_id?: string | null
+  audio_url?: string | null
+  transcript_raw?: string | null
+  transcript_edited?: string | null
+  transcript?: string | null
+  language: string
+  transcription_status: string
+  transcription_provider?: string | null
+  transcription_error?: string | null
+  created_at: string
+  updated_at: string
+}
+
 export type JobDetail = JobSummary & {
   company_id: string
   created_by?: string | null
@@ -66,6 +82,7 @@ export type JobDetail = JobSummary & {
   notes?: string | null
   privacy_mode: string
   media: MediaAsset[]
+  voice?: VoiceSummary | null
   job_started_at?: string | null
   job_completed_at?: string | null
 }

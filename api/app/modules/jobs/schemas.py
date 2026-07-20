@@ -114,6 +114,22 @@ class JobSummaryOut(BaseModel):
     updated_at: datetime
 
 
+class VoiceSummaryOut(BaseModel):
+    id: UUID
+    job_id: UUID
+    audio_asset_id: Optional[UUID] = None
+    audio_url: Optional[str] = None
+    transcript_raw: Optional[str] = None
+    transcript_edited: Optional[str] = None
+    transcript: Optional[str] = None
+    language: str
+    transcription_status: str
+    transcription_provider: Optional[str] = None
+    transcription_error: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+
 class JobDetailOut(BaseModel):
     id: UUID
     company_id: UUID
@@ -133,6 +149,7 @@ class JobDetailOut(BaseModel):
     next_action: NextActionOut
     timeline: list[TimelineStepOut]
     media: list[MediaOut]
+    voice: Optional[VoiceSummaryOut] = None
     created_at: datetime
     updated_at: datetime
     job_started_at: Optional[datetime] = None
@@ -171,3 +188,30 @@ class MediaUpdate(BaseModel):
 
 class MediaReorderRequest(BaseModel):
     media_ids: list[UUID] = Field(min_length=1)
+
+
+class VoiceUploadUrlRequest(BaseModel):
+    filename: str = Field(min_length=1, max_length=300)
+    mime_type: str = Field(min_length=3, max_length=100)
+    file_size_bytes: Optional[int] = Field(default=None, ge=1, le=25 * 1024 * 1024)
+    duration_seconds: Optional[int] = Field(default=None, ge=0, le=600)
+    language: Optional[str] = Field(default="en", max_length=16)
+
+
+class VoiceUploadUrlResponse(BaseModel):
+    media_id: UUID
+    storage_key: str
+    upload_url: str
+    upload_method: str = "PUT"
+    headers: dict[str, str]
+    expires_in: int = 3600
+
+
+class VoiceCompleteRequest(BaseModel):
+    media_id: UUID
+    file_size_bytes: Optional[int] = Field(default=None, ge=1)
+    duration_seconds: Optional[int] = Field(default=None, ge=0, le=600)
+
+
+class VoiceTranscriptUpdate(BaseModel):
+    transcript_edited: str = Field(min_length=1)

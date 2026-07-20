@@ -178,6 +178,169 @@
         </div>
       </div>
 
+      <!-- Voice summary -->
+      <div
+        v-if="showVoiceSection"
+        id="voice"
+        class="card voice-card"
+        style="margin-bottom: 12px;"
+      >
+        <div class="group-head">
+          <span style="font-weight: 600;">Voice summary</span>
+          <span class="muted" style="font-size: 13px;">Required</span>
+        </div>
+        <p class="muted" style="margin: 8px 0 12px; font-size: 13px;">
+          Describe the work in 15–60 seconds: problem, what you did, result.
+        </p>
+
+        <div v-if="needsRecording" class="recorder">
+          <div class="rec-timer">
+            <span
+              class="rec-dot"
+              :class="{ live: recorder.state.value === 'recording' }"
+            />
+            {{ recorder.formatDuration(recorder.durationMs.value) }}
+            <span class="muted" style="font-size: 12px; margin-left: 8px;">
+              {{ recorderStateLabel }}
+            </span>
+          </div>
+
+          <div class="rec-controls">
+            <button
+              v-if="recorder.state.value === 'idle' || recorder.state.value === 'unsupported'"
+              type="button"
+              class="btn btn-primary btn-block"
+              :disabled="recorder.state.value === 'unsupported' || voiceUpload.uploading.value"
+              @click="recorder.start()"
+            >
+              Start recording
+            </button>
+            <template v-else-if="recorder.state.value === 'recording'">
+              <button type="button" class="btn btn-block rec-pause" @click="recorder.pause()">
+                Pause
+              </button>
+              <button type="button" class="btn btn-primary btn-block" style="margin-top: 8px;" @click="recorder.stop()">
+                Stop
+              </button>
+            </template>
+            <template v-else-if="recorder.state.value === 'paused'">
+              <button type="button" class="btn btn-primary btn-block" @click="recorder.resume()">
+                Resume
+              </button>
+              <button type="button" class="btn btn-block" style="margin-top: 8px; background: #e8eef5; color: var(--jp-primary);" @click="recorder.stop()">
+                Stop
+              </button>
+            </template>
+            <template v-else-if="recorder.state.value === 'stopped'">
+              <audio
+                v-if="recorder.playbackUrl.value"
+                :src="recorder.playbackUrl.value"
+                controls
+                class="audio-player"
+              />
+              <button
+                type="button"
+                class="btn btn-primary btn-block"
+                style="margin-top: 10px;"
+                :disabled="voiceUpload.uploading.value"
+                @click="submitRecording"
+              >
+                {{ voiceUpload.uploading.value ? (voiceUpload.progressLabel.value || 'Uploading…') : 'Upload & transcribe' }}
+              </button>
+              <button
+                type="button"
+                class="btn btn-block"
+                style="margin-top: 8px; background: #e8eef5; color: var(--jp-primary);"
+                :disabled="voiceUpload.uploading.value"
+                @click="recorder.discard()"
+              >
+                Re-record
+              </button>
+            </template>
+          </div>
+
+          <p v-if="recorder.error.value" class="error-text">{{ recorder.error.value }}</p>
+          <p v-if="voiceUpload.uploadError.value" class="error-text">{{ voiceUpload.uploadError.value }}</p>
+          <p v-if="voiceNote" class="muted" style="margin-top: 10px; font-size: 13px;">{{ voiceNote }}</p>
+        </div>
+
+        <div v-else-if="job.voice">
+          <div v-if="job.voice.audio_url" style="margin-bottom: 12px;">
+            <audio :src="job.voice.audio_url" controls class="audio-player" />
+          </div>
+
+          <div
+            v-if="job.voice.transcription_status === 'pending' || job.voice.transcription_status === 'processing'"
+            class="muted"
+            style="font-size: 13px; margin-bottom: 12px;"
+          >
+            Transcribing… hang tight.
+          </div>
+          <div
+            v-else-if="job.voice.transcription_status === 'failed'"
+            class="error-text"
+            style="margin-bottom: 12px;"
+          >
+            {{ job.voice.transcription_error || 'Transcription failed.' }}
+            <button type="button" class="mini" style="margin-left: 8px;" @click="doRetranscribe">
+              Retry
+            </button>
+          </div>
+
+          <template v-if="job.voice.transcription_status === 'completed' || transcriptDraft">
+            <label class="field-label">Transcript</label>
+            <textarea
+              v-model="transcriptDraft"
+              class="field-input transcript-area"
+              rows="5"
+              placeholder="Edit the transcript if needed…"
+            />
+            <p class="muted" style="margin: 6px 0 0; font-size: 12px;">
+              Fix names, materials, or anything the transcript got wrong. AI will use this text.
+            </p>
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              style="margin-top: 12px;"
+              :disabled="savingTranscript || !transcriptDraft.trim()"
+              @click="saveTranscript"
+            >
+              {{ savingTranscript ? 'Saving…' : 'Save transcript' }}
+            </button>
+          </template>
+
+          <div class="voice-actions" style="margin-top: 12px;">
+            <button type="button" class="mini" :disabled="voiceUpload.uploading.value" @click="startRerecord">
+              Re-record
+            </button>
+            <button
+              v-if="job.voice.transcription_status === 'completed'"
+              type="button"
+              class="mini"
+              :disabled="retranscribing"
+              @click="doRetranscribe"
+            >
+              {{ retranscribing ? '…' : 'Retranscribe' }}
+            </button>
+          </div>
+          <p v-if="voiceNote" class="muted" style="margin-top: 10px; font-size: 13px;">{{ voiceNote }}</p>
+        </div>
+      </div>
+
+      <div
+        v-if="job.next_action.action === 'generate_content'"
+        class="card"
+        style="margin-bottom: 12px; border-color: #b7d0ea; background: #f3f8fc;"
+      >
+        <div style="font-weight: 700; margin-bottom: 6px;">Ready to generate</div>
+        <p class="muted" style="margin: 0 0 12px; font-size: 13px;">
+          Photos and voice are in. Content generation ships in Phase 4.
+        </p>
+        <button class="btn btn-primary btn-block" type="button" disabled>
+          Generate content (coming soon)
+        </button>
+      </div>
+
       <div class="card" style="margin-bottom: 24px;">
         <p class="muted" style="margin: 0 0 12px; font-size: 13px;">
           This job is saved on the server. Close the app anytime and continue later from Your jobs.
@@ -199,12 +362,14 @@
 </template>
 
 <script setup lang="ts">
-import type { JobDetail, MediaAsset } from '~/composables/useJobs'
+import type { JobDetail, VoiceSummary } from '~/composables/useJobs'
 import type { StageLabel } from '~/composables/useJobMedia'
 
 const route = useRoute()
 const api = useApi()
 const media = useJobMedia()
+const recorder = useVoiceRecorder()
+const voiceUpload = useJobVoice()
 const { statusLabel } = useJobs()
 
 const jobId = computed(() => String(route.params.id))
@@ -215,7 +380,13 @@ const editTitle = ref('')
 const savingMeta = ref(false)
 const reordering = ref(false)
 const uploadNote = ref('')
+const voiceNote = ref('')
+const transcriptDraft = ref('')
+const savingTranscript = ref(false)
+const retranscribing = ref(false)
+const forceRerecord = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
+let pollTimer: ReturnType<typeof setInterval> | null = null
 
 const stages = [
   { key: 'before' as StageLabel, label: 'Before (optional)' },
@@ -248,9 +419,67 @@ const photoGroups = computed(() => {
   ]
 })
 
+const showVoiceSection = computed(() => {
+  if (!job.value) return false
+  if (job.value.photo_counts.after >= 1) return true
+  return ['record_voice_summary', 'generate_content'].includes(job.value.next_action.action)
+})
+
+const needsRecording = computed(() => {
+  if (forceRerecord.value) return true
+  const v = job.value?.voice
+  if (!v) return true
+  if (v.transcription_status === 'failed' && !v.transcript) return true
+  return false
+})
+
+const recorderStateLabel = computed(() => {
+  const s = recorder.state.value
+  if (s === 'recording') return 'Recording'
+  if (s === 'paused') return 'Paused'
+  if (s === 'stopped') return 'Ready to upload'
+  if (s === 'unsupported') return 'Unavailable'
+  return 'Ready'
+})
+
 function applyJob(data: JobDetail) {
   job.value = data
   editTitle.value = data.title
+  if (data.voice && !forceRerecord.value) {
+    syncTranscriptFromVoice(data.voice)
+    maybeStartPolling(data.voice)
+  }
+}
+
+function syncTranscriptFromVoice(v: VoiceSummary) {
+  transcriptDraft.value = (v.transcript_edited || v.transcript_raw || v.transcript || '').trim()
+}
+
+function stopPolling() {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
+  }
+}
+
+function maybeStartPolling(v: VoiceSummary) {
+  stopPolling()
+  if (v.transcription_status !== 'pending' && v.transcription_status !== 'processing') return
+  pollTimer = setInterval(async () => {
+    try {
+      const voice = (await api.getVoice(jobId.value)) as VoiceSummary
+      if (job.value) {
+        job.value = { ...job.value, voice }
+      }
+      if (voice.transcription_status === 'completed' || voice.transcription_status === 'failed') {
+        syncTranscriptFromVoice(voice)
+        stopPolling()
+        await loadJob()
+      }
+    } catch {
+      /* keep polling briefly */
+    }
+  }, 1500)
 }
 
 async function loadJob() {
@@ -389,6 +618,79 @@ async function archive() {
   }
 }
 
+async function submitRecording() {
+  if (!job.value) return
+  const file = recorder.asFile()
+  if (!file) {
+    voiceNote.value = 'No recording to upload.'
+    return
+  }
+  voiceNote.value = ''
+  try {
+    const result = (await voiceUpload.uploadVoice(job.value.id, file, file.name)) as {
+      voice: VoiceSummary
+      job: JobDetail
+    }
+    forceRerecord.value = false
+    recorder.discard()
+    applyJob(result.job)
+    voiceNote.value =
+      result.voice.transcription_status === 'completed'
+        ? 'Transcript ready — review and edit if needed.'
+        : 'Uploaded. Waiting for transcript…'
+  } catch (e: any) {
+    voiceNote.value = e?.message || 'Upload failed'
+  }
+}
+
+function startRerecord() {
+  forceRerecord.value = true
+  voiceNote.value = ''
+  recorder.discard()
+}
+
+async function saveTranscript() {
+  if (!job.value || savingTranscript.value) return
+  const text = transcriptDraft.value.trim()
+  if (!text) {
+    voiceNote.value = 'Transcript cannot be empty.'
+    return
+  }
+  savingTranscript.value = true
+  voiceNote.value = ''
+  try {
+    const result = (await api.updateVoiceTranscript(job.value.id, text)) as {
+      voice: VoiceSummary
+      job: JobDetail
+    }
+    applyJob(result.job)
+    voiceNote.value = 'Transcript saved.'
+  } catch (e: any) {
+    voiceNote.value = e?.message || 'Could not save transcript'
+  } finally {
+    savingTranscript.value = false
+  }
+}
+
+async function doRetranscribe() {
+  if (!job.value || retranscribing.value) return
+  retranscribing.value = true
+  voiceNote.value = ''
+  try {
+    const result = (await api.retranscribeVoice(job.value.id)) as {
+      voice: VoiceSummary
+      job: JobDetail
+    }
+    forceRerecord.value = false
+    applyJob(result.job)
+    voiceNote.value = 'New transcript ready.'
+  } catch (e: any) {
+    voiceNote.value = e?.message || 'Retranscribe failed'
+  } finally {
+    retranscribing.value = false
+  }
+}
+
 onMounted(async () => {
   const qStage = String(route.query.stage || '')
   if (qStage === 'before' || qStage === 'after') {
@@ -401,6 +703,14 @@ onMounted(async () => {
     else if (job.value.next_action.action === 'record_voice_summary') activeStage.value = 'after'
     else activeStage.value = 'after'
   }
+  if (route.hash === '#voice' || job.value?.next_action.action === 'record_voice_summary') {
+    await nextTick()
+    document.getElementById('voice')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+})
+
+onBeforeUnmount(() => {
+  stopPolling()
 })
 </script>
 
@@ -659,5 +969,56 @@ onMounted(async () => {
 .error-text {
   color: var(--jp-danger);
   font-size: 14px;
+}
+.voice-card {
+  border-color: #b7d0ea;
+}
+.recorder {
+  margin-top: 4px;
+}
+.rec-timer {
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 12px;
+}
+.rec-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+.rec-dot.live {
+  background: #dc2626;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.2);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+.rec-pause {
+  background: #fef3c7;
+  color: #92400e;
+}
+.audio-player {
+  width: 100%;
+  margin-top: 4px;
+}
+.transcript-area {
+  resize: vertical;
+  min-height: 110px;
+  line-height: 1.45;
+  font-family: inherit;
+}
+.voice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 </style>

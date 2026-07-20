@@ -12,6 +12,7 @@ from app.core.exceptions import AppError
 from app.core.responses import success
 from app.db.session import get_db
 from app.modules.jobs import service
+from app.modules.jobs import voice as voice_svc
 from app.modules.jobs.schemas import (
     JobCreate,
     JobDetailOut,
@@ -23,6 +24,11 @@ from app.modules.jobs.schemas import (
     MediaUpdate,
     MediaUploadUrlRequest,
     MediaUploadUrlResponse,
+    VoiceCompleteRequest,
+    VoiceSummaryOut,
+    VoiceTranscriptUpdate,
+    VoiceUploadUrlRequest,
+    VoiceUploadUrlResponse,
 )
 
 router = APIRouter(tags=["jobs"])
@@ -264,3 +270,132 @@ async def set_primary_media(
         db, company_id=ctx.company_id, media_id=media_id, role=ctx.role
     )
     return success(_media_out(media))
+
+
+def _voice_out(voice) -> dict:
+    return VoiceSummaryOut.model_validate(voice_svc.serialize_voice(voice)).model_dump(
+        mode="json"
+    )
+
+
+@router.post("/jobs/{job_id}/voice/upload-url", status_code=201)
+async def voice_upload_url(
+    job_id: UUID,
+    body: VoiceUploadUrlRequest,
+    ctx: AuthContext = Depends(get_auth_context),
+    db: AsyncSession = Depends(get_db),
+):
+    payload = await voice_svc.create_voice_upload_url(
+        db,
+        company_id=ctx.company_id,
+        job_id=job_id,
+        user_id=ctx.user_id,
+        role=ctx.role,
+        data=body,
+    )
+    return success(VoiceUploadUrlResponse.model_validate(payload).model_dump(mode="json"))
+
+
+@router.post("/jobs/{job_id}/voice/complete")
+async def voice_complete(
+    job_id: UUID,
+    body: VoiceCompleteRequest,
+    ctx: AuthContext = Depends(get_auth_context),
+    db: AsyncSession = Depends(get_db),
+):
+    voice, job = await voice_svc.complete_voice_upload(
+        db,
+        company_id=ctx.company_id,
+        job_id=job_id,
+        role=ctx.role,
+        data=body,
+    )
+    return success(
+        {
+            "voice": _voice_out(voice),
+            "job": _job_detail(job),
+        }
+    )
+
+
+@router.post("/jobs/{job_id}/voice/upload", status_code=201)
+async def voice_direct_upload(
+    job_id: UUID,
+    file: UploadFile = File(...),
+    language: str = Form(default="en"),
+    ctx: AuthContext = Depends(get_auth_context),
+    db: AsyncSession = Depends(get_db),
+):
+    """Multipart fallback when browser→MinIO CORS fails for audio."""
+    content = await file.read()
+    mime = (file.content_type or "audio/webm").lower()
+    voice, job = await voice_svc.complete_voice_with_bytes(
+        db,
+        company_id=ctx.company_id,
+        job_id=job_id,
+        user_id=ctx.user_id,
+        role=ctx.role,
+        filename=file.filename or "voice.webm",
+        mime_type=mime,
+        content=content,
+        language=language or "en",
+    )
+    return success(
+        {
+            "voice": _voice_out(voice),
+            "job": _job_detail(job),
+        }
+    )
+
+
+@router.get("/jobs/{job_id}/voice")
+async def get_voice(
+    job_id: UUID,
+    ctx: AuthContext = Depends(get_auth_context),
+    db: AsyncSession = Depends(get_db),
+):
+    voice = await voice_svc.get_voice_for_job(db, ctx.company_id, job_id)
+    return success(_voice_out(voice))
+
+
+@router.patch("/jobs/{job_id}/voice/transcript")
+async def patch_voice_transcript(
+    job_id: UUID,
+    body: VoiceTranscriptUpdate,
+    ctx: AuthContext = Depends(get_auth_context),
+    db: AsyncSession = Depends(get_db),
+):
+    voice, job = await voice_svc.update_transcript(
+        db,
+        company_id=ctx.company_id,
+        job_id=job_id,
+        role=ctx.role,
+        data=body,
+    )
+    return success(
+        {
+            "voice": _voice_out(voice),
+            "job": _job_detail(job),
+        }
+    )
+
+
+@router.post("/jobs/{job_id}/voice/retranscribe")
+async def retranscribe_voice(
+    job_id: UUID,
+    ctx: AuthContext = Depends(get_auth_context),
+    db: AsyncSession = Depends(get_db),
+):
+    voice, job = await voice_svc.retranscribe(
+        db,
+        company_id=ctx.company_id,
+        job_id=job_id,
+        role=ctx.role,
+    )
+    return success(
+        {
+            "voice": _voice_out(voice),
+            "job": _job_detail(job),
+        }
+    )
+

@@ -125,6 +125,11 @@ const hour = new Date().getHours()
 const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
 
 function openJob(id: string) {
+  const job = jobs.value.find((j) => j.id === id)
+  if (job?.next_action?.action === 'record_voice_summary') {
+    navigateTo(`/jobs/${id}#voice`)
+    return
+  }
   navigateTo(`/jobs/${id}`)
 }
 

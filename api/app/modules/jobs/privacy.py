@@ -11,7 +11,8 @@ from __future__ import annotations
 from typing import Any, Optional
 from uuid import UUID
 
-from app.db.models import Job
+from app.db.models import Job, VoiceSummary
+from app.modules.jobs.state import usable_transcript_text
 
 # Never include these in AI, social, or public directory payloads.
 PRIVATE_JOB_FIELDS = frozenset(
@@ -34,12 +35,20 @@ GENERATION_SAFE_FIELDS = frozenset(
 )
 
 
-def fields_for_generation(job: Job) -> dict[str, Any]:
+def transcript_for_generation(voice: Optional[VoiceSummary]) -> Optional[str]:
+    """Edited transcript preferred over raw for AI generation (Phase 4+)."""
+    return usable_transcript_text(voice)
+
+
+def fields_for_generation(job: Job, voice: Optional[VoiceSummary] = None) -> dict[str, Any]:
     """
     Build the safe subset of job metadata for AI generation (Phase 4+).
 
     Explicitly excludes private contractor labels and PII.
+    Transcript text may be included; job title is never included.
     """
+    if voice is None:
+        voice = getattr(job, "voice_summary", None)
     out: dict[str, Any] = {
         "job_id": str(job.id),
         "company_id": str(job.company_id),
@@ -49,6 +58,9 @@ def fields_for_generation(job: Job) -> dict[str, Any]:
         "location_display": job.location_display,
         # Intentionally omit: title, customer_name_private, notes, postal_code
     }
+    transcript = transcript_for_generation(voice)
+    if transcript:
+        out["transcript"] = transcript
     return out
 
 

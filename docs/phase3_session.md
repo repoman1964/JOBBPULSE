@@ -70,16 +70,16 @@ Let the contractor **record a short voice description** of the completed work, u
 
 ### Spec acceptance (from `jobpulse_agent_build_spec.md` §32 Phase 3)
 
-- [ ] User can record  
-- [ ] Transcript appears  
-- [ ] Transcript can be corrected  
+- [x] User can record  
+- [x] Transcript appears  
+- [x] Transcript can be corrected  
 
 Also from §10.6 / §13:
 
-- [ ] Audio upload (signed URL preferred, same pattern as photos)  
-- [ ] Transcription task (mock provider OK for MVP; real provider pluggable)  
-- [ ] Status polling until transcript ready  
-- [ ] Edited transcript preferred over raw for later AI  
+- [x] Audio upload (signed URL preferred, same pattern as photos)  
+- [x] Transcription task (mock provider OK for MVP; real provider pluggable)  
+- [x] Status polling until transcript ready  
+- [x] Edited transcript preferred over raw for later AI  
 
 ---
 
