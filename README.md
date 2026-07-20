@@ -87,8 +87,8 @@ See `jobpulse_agent_build_spec.md` §32 and the session plan. High level:
 1. Auth + company — **done**  
 2. Job capture + photos — **done**  
 3. Voice + transcription — **done** (mock STT; real vendor is a config swap)  
-4. AI generation — **next** → see [`docs/phase4_session.md`](docs/phase4_session.md)  
-5. Human review (contractor approves; not the founder)  
+4. AI generation (drafts) — mock provider; see [`docs/phase4_session.md`](docs/phase4_session.md)  
+5. Human review (contractor approves; not the founder) — next  
 6. Directory publish  
 7. Social publish (third-party poster vendor)  
 8. Pilot hardening  
@@ -100,10 +100,10 @@ See PRD **§14.1**. MVP uses mocks; production plugs in:
 | Role | Env | Notes |
 |---|---|---|
 | Voice → text | `TRANSCRIPTION_PROVIDER` | Mock now; Whisper/Deepgram/etc. later |
-| AI generation | `AI_PROVIDER` | Phase 4; mock first, pluggable LLM later |
+| AI generation | `AI_PROVIDER` | Mock now; pluggable LLM later |
 | Social poster | `PUBLISHING_PROVIDER` | Phase 7; e.g. Blotato-class distributor |
 
-## Phase 1–3 (try it)
+## Phase 1–4 (try it)
 
 ```bash
 make infra-up
@@ -118,12 +118,14 @@ make mobile-dev       # terminal 2 — http://localhost:3000
 4. Tap **Create Job** → **required private job name** (e.g. “Johnson / Oak St” — only you see it)  
 5. **Before photos optional** (recommended). **After photos required.**  
 6. **Record voice summary** on the job (mic → upload → mock transcript appears).  
-7. **Edit the transcript** if needed → Save. Next action becomes **Generate content** (Phase 4).  
-8. Forgot befores? Still finish with afters + voice. Leave and return → **Your jobs** shows Continue + timeline.  
+7. **Edit the transcript** if needed → Save. Next action becomes **Generate content**.  
+8. Tap **Generate content** → mock AI produces draft variants (primary social, short caption, before/after, directory). Job moves to **Needs review**.  
+9. Preview drafts on the job page. Full edit/approve is Phase 5. **Regenerate** creates a new version.  
+10. Forgot befores? Still finish with afters + voice. Leave and return → **Your jobs** shows Continue + timeline.  
 
-**Workflow:** Create job → (optional befores) → work → **afters (required)** → **voice (required)** → AI → review → publish.
+**Workflow:** Create job → (optional befores) → work → **afters (required)** → **voice (required)** → **AI drafts** → contractor review → publish.
 
-**Privacy:** Job name is contractor-only. It is never sent to AI, social, or the public directory. AI will invent public titles later. Edited transcript is preferred for generation.
+**Privacy:** Job name is contractor-only. It is never sent to AI, social, or the public directory. AI invents public titles/hooks from photos + voice + coarse location. Edited transcript is preferred for generation.
 
 **Apps:** Contractor app (`mobile_app`) = jobs + capture. Public directory (`directory`) = local SEO pages; contractor analytics/admin on the directory side comes later (not a third product).
 

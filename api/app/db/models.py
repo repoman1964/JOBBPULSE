@@ -81,6 +81,34 @@ class TranscriptionStatus(str, enum.Enum):
     failed = "failed"
 
 
+class GenerationRunStatus(str, enum.Enum):
+    pending = "pending"
+    processing = "processing"
+    completed = "completed"
+    failed = "failed"
+
+
+class GenerationType(str, enum.Enum):
+    initial = "initial"
+    regenerate = "regenerate"
+
+
+class ContentType(str, enum.Enum):
+    primary_social = "primary_social"
+    short_caption = "short_caption"
+    before_after = "before_after"
+    directory_listing = "directory_listing"
+    educational = "educational"
+
+
+class ContentVariantStatus(str, enum.Enum):
+    draft = "draft"
+    awaiting_review = "awaiting_review"
+    approved = "approved"
+    rejected = "rejected"
+    superseded = "superseded"
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -268,6 +296,20 @@ class Job(Base):
         uselist=False,
         cascade="all, delete-orphan",
     )
+    generation_runs: Mapped[list["GenerationRun"]] = relationship(
+        back_populates="job",
+        cascade="all, delete-orphan",
+        foreign_keys="GenerationRun.job_id",
+    )
+    content_variants: Mapped[list["ContentVariant"]] = relationship(
+        back_populates="job",
+        cascade="all, delete-orphan",
+    )
+    structured_details: Mapped[Optional["JobStructuredDetails"]] = relationship(
+        back_populates="job",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
 
 class MediaAsset(Base):
@@ -377,3 +419,161 @@ class VoiceSummary(Base):
         back_populates="voice_summary",
         foreign_keys=[audio_asset_id],
     )
+
+
+class GenerationRun(Base):
+    """One AI generation attempt for a job (initial or regenerate)."""
+
+    __tablename__ = "generation_runs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    job_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    requested_by: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    status: Mapped[GenerationRunStatus] = mapped_column(
+        Enum(
+            GenerationRunStatus,
+            name="generation_run_status",
+            values_callable=lambda x: [e.value for e in x],
+        ),
+        default=GenerationRunStatus.pending,
+        index=True,
+        nullable=False,
+    )
+    generation_type: Mapped[GenerationType] = mapped_column(
+        Enum(
+            GenerationType,
+            name="generation_type",
+            values_callable=lambda x: [e.value for e in x],
+        ),
+        default=GenerationType.initial,
+        nullable=False,
+    )
+    tone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    length_preference: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    user_instruction: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    model_provider: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    model_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    prompt_version: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    input_snapshot_json: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    output_snapshot_json: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    job: Mapped[Job] = relationship(
+        back_populates="generation_runs",
+        foreign_keys=[job_id],
+    )
+    variants: Mapped[list["ContentVariant"]] = relationship(
+        back_populates="generation_run",
+        cascade="all, delete-orphan",
+    )
+
+
+class ContentVariant(Base):
+    """One draft marketing piece produced by a generation run."""
+
+    __tablename__ = "content_variants"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    job_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    generation_run_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("generation_runs.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+    content_type: Mapped[ContentType] = mapped_column(
+        Enum(
+            ContentType,
+            name="content_type",
+            values_callable=lambda x: [e.value for e in x],
+        ),
+        nullable=False,
+        index=True,
+    )
+    platform_target: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    title: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
+    body_generated: Mapped[str] = mapped_column(Text, nullable=False)
+    body_edited: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    call_to_action: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
+    hashtags_json: Mapped[Optional[list[Any]]] = mapped_column(JSONB, nullable=True)
+    status: Mapped[ContentVariantStatus] = mapped_column(
+        Enum(
+            ContentVariantStatus,
+            name="content_variant_status",
+            values_callable=lambda x: [e.value for e in x],
+        ),
+        default=ContentVariantStatus.awaiting_review,
+        index=True,
+        nullable=False,
+    )
+    version_number: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    approved_by: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    rejected_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    job: Mapped[Job] = relationship(back_populates="content_variants")
+    generation_run: Mapped[GenerationRun] = relationship(back_populates="variants")
+
+
+class JobStructuredDetails(Base):
+    """Latest structured extract for a job (upserted on each successful generation)."""
+
+    __tablename__ = "job_structured_details"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    job_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        unique=True,
+        index=True,
+        nullable=False,
+    )
+    generation_run_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("generation_runs.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    customer_problem: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    work_completed: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    materials: Mapped[Optional[list[Any]]] = mapped_column(JSONB, nullable=True)
+    equipment: Mapped[Optional[list[Any]]] = mapped_column(JSONB, nullable=True)
+    techniques: Mapped[Optional[list[Any]]] = mapped_column(JSONB, nullable=True)
+    challenges: Mapped[Optional[list[Any]]] = mapped_column(JSONB, nullable=True)
+    result: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    duration_text: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    customer_reaction: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    homeowner_advice: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    safety_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    location_context: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    differentiators: Mapped[Optional[list[Any]]] = mapped_column(JSONB, nullable=True)
+    confidence_json: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    source_version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    job: Mapped[Job] = relationship(back_populates="structured_details")

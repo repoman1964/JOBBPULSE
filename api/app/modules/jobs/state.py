@@ -181,6 +181,18 @@ def compute_next_action(
             reason="AI content is being prepared.",
         )
 
+    if job.status == JobStatus.failed:
+        tip = OPTIONAL_BEFORE_TIP if counts.before == 0 else None
+        if counts.after >= 1 and has_usable_transcript(voice):
+            return NextAction(
+                action="generate_content",
+                label="Retry generation",
+                cta="Generate content",
+                reason="Content generation failed. Fix inputs if needed, then try again.",
+                optional_tip=tip,
+            )
+        # Fall through to capture-phase guidance if media/transcript missing.
+
     # --- Capture phase ---
 
     if counts.after == 0:

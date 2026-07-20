@@ -334,11 +334,71 @@
       >
         <div style="font-weight: 700; margin-bottom: 6px;">Ready to generate</div>
         <p class="muted" style="margin: 0 0 12px; font-size: 13px;">
-          Photos and voice are in. Content generation ships in Phase 4.
+          Photos and voice are in. Generate draft marketing content for your review.
         </p>
-        <button class="btn btn-primary btn-block" type="button" disabled>
-          Generate content (coming soon)
+        <p v-if="generateNote" class="muted" style="margin: 0 0 10px; font-size: 13px;">{{ generateNote }}</p>
+        <p v-if="generateError" class="error-text" style="margin: 0 0 10px;">{{ generateError }}</p>
+        <button
+          class="btn btn-primary btn-block"
+          type="button"
+          :disabled="gen.generating.value"
+          @click="doGenerate"
+        >
+          {{ gen.generating.value ? 'Generating…' : job.next_action.cta || 'Generate content' }}
         </button>
+      </div>
+
+      <div
+        v-if="job.next_action.action === 'wait_generation'"
+        class="card"
+        style="margin-bottom: 12px;"
+      >
+        <div style="font-weight: 700; margin-bottom: 6px;">Generating content…</div>
+        <p class="muted" style="margin: 0; font-size: 13px;">{{ job.next_action.reason }}</p>
+      </div>
+
+      <!-- Draft preview (Phase 4 — full review/approve is Phase 5) -->
+      <div
+        v-if="draftVariants.length"
+        class="card"
+        style="margin-bottom: 12px; border-color: #c4d9b8; background: #f6faf3;"
+      >
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px;">
+          <div style="font-weight: 700;">Draft content</div>
+          <span class="muted" style="font-size: 12px;">Awaiting your review</span>
+        </div>
+        <p class="muted" style="margin: 6px 0 12px; font-size: 13px;">
+          Preview only. Full edit / approve ships in the next phase.
+        </p>
+        <div v-if="draftWarnings.length" class="tip-banner" style="margin-bottom: 12px;">
+          <div v-for="(w, i) in draftWarnings" :key="i">{{ w }}</div>
+        </div>
+        <div v-for="v in draftVariants" :key="v.id" class="draft-card">
+          <div class="draft-type">{{ contentTypeLabel(v.content_type) }}</div>
+          <div v-if="v.title" class="draft-title">{{ v.title }}</div>
+          <p class="draft-body">{{ v.body_edited || v.body_generated }}</p>
+          <div v-if="v.call_to_action" class="muted" style="font-size: 12px; margin-top: 6px;">
+            CTA: {{ v.call_to_action }}
+          </div>
+          <div
+            v-if="v.hashtags_json?.length"
+            class="muted"
+            style="font-size: 12px; margin-top: 4px;"
+          >
+            {{ v.hashtags_json.join(' ') }}
+          </div>
+        </div>
+        <button
+          v-if="job.next_action.action === 'review_content' || job.status === 'awaiting_review'"
+          class="btn btn-block"
+          type="button"
+          style="margin-top: 12px;"
+          :disabled="gen.generating.value"
+          @click="doRegenerate"
+        >
+          {{ gen.generating.value ? 'Regenerating…' : 'Regenerate drafts' }}
+        </button>
+        <p v-if="generateError" class="error-text" style="margin-top: 10px;">{{ generateError }}</p>
       </div>
 
       <div class="card" style="margin-bottom: 24px;">
@@ -364,12 +424,15 @@
 <script setup lang="ts">
 import type { JobDetail, VoiceSummary } from '~/composables/useJobs'
 import type { StageLabel } from '~/composables/useJobMedia'
+import type { ContentVariant } from '~/composables/useGeneration'
+import { contentTypeLabel } from '~/composables/useGeneration'
 
 const route = useRoute()
 const api = useApi()
 const media = useJobMedia()
 const recorder = useVoiceRecorder()
 const voiceUpload = useJobVoice()
+const gen = useGeneration()
 const { statusLabel } = useJobs()
 
 const jobId = computed(() => String(route.params.id))
@@ -385,6 +448,10 @@ const transcriptDraft = ref('')
 const savingTranscript = ref(false)
 const retranscribing = ref(false)
 const forceRerecord = ref(false)
+const generateNote = ref('')
+const generateError = ref('')
+const draftVariants = ref<ContentVariant[]>([])
+const draftWarnings = ref<string[]>([])
 const fileInput = ref<HTMLInputElement | null>(null)
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
@@ -482,12 +549,68 @@ function maybeStartPolling(v: VoiceSummary) {
   }, 1500)
 }
 
+async function loadDrafts() {
+  if (!job.value) return
+  const status = job.value.status
+  if (!['awaiting_review', 'revision_requested', 'approved', 'generating'].includes(status)) {
+    if (job.value.next_action.action !== 'review_content') {
+      draftVariants.value = []
+      draftWarnings.value = []
+      return
+    }
+  }
+  try {
+    const content = await gen.getContent(jobId.value)
+    draftVariants.value = (content.variants || []).slice().sort((a, b) => {
+      const order = ['primary_social', 'short_caption', 'before_after', 'directory_listing']
+      return order.indexOf(a.content_type) - order.indexOf(b.content_type)
+    })
+    const warnings =
+      (content.structured_details as { warnings?: string[] } | null)?.warnings || []
+    // Warnings live on the run; soft-load from output if present later
+    if (!draftWarnings.value.length && Array.isArray(warnings)) {
+      draftWarnings.value = warnings
+    }
+  } catch {
+    /* drafts optional until generated */
+  }
+}
+
+async function doGenerate() {
+  generateError.value = ''
+  generateNote.value = ''
+  try {
+    const result = await gen.generate(jobId.value)
+    applyJob(result.job)
+    draftVariants.value = result.variants || []
+    draftWarnings.value = result.warnings || []
+    generateNote.value = 'Drafts ready — review below. Approve/edit comes next phase.'
+  } catch (e: any) {
+    generateError.value = e?.message || 'Generation failed'
+  }
+}
+
+async function doRegenerate() {
+  generateError.value = ''
+  generateNote.value = ''
+  try {
+    const result = await gen.regenerate(jobId.value)
+    applyJob(result.job)
+    draftVariants.value = result.variants || []
+    draftWarnings.value = result.warnings || []
+    generateNote.value = 'New drafts generated.'
+  } catch (e: any) {
+    generateError.value = e?.message || 'Regeneration failed'
+  }
+}
+
 async function loadJob() {
   loading.value = true
   error.value = null
   try {
     const data = (await api.getJob(jobId.value)) as JobDetail
     applyJob(data)
+    await loadDrafts()
   } catch (e: any) {
     error.value = e?.message || 'Failed to load job'
     job.value = null
@@ -1020,5 +1143,31 @@ onBeforeUnmount(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+.draft-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+.draft-type {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--jp-text-secondary);
+  margin-bottom: 4px;
+}
+.draft-title {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+.draft-body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
 }
 </style>
