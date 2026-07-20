@@ -100,6 +100,7 @@ See PRD **§14.1**. MVP uses mocks; production plugs in:
 | Role | Env | Notes |
 |---|---|---|
 | Voice → text | `TRANSCRIPTION_PROVIDER` | Mock now; Whisper/Deepgram/etc. later |
+| AI generation | `AI_PROVIDER` | Phase 4; mock first, pluggable LLM later |
 | Social poster | `PUBLISHING_PROVIDER` | Phase 7; e.g. Blotato-class distributor |
 
 ## Phase 1–3 (try it)
