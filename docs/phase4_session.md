@@ -1,12 +1,14 @@
 # Phase 4 session handoff — AI Generation
 
-**Status of prior work:** Phase 3 is **complete**, tests green, committed and **pushed**.
+**Status:** Phase 4 is **complete** on `main` (`bca5175`). For the next session, use **[`docs/phase5_session.md`](phase5_session.md)**.
+
+**Status of prior work (when Phase 4 started):** Phase 3 was complete.
 
 | Check | Detail |
 |---|---|
-| Commit | `a8caa03` — *Implement Phase 3 voice capture with mock transcription.* |
+| Phase 4 commit | `bca5175` — *Implement Phase 4 AI generation with mock provider and draft previews.* |
 | Remote | `origin/main` on https://github.com/repoman1964/JOBPULSE.git |
-| Tests | `make api-test` → **28 passed** (as of handoff) |
+| Tests after Phase 4 | `make api-test` → **33 passed** |
 | Greenfield only | Work in `api/`, `mobile_app/`, `directory/` — **`legacy/` is reference only** (untracked; do not extend) |
 
 ---

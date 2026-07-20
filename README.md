@@ -88,7 +88,7 @@ See `jobpulse_agent_build_spec.md` §32 and the session plan. High level:
 2. Job capture + photos — **done**  
 3. Voice + transcription — **done** (mock STT; real vendor is a config swap)  
 4. AI generation (drafts) — mock provider; see [`docs/phase4_session.md`](docs/phase4_session.md)  
-5. Human review (contractor approves; not the founder) — next  
+5. Human review (contractor approves; not the founder) — **next** → see [`docs/phase5_session.md`](docs/phase5_session.md)  
 6. Directory publish  
 7. Social publish (third-party poster vendor)  
 8. Pilot hardening  
