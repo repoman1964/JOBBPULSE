@@ -4,19 +4,26 @@ JobPulse API — FastAPI application entry point.
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy import text
 
 from app.core.config import get_settings
-from app.core.responses import success
+from app.core.exceptions import AppError
+from app.core.responses import failure, success
+from app.db.session import engine
+from app.modules.auth.api import router as auth_router
+from app.modules.companies.api import router as company_router
 
 settings = get_settings()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup hooks (DB warm-up, storage checks) land here in later phases.
     yield
+    await engine.dispose()
 
 
 app = FastAPI(
@@ -33,6 +40,29 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(auth_router, prefix=settings.api_v1_prefix)
+app.include_router(company_router, prefix=settings.api_v1_prefix)
+
+
+@app.exception_handler(AppError)
+async def app_error_handler(_: Request, exc: AppError):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=failure(exc.code, exc.message, exc.details),
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_error_handler(_: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content=failure(
+            "VALIDATION_ERROR",
+            "Request validation failed.",
+            {"errors": exc.errors()},
+        ),
+    )
 
 
 @app.get("/")
@@ -59,8 +89,15 @@ async def health_live():
 
 @app.get("/health/ready")
 async def health_ready():
-    # Phase 1+: check DB / Redis connectivity.
-    return {"status": "ready"}
+    try:
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+        return {"status": "ready", "database": "ok"}
+    except Exception as exc:  # noqa: BLE001 — readiness should not raise
+        return JSONResponse(
+            status_code=503,
+            content={"status": "not_ready", "database": "error", "detail": str(exc)},
+        )
 
 
 @app.get(f"{settings.api_v1_prefix}/status")

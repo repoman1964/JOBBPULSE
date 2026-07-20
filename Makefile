@@ -6,6 +6,7 @@ help:
 	@echo "  make infra-down        Stop infrastructure"
 	@echo "  make api-install       Install API Python deps into api/.venv"
 	@echo "  make api-dev           Run FastAPI with reload on :8000"
+	@echo "  make api-migrate       Apply Alembic migrations"
 	@echo "  make api-test          Run API tests"
 	@echo "  make mobile-install    npm install for mobile_app"
 	@echo "  make mobile-dev        Run contractor app on :3000"
@@ -23,10 +24,13 @@ api-install:
 	cd api && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
 api-dev:
-	cd api && .venv/bin/uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+	cd api && PYTHONPATH=. .venv/bin/uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 api-test:
 	cd api && PYTHONPATH=. .venv/bin/pytest -q
+
+api-migrate:
+	cd api && PYTHONPATH=. .venv/bin/alembic upgrade head
 
 mobile-install:
 	cd mobile_app && npm install

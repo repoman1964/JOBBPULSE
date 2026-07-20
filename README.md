@@ -36,6 +36,7 @@ make infra-up
 # 2. API
 make api-install
 cp api/.env.example api/.env   # if you don't already have api/.env
+make api-migrate
 make api-dev
 # → http://localhost:8000/docs
 
@@ -91,6 +92,20 @@ See `jobpulse_agent_build_spec.md` §32 and the session plan. High level:
 6. Directory publish  
 7. Social publish  
 8. Pilot hardening  
+
+## Phase 1 auth (try it)
+
+```bash
+make infra-up
+make api-migrate
+make api-dev          # terminal 1 — http://localhost:8000/docs
+make mobile-dev       # terminal 2 — http://localhost:3000
+```
+
+1. Open http://localhost:3000/register  
+2. Create account (user + company + owner role)  
+3. Complete short onboarding  
+4. Land on protected Jobs home with role permissions  
 
 ## Tests
 

@@ -7,10 +7,10 @@
 
     <div class="page-body">
       <div class="card">
-        <h1 style="margin: 0 0 8px; font-size: 18px;">Quick capture (coming in Phase 2)</h1>
+        <h1 style="margin: 0 0 8px; font-size: 18px;">Coming in Phase 2</h1>
         <p class="muted" style="margin: 0 0 12px;">
-          This screen will open the camera for before photos, save the Job on the server,
-          and let you finish later with after photos and a voice description.
+          You’re signed in as <strong>{{ auth.user.value?.full_name }}</strong>
+          ({{ auth.permissions.value?.role || 'member' }}). Job capture with before/after photos ships next.
         </p>
         <ol class="muted" style="margin: 0; padding-left: 18px; line-height: 1.6;">
           <li>Tap create → take before photos</li>
@@ -22,3 +22,7 @@
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+const auth = useAuth()
+</script>
