@@ -93,7 +93,7 @@ See `jobpulse_agent_build_spec.md` §32 and the session plan. High level:
 7. Social publish  
 8. Pilot hardening  
 
-## Phase 1 auth (try it)
+## Phase 1–2 (try it)
 
 ```bash
 make infra-up
@@ -105,7 +105,16 @@ make mobile-dev       # terminal 2 — http://localhost:3000
 1. Open http://localhost:3000/register  
 2. Create account (user + company + owner role)  
 3. Complete short onboarding  
-4. Land on protected Jobs home with role permissions  
+4. Tap **Create Job** → **required private job name** (e.g. “Johnson / Oak St” — only you see it)  
+5. **Before photos optional** (recommended). **After photos required.** Then a **voice summary** (Phase 3) completes the job.  
+6. Forgot befores? Still finish with afters + voice. Reorder photos with ↑↓.  
+7. Leave and return → **Your jobs** shows Continue + next step + timeline  
+
+**Workflow:** Create job → (optional befores) → work → **afters (required)** → **voice (required)** → AI → review → publish.
+
+**Privacy:** Job name is contractor-only. It is never sent to AI, social, or the public directory. AI will invent public titles later.
+
+**Apps:** Contractor app (`mobile_app`) = jobs + capture. Public directory (`directory`) = local SEO pages; contractor analytics/admin on the directory side comes later (not a third product). 
 
 ## Tests
 

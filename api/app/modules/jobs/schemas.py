@@ -1,0 +1,173 @@
+"""Job and media request/response schemas."""
+
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Optional
+from uuid import UUID
+
+from pydantic import BaseModel, Field, field_validator
+
+# Contractor-facing photo stages for Phase 2 (progress deferred).
+STAGE_LABEL_PATTERN = "^(before|after)$"
+
+
+class JobCreate(BaseModel):
+    """Create a Job. `title` is required and private (contractor reference only)."""
+
+    title: str = Field(min_length=1, max_length=200)
+    service_key: Optional[str] = Field(default=None, max_length=100)
+    # Coarse area only — never street address (client may fill from quiet geolocation).
+    location_display: Optional[str] = Field(default=None, max_length=200)
+    city: Optional[str] = Field(default=None, max_length=150)
+    state: Optional[str] = Field(default=None, max_length=100)
+    postal_code: Optional[str] = Field(default=None, max_length=20)
+    customer_name_private: Optional[str] = Field(default=None, max_length=200)
+    notes: Optional[str] = None
+
+    @field_validator("title")
+    @classmethod
+    def title_required_non_blank(cls, v: str) -> str:
+        cleaned = (v or "").strip()
+        if not cleaned:
+            raise ValueError("Job name is required.")
+        return cleaned
+
+
+class JobUpdate(BaseModel):
+    title: Optional[str] = Field(default=None, min_length=1, max_length=200)
+    service_key: Optional[str] = Field(default=None, max_length=100)
+    location_display: Optional[str] = Field(default=None, max_length=200)
+    city: Optional[str] = Field(default=None, max_length=150)
+    state: Optional[str] = Field(default=None, max_length=100)
+    postal_code: Optional[str] = Field(default=None, max_length=20)
+    customer_name_private: Optional[str] = Field(default=None, max_length=200)
+    notes: Optional[str] = None
+    privacy_mode: Optional[str] = Field(default=None, max_length=40)
+
+    @field_validator("title")
+    @classmethod
+    def title_non_blank_if_set(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        cleaned = v.strip()
+        if not cleaned:
+            raise ValueError("Job name cannot be empty.")
+        return cleaned
+
+
+class NextActionOut(BaseModel):
+    action: str
+    label: str
+    cta: str
+    reason: str
+    optional_tip: Optional[str] = None
+
+
+class PhotoCountsOut(BaseModel):
+    total: int
+    before: int
+    after: int
+    has_before_after_pair: bool
+
+
+class TimelineStepOut(BaseModel):
+    key: str
+    label: str
+    status: str  # complete | current | upcoming | locked | optional | skipped
+
+
+class MediaOut(BaseModel):
+    id: UUID
+    job_id: UUID
+    storage_key: str
+    url: Optional[str] = None
+    original_filename: Optional[str] = None
+    mime_type: Optional[str] = None
+    file_size_bytes: Optional[int] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    asset_type: str
+    stage_label: str
+    display_order: int
+    is_primary: bool
+    processing_status: str
+    moderation_status: str
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class JobSummaryOut(BaseModel):
+    id: UUID
+    title: str  # private contractor label — never for public/AI
+    service_key: Optional[str] = None
+    location_display: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    status: str
+    photo_counts: PhotoCountsOut
+    next_action: NextActionOut
+    timeline: list[TimelineStepOut]
+    created_at: datetime
+    updated_at: datetime
+
+
+class JobDetailOut(BaseModel):
+    id: UUID
+    company_id: UUID
+    created_by: Optional[UUID] = None
+    title: str  # private contractor label
+    service_key: Optional[str] = None
+    location_display: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    postal_code: Optional[str] = None
+    customer_name_private: Optional[str] = None
+    customer_consent_status: str
+    status: str
+    notes: Optional[str] = None
+    privacy_mode: str
+    photo_counts: PhotoCountsOut
+    next_action: NextActionOut
+    timeline: list[TimelineStepOut]
+    media: list[MediaOut]
+    created_at: datetime
+    updated_at: datetime
+    job_started_at: Optional[datetime] = None
+    job_completed_at: Optional[datetime] = None
+
+
+class MediaUploadUrlRequest(BaseModel):
+    filename: str = Field(min_length=1, max_length=300)
+    mime_type: str = Field(min_length=3, max_length=100)
+    stage_label: str = Field(default="before", pattern=STAGE_LABEL_PATTERN)
+    file_size_bytes: Optional[int] = Field(default=None, ge=1, le=50 * 1024 * 1024)
+
+
+class MediaUploadUrlResponse(BaseModel):
+    media_id: UUID
+    storage_key: str
+    upload_url: str
+    upload_method: str = "PUT"
+    headers: dict[str, str]
+    expires_in: int = 3600
+    stage_label: str
+
+
+class MediaCompleteRequest(BaseModel):
+    media_id: UUID
+    file_size_bytes: Optional[int] = Field(default=None, ge=1)
+    width: Optional[int] = Field(default=None, ge=1)
+    height: Optional[int] = Field(default=None, ge=1)
+
+
+class MediaUpdate(BaseModel):
+    stage_label: Optional[str] = Field(default=None, pattern=STAGE_LABEL_PATTERN)
+    display_order: Optional[int] = Field(default=None, ge=0)
+    is_primary: Optional[bool] = None
+
+
+class MediaReorderRequest(BaseModel):
+    media_ids: list[UUID] = Field(min_length=1)

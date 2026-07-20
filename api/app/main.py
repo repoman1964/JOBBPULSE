@@ -16,12 +16,19 @@ from app.core.responses import failure, success
 from app.db.session import engine
 from app.modules.auth.api import router as auth_router
 from app.modules.companies.api import router as company_router
+from app.modules.jobs.api import router as jobs_router
 
 settings = get_settings()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    try:
+        from app.core.storage import ensure_bucket
+
+        ensure_bucket()
+    except Exception:  # noqa: BLE001 — storage may be down during boot
+        pass
     yield
     await engine.dispose()
 
@@ -43,6 +50,7 @@ app.add_middleware(
 
 app.include_router(auth_router, prefix=settings.api_v1_prefix)
 app.include_router(company_router, prefix=settings.api_v1_prefix)
+app.include_router(jobs_router, prefix=settings.api_v1_prefix)
 
 
 @app.exception_handler(AppError)
@@ -53,6 +61,20 @@ async def app_error_handler(_: Request, exc: AppError):
     )
 
 
+def _json_safe_validation_errors(errors: list) -> list:
+    """Pydantic may put Exception objects in error ctx; make them JSON-safe."""
+    safe: list = []
+    for err in errors:
+        item = dict(err)
+        ctx = item.get("ctx")
+        if isinstance(ctx, dict):
+            item["ctx"] = {
+                k: (str(v) if isinstance(v, BaseException) else v) for k, v in ctx.items()
+            }
+        safe.append(item)
+    return safe
+
+
 @app.exception_handler(RequestValidationError)
 async def validation_error_handler(_: Request, exc: RequestValidationError):
     return JSONResponse(
@@ -60,7 +82,7 @@ async def validation_error_handler(_: Request, exc: RequestValidationError):
         content=failure(
             "VALIDATION_ERROR",
             "Request validation failed.",
-            {"errors": exc.errors()},
+            {"errors": _json_safe_validation_errors(exc.errors())},
         ),
     )
 

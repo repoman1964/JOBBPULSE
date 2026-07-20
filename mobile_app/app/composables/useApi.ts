@@ -66,5 +66,56 @@ export const useApi = () => {
         method: 'POST',
         body: JSON.stringify(payload),
       }),
+
+    // Jobs
+    listJobs: (params?: { include_archived?: boolean }) => {
+      const q = params?.include_archived ? '?include_archived=true' : ''
+      return request(`/api/v1/jobs${q}`)
+    },
+    createJob: (payload: Record<string, unknown> = {}) =>
+      request('/api/v1/jobs', { method: 'POST', body: JSON.stringify(payload) }),
+    getJob: (jobId: string) => request(`/api/v1/jobs/${jobId}`),
+    updateJob: (jobId: string, payload: Record<string, unknown>) =>
+      request(`/api/v1/jobs/${jobId}`, { method: 'PATCH', body: JSON.stringify(payload) }),
+    archiveJob: (jobId: string) =>
+      request(`/api/v1/jobs/${jobId}/archive`, { method: 'POST' }),
+    deleteJob: (jobId: string) =>
+      request(`/api/v1/jobs/${jobId}`, { method: 'DELETE' }),
+
+    // Media
+    requestMediaUploadUrl: (jobId: string, payload: Record<string, unknown>) =>
+      request(`/api/v1/jobs/${jobId}/media/upload-url`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    completeMediaUpload: (jobId: string, payload: Record<string, unknown>) =>
+      request(`/api/v1/jobs/${jobId}/media/complete`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    uploadMediaDirect: async (jobId: string, file: File, stageLabel: string) => {
+      const form = new FormData()
+      form.append('file', file)
+      form.append('stage_label', stageLabel)
+      return request(`/api/v1/jobs/${jobId}/media/upload`, {
+        method: 'POST',
+        body: form,
+      })
+    },
+    listJobMedia: (jobId: string) => request(`/api/v1/jobs/${jobId}/media`),
+    updateMedia: (mediaId: string, payload: Record<string, unknown>) =>
+      request(`/api/v1/media/${mediaId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      }),
+    deleteMedia: (mediaId: string) =>
+      request(`/api/v1/media/${mediaId}`, { method: 'DELETE' }),
+    setPrimaryMedia: (mediaId: string) =>
+      request(`/api/v1/media/${mediaId}/set-primary`, { method: 'POST' }),
+    reorderMedia: (jobId: string, mediaIds: string[]) =>
+      request(`/api/v1/jobs/${jobId}/media/reorder`, {
+        method: 'POST',
+        body: JSON.stringify({ media_ids: mediaIds }),
+      }),
   }
 }
