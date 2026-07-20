@@ -83,10 +83,10 @@ A store-installed app (Capacitor) is optional later packaging of the same code�
 
 See `jobpulse_agent_build_spec.md` §32 and the session plan. High level:
 
-0. Bootstrap (this scaffold)  
-1. Auth + company  
-2. Job capture + photos  
-3. Voice + transcription  
+0. Bootstrap — **done**  
+1. Auth + company — **done**  
+2. Job capture + photos — **done** (`5141db3` on `main`)  
+3. Voice + transcription — **next** → see [`docs/phase3_session.md`](docs/phase3_session.md)  
 4. AI generation  
 5. Human review  
 6. Directory publish  
