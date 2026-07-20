@@ -1,6 +1,6 @@
 /**
  * AI content generation helpers (Phase 4).
- * Produces drafts only — contractor review/approve is Phase 5.
+ * Review / approve lives in useContentReview (Phase 5).
  */
 
 import type { JobDetail } from '~/composables/useJobs'

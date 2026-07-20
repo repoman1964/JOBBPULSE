@@ -169,6 +169,9 @@ def serialize_variant(v: ContentVariant) -> dict:
         "hashtags_json": v.hashtags_json,
         "status": v.status.value,
         "version_number": v.version_number,
+        "approved_by": v.approved_by,
+        "approved_at": v.approved_at,
+        "rejected_at": v.rejected_at,
         "created_at": v.created_at,
         "updated_at": v.updated_at,
     }
@@ -242,6 +245,7 @@ def _piece_for_type(bundle: GeneratedContentBundle, ctype: ContentType):
 
 
 async def _supersede_prior_variants(db: AsyncSession, job_id: UUID) -> None:
+    """Mark all prior active variants superseded, including approved (regen invalidates)."""
     result = await db.execute(
         select(ContentVariant).where(
             ContentVariant.job_id == job_id,
@@ -250,12 +254,15 @@ async def _supersede_prior_variants(db: AsyncSession, job_id: UUID) -> None:
                     ContentVariantStatus.draft,
                     ContentVariantStatus.awaiting_review,
                     ContentVariantStatus.rejected,
+                    ContentVariantStatus.approved,
                 ]
             ),
         )
     )
     for v in result.scalars().all():
         v.status = ContentVariantStatus.superseded
+        v.approved_by = None
+        v.approved_at = None
 
 
 async def _persist_success(
@@ -273,6 +280,8 @@ async def _persist_success(
     job.generation_version = new_version
     job.latest_generation_run_id = run.id
     job.status = JobStatus.awaiting_review
+    # Regen always clears job-level approval — contractor must re-approve
+    job.approved_at = None
 
     run.status = GenerationRunStatus.completed
     run.model_provider = get_generation_provider().name
@@ -381,6 +390,8 @@ async def _run_generation(
     )
     db.add(run)
     job.status = JobStatus.generating
+    # Leaving approved/revision while regenerating
+    job.approved_at = None
     await db.flush()
 
     provider = get_generation_provider()

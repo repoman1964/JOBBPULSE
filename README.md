@@ -103,7 +103,7 @@ See PRD **§14.1**. MVP uses mocks; production plugs in:
 | AI generation | `AI_PROVIDER` | Mock now; pluggable LLM later |
 | Social poster | `PUBLISHING_PROVIDER` | Phase 7; e.g. Blotato-class distributor |
 
-## Phase 1–4 (try it)
+## Phase 1–5 (try it)
 
 ```bash
 make infra-up
@@ -120,10 +120,12 @@ make mobile-dev       # terminal 2 — http://localhost:3000
 6. **Record voice summary** on the job (mic → upload → mock transcript appears).  
 7. **Edit the transcript** if needed → Save. Next action becomes **Generate content**.  
 8. Tap **Generate content** → mock AI produces draft variants (primary social, short caption, before/after, directory). Job moves to **Needs review**.  
-9. Preview drafts on the job page. Full edit/approve is Phase 5. **Regenerate** creates a new version.  
-10. Forgot befores? Still finish with afters + voice. Leave and return → **Your jobs** shows Continue + timeline.  
+9. **Review workspace:** edit any draft body → **Save edit**. Approve or reject each piece (manager/owner).  
+10. Optional: add a regenerate instruction → **Regenerate drafts** (prior versions stay in history as superseded).  
+11. When at least one social variant + the directory listing are approved (and after photos still present), tap **Approve all & mark ready**. Job becomes **Approved** / ready to publish.  
+12. Forgot befores? Still generate, review, and approve — befores are a soft tip only.  
 
-**Workflow:** Create job → (optional befores) → work → **afters (required)** → **voice (required)** → **AI drafts** → contractor review → publish.
+**Workflow:** Create job → (optional befores) → work → **afters (required)** → **voice (required)** → **AI drafts** → **contractor review / approve** → publish (Phases 6–7).
 
 **Privacy:** Job name is contractor-only. It is never sent to AI, social, or the public directory. AI invents public titles/hooks from photos + voice + coarse location. Edited transcript is preferred for generation.
 

@@ -99,6 +99,9 @@ class ContentVariantOut(BaseModel):
     hashtags_json: Optional[list[Any]] = None
     status: str
     version_number: int
+    approved_by: Optional[UUID] = None
+    approved_at: Optional[datetime] = None
+    rejected_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
 

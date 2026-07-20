@@ -1,13 +1,12 @@
 # Phase 5 session handoff — Human Review
 
-**Status of prior work:** Phase 4 is **complete**, tests green, committed and **pushed**.
+**Status:** Phase 5 is **complete** on main (implement in same branch after Phase 4).
 
 | Check | Detail |
 |---|---|
-| Commit | `bca5175` — *Implement Phase 4 AI generation with mock provider and draft previews.* |
-| Remote | `origin/main` on https://github.com/repoman1964/JOBPULSE.git |
-| Tests | `make api-test` → **33 passed** (as of handoff) |
-| Greenfield only | Work in `api/`, `mobile_app/`, `directory/` — **`legacy/` is reference only** (untracked; do not extend) |
+| Prior commit | `bca5175` — Phase 4 AI generation |
+| Tests | `make api-test` → **43 passed** (Phase 5 review suite included) |
+| Greenfield only | Work in `api/`, `mobile_app/`, `directory/` — **`legacy/` is reference only** |
 
 ---
 
@@ -90,12 +89,12 @@ Give the **contractor** a real **review workspace**: edit drafts, approve/reject
 
 ### Spec acceptance (from `jobpulse_agent_build_spec.md` §32 Phase 5)
 
-- [ ] Review workspace  
-- [ ] Inline editing  
-- [ ] Reject  
-- [ ] Regenerate  
-- [ ] Version history  
-- [ ] Approval  
+- [x] Review workspace  
+- [x] Inline editing  
+- [x] Reject  
+- [x] Regenerate  
+- [x] Version history  
+- [x] Approval  
 
 **Acceptance lines:**
 
@@ -104,16 +103,16 @@ Give the **contractor** a real **review workspace**: edit drafts, approve/reject
 
 Also from §10.8 / §15:
 
-- [ ] `GET /jobs/{id}/content` (exists — extend as needed)  
-- [ ] `GET /content/{content_id}`  
-- [ ] `PATCH /content/{content_id}` (edit body / title / CTA / hashtags → `body_edited`)  
-- [ ] `POST /content/{content_id}/approve`  
-- [ ] `POST /content/{content_id}/reject`  
-- [ ] `POST /content/{content_id}/duplicate` (optional MVP; nice-to-have)  
-- [ ] `POST /jobs/{id}/approve-all` (or job-level approve when rules met)  
-- [ ] Regenerate already exists at job level; optional per-variant regenerate  
-- [ ] Permissions: approve/reject requires **manager or owner** (`can_approve_and_publish`); crew may edit drafts or only capture — product choice: recommend **crew can edit + regenerate, only manager+ approve**  
-- [ ] Job status: `awaiting_review` ↔ `revision_requested` → regenerate → `awaiting_review` → `approved`
+- [x] `GET /jobs/{id}/content` (exists — extend as needed)  
+- [x] `GET /content/{content_id}`  
+- [x] `PATCH /content/{content_id}` (edit body / title / CTA / hashtags → `body_edited`)  
+- [x] `POST /content/{content_id}/approve`  
+- [x] `POST /content/{content_id}/reject`  
+- [ ] `POST /content/{content_id}/duplicate` (optional MVP; skipped)  
+- [x] `POST /jobs/{id}/approve-all` (or job-level approve when rules met)  
+- [x] Regenerate already exists at job level; optional per-variant regenerate  
+- [x] Permissions: approve/reject requires **manager or owner** (`can_approve_and_publish`); crew may edit drafts or only capture — product choice: recommend **crew can edit + regenerate, only manager+ approve**  
+- [x] Job status: `awaiting_review` ↔ `revision_requested` → regenerate → `awaiting_review` → `approved`
 
 ---
 

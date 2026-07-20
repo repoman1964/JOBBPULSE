@@ -357,27 +357,90 @@
         <p class="muted" style="margin: 0; font-size: 13px;">{{ job.next_action.reason }}</p>
       </div>
 
-      <!-- Draft preview (Phase 4 — full review/approve is Phase 5) -->
+      <!-- Review workspace (Phase 5) -->
       <div
-        v-if="draftVariants.length"
+        v-if="showReviewWorkspace"
         class="card"
         style="margin-bottom: 12px; border-color: #c4d9b8; background: #f6faf3;"
       >
         <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px;">
-          <div style="font-weight: 700;">Draft content</div>
-          <span class="muted" style="font-size: 12px;">Awaiting your review</span>
+          <div style="font-weight: 700;">
+            {{ job.status === 'approved' ? 'Approved content' : 'Review content' }}
+          </div>
+          <span class="muted" style="font-size: 12px;">
+            {{ job.status === 'approved' ? 'Ready to publish' : 'Your approval required' }}
+          </span>
         </div>
         <p class="muted" style="margin: 6px 0 12px; font-size: 13px;">
-          Preview only. Full edit / approve ships in the next phase.
+          Edit drafts, approve or reject each piece, then mark the job ready when you’re satisfied.
+          Nothing publishes without your approval.
         </p>
+
+        <div
+          v-if="job.status === 'approved'"
+          class="ready-banner"
+          style="margin-bottom: 12px;"
+        >
+          Content is approved. Social + directory publish comes next (Phases 6–7).
+        </div>
+
         <div v-if="draftWarnings.length" class="tip-banner" style="margin-bottom: 12px;">
           <div v-for="(w, i) in draftWarnings" :key="i">{{ w }}</div>
         </div>
+        <div
+          v-if="readiness?.soft_warnings?.length"
+          class="tip-banner"
+          style="margin-bottom: 12px;"
+        >
+          <div v-for="(w, i) in readiness.soft_warnings" :key="'sw-' + i">{{ w }}</div>
+        </div>
+
         <div v-for="v in draftVariants" :key="v.id" class="draft-card">
-          <div class="draft-type">{{ contentTypeLabel(v.content_type) }}</div>
+          <div class="draft-card-head">
+            <div class="draft-type">{{ contentTypeLabel(v.content_type) }}</div>
+            <span class="status-pill" :class="'st-' + v.status">{{ variantStatusLabel(v.status) }}</span>
+          </div>
           <div v-if="v.title" class="draft-title">{{ v.title }}</div>
-          <p class="draft-body">{{ v.body_edited || v.body_generated }}</p>
-          <div v-if="v.call_to_action" class="muted" style="font-size: 12px; margin-top: 6px;">
+
+          <label class="field-label" style="margin-top: 8px;">Body</label>
+          <textarea
+            v-model="editBodies[v.id]"
+            class="field-input transcript-area"
+            rows="5"
+            :disabled="v.status === 'superseded' || savingVariantId === v.id"
+          />
+          <div class="voice-actions" style="margin-top: 8px;">
+            <button
+              class="btn"
+              type="button"
+              style="flex: 1;"
+              :disabled="savingVariantId === v.id || review.busy.value"
+              @click="saveVariant(v)"
+            >
+              {{ savingVariantId === v.id ? 'Saving…' : 'Save edit' }}
+            </button>
+            <button
+              v-if="canApprove"
+              class="btn btn-primary"
+              type="button"
+              style="flex: 1;"
+              :disabled="v.status === 'approved' || review.busy.value"
+              @click="approveOne(v)"
+            >
+              Approve
+            </button>
+            <button
+              v-if="canApprove"
+              class="btn"
+              type="button"
+              style="flex: 1; background: #fee2e2; color: #991b1b;"
+              :disabled="v.status === 'rejected' || review.busy.value"
+              @click="rejectOne(v)"
+            >
+              Reject
+            </button>
+          </div>
+          <div v-if="v.call_to_action" class="muted" style="font-size: 12px; margin-top: 8px;">
             CTA: {{ v.call_to_action }}
           </div>
           <div
@@ -388,17 +451,106 @@
             {{ v.hashtags_json.join(' ') }}
           </div>
         </div>
-        <button
-          v-if="job.next_action.action === 'review_content' || job.status === 'awaiting_review'"
-          class="btn btn-block"
-          type="button"
-          style="margin-top: 12px;"
-          :disabled="gen.generating.value"
-          @click="doRegenerate"
-        >
-          {{ gen.generating.value ? 'Regenerating…' : 'Regenerate drafts' }}
-        </button>
+
+        <p v-if="!canApprove" class="muted" style="font-size: 12px; margin: 0 0 10px;">
+          You can edit drafts. Only a manager or owner can approve or reject.
+        </p>
+
+        <div v-if="canApprove && job.status !== 'approved'" style="margin-bottom: 12px;">
+          <div v-if="readiness && !readiness.can_approve_job && readiness.blockers.length" class="tip-banner">
+            <div style="font-weight: 600; margin-bottom: 4px;">Before job approval:</div>
+            <div v-for="(b, i) in readiness.blockers" :key="'b-' + i">• {{ b }}</div>
+          </div>
+          <button
+            class="btn btn-primary btn-block"
+            type="button"
+            style="margin-top: 10px;"
+            :disabled="review.busy.value"
+            @click="doApproveAll"
+          >
+            {{ review.busy.value ? 'Working…' : 'Approve all & mark ready' }}
+          </button>
+          <button
+            class="btn btn-block"
+            type="button"
+            style="margin-top: 8px;"
+            :disabled="review.busy.value || !readiness?.can_approve_job"
+            @click="doApproveJob"
+          >
+            Mark job approved (if rules already met)
+          </button>
+        </div>
+
+        <div style="margin-top: 4px;">
+          <label class="field-label">Regenerate with instruction (optional)</label>
+          <textarea
+            v-model="regenInstruction"
+            class="field-input transcript-area"
+            rows="2"
+            placeholder="e.g. Focus on curb appeal, shorter captions"
+          />
+          <button
+            class="btn btn-block"
+            type="button"
+            style="margin-top: 8px;"
+            :disabled="gen.generating.value"
+            @click="doRegenerate"
+          >
+            {{ gen.generating.value ? 'Regenerating…' : 'Regenerate drafts' }}
+          </button>
+        </div>
+
         <p v-if="generateError" class="error-text" style="margin-top: 10px;">{{ generateError }}</p>
+        <p v-if="reviewNote" class="muted" style="margin-top: 8px; font-size: 13px;">{{ reviewNote }}</p>
+
+        <!-- Light version history -->
+        <div v-if="generationRuns.length" style="margin-top: 16px; border-top: 1px solid #dce5d6; padding-top: 12px;">
+          <button
+            type="button"
+            class="linkish"
+            style="font-weight: 600;"
+            @click="showHistory = !showHistory"
+          >
+            {{ showHistory ? 'Hide' : 'Show' }} version history ({{ generationRuns.length }})
+          </button>
+          <div v-if="showHistory" style="margin-top: 10px;">
+            <div
+              v-for="run in generationRuns"
+              :key="run.id"
+              class="history-run"
+            >
+              <div style="display: flex; justify-content: space-between; gap: 8px;">
+                <strong>v{{ run.variants?.[0]?.version_number || '—' }}</strong>
+                <span class="muted" style="font-size: 12px;">{{ run.generation_type }} · {{ run.status }}</span>
+              </div>
+              <div class="muted" style="font-size: 12px; margin-top: 2px;">
+                {{ formatRunDate(run.created_at) }}
+                <span v-if="run.user_instruction"> · “{{ run.user_instruction }}”</span>
+              </div>
+              <button
+                type="button"
+                class="linkish"
+                style="font-size: 13px; margin-top: 4px;"
+                @click="toggleRunDetail(run.id)"
+              >
+                {{ expandedRunId === run.id ? 'Hide variants' : 'View this version' }}
+              </button>
+              <div v-if="expandedRunId === run.id" style="margin-top: 8px;">
+                <div
+                  v-for="rv in run.variants || []"
+                  :key="rv.id"
+                  class="history-variant"
+                >
+                  <div class="draft-type">
+                    {{ contentTypeLabel(rv.content_type) }}
+                    <span class="status-pill" :class="'st-' + rv.status" style="margin-left: 6px;">{{ rv.status }}</span>
+                  </div>
+                  <p class="draft-body muted">{{ rv.body_edited || rv.body_generated }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="card" style="margin-bottom: 24px;">
@@ -424,8 +576,9 @@
 <script setup lang="ts">
 import type { JobDetail, VoiceSummary } from '~/composables/useJobs'
 import type { StageLabel } from '~/composables/useJobMedia'
-import type { ContentVariant } from '~/composables/useGeneration'
+import type { ContentVariant, GenerationRun } from '~/composables/useGeneration'
 import { contentTypeLabel } from '~/composables/useGeneration'
+import type { ApprovalReadiness } from '~/composables/useContentReview'
 
 const route = useRoute()
 const api = useApi()
@@ -433,6 +586,8 @@ const media = useJobMedia()
 const recorder = useVoiceRecorder()
 const voiceUpload = useJobVoice()
 const gen = useGeneration()
+const review = useContentReview()
+const auth = useAuth()
 const { statusLabel } = useJobs()
 
 const jobId = computed(() => String(route.params.id))
@@ -450,10 +605,57 @@ const retranscribing = ref(false)
 const forceRerecord = ref(false)
 const generateNote = ref('')
 const generateError = ref('')
+const reviewNote = ref('')
 const draftVariants = ref<ContentVariant[]>([])
 const draftWarnings = ref<string[]>([])
+const editBodies = ref<Record<string, string>>({})
+const savingVariantId = ref<string | null>(null)
+const readiness = ref<ApprovalReadiness | null>(null)
+const regenInstruction = ref('')
+const generationRuns = ref<GenerationRun[]>([])
+const showHistory = ref(false)
+const expandedRunId = ref<string | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 let pollTimer: ReturnType<typeof setInterval> | null = null
+
+const canApprove = computed(
+  () => auth.permissions.value?.can_approve_and_publish === true,
+)
+
+const showReviewWorkspace = computed(() => {
+  if (!job.value) return false
+  if (draftVariants.value.length > 0) return true
+  return ['awaiting_review', 'revision_requested', 'approved'].includes(job.value.status)
+})
+
+function variantStatusLabel(status: string): string {
+  const map: Record<string, string> = {
+    awaiting_review: 'Needs review',
+    approved: 'Approved',
+    rejected: 'Rejected',
+    superseded: 'Superseded',
+    draft: 'Draft',
+  }
+  return map[status] || status
+}
+
+function formatRunDate(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString()
+  } catch {
+    return iso
+  }
+}
+
+function syncEditBodies(variants: ContentVariant[]) {
+  const next: Record<string, string> = { ...editBodies.value }
+  for (const v of variants) {
+    if (next[v.id] === undefined) {
+      next[v.id] = (v.body_edited || v.body_generated || '').trim()
+    }
+  }
+  editBodies.value = next
+}
 
 const stages = [
   { key: 'before' as StageLabel, label: 'Before (optional)' },
@@ -553,38 +755,89 @@ async function loadDrafts() {
   if (!job.value) return
   const status = job.value.status
   if (!['awaiting_review', 'revision_requested', 'approved', 'generating'].includes(status)) {
-    if (job.value.next_action.action !== 'review_content') {
+    if (
+      job.value.next_action.action !== 'review_content' &&
+      job.value.next_action.action !== 'ready_to_publish'
+    ) {
       draftVariants.value = []
       draftWarnings.value = []
+      readiness.value = null
       return
     }
   }
   try {
     const content = await gen.getContent(jobId.value)
-    draftVariants.value = (content.variants || []).slice().sort((a, b) => {
+    const sorted = (content.variants || []).slice().sort((a, b) => {
       const order = ['primary_social', 'short_caption', 'before_after', 'directory_listing']
       return order.indexOf(a.content_type) - order.indexOf(b.content_type)
     })
+    draftVariants.value = sorted
+    editBodies.value = {}
+    syncEditBodies(sorted)
     const warnings =
       (content.structured_details as { warnings?: string[] } | null)?.warnings || []
-    // Warnings live on the run; soft-load from output if present later
     if (!draftWarnings.value.length && Array.isArray(warnings)) {
       draftWarnings.value = warnings
     }
+    await loadReadiness()
+    await loadHistory()
   } catch {
     /* drafts optional until generated */
+  }
+}
+
+async function loadReadiness() {
+  if (!job.value) return
+  try {
+    readiness.value = await review.getReadiness(jobId.value)
+  } catch {
+    readiness.value = null
+  }
+}
+
+async function loadHistory() {
+  if (!job.value) return
+  try {
+    generationRuns.value = (await api.request(
+      `/api/v1/jobs/${jobId.value}/generation-runs`,
+    )) as GenerationRun[]
+  } catch {
+    generationRuns.value = []
+  }
+}
+
+async function toggleRunDetail(runId: string) {
+  if (expandedRunId.value === runId) {
+    expandedRunId.value = null
+    return
+  }
+  expandedRunId.value = runId
+  const existing = generationRuns.value.find((r) => r.id === runId)
+  if (existing && existing.variants?.length) return
+  try {
+    const full = await gen.getRun(runId)
+    generationRuns.value = generationRuns.value.map((r) =>
+      r.id === runId ? full : r,
+    )
+  } catch {
+    /* ignore */
   }
 }
 
 async function doGenerate() {
   generateError.value = ''
   generateNote.value = ''
+  reviewNote.value = ''
   try {
     const result = await gen.generate(jobId.value)
     applyJob(result.job)
     draftVariants.value = result.variants || []
+    editBodies.value = {}
+    syncEditBodies(draftVariants.value)
     draftWarnings.value = result.warnings || []
-    generateNote.value = 'Drafts ready — review below. Approve/edit comes next phase.'
+    generateNote.value = 'Drafts ready — edit and approve below.'
+    await loadReadiness()
+    await loadHistory()
   } catch (e: any) {
     generateError.value = e?.message || 'Generation failed'
   }
@@ -593,14 +846,111 @@ async function doGenerate() {
 async function doRegenerate() {
   generateError.value = ''
   generateNote.value = ''
+  reviewNote.value = ''
   try {
-    const result = await gen.regenerate(jobId.value)
+    const payload: { user_instruction?: string } = {}
+    if (regenInstruction.value.trim()) {
+      payload.user_instruction = regenInstruction.value.trim()
+    }
+    const result = await gen.regenerate(jobId.value, payload)
     applyJob(result.job)
     draftVariants.value = result.variants || []
+    editBodies.value = {}
+    syncEditBodies(draftVariants.value)
     draftWarnings.value = result.warnings || []
-    generateNote.value = 'New drafts generated.'
+    generateNote.value = 'New drafts generated — previous versions are in history.'
+    regenInstruction.value = ''
+    await loadReadiness()
+    await loadHistory()
   } catch (e: any) {
     generateError.value = e?.message || 'Regeneration failed'
+  }
+}
+
+async function saveVariant(v: ContentVariant) {
+  savingVariantId.value = v.id
+  reviewNote.value = ''
+  generateError.value = ''
+  try {
+    const updated = await review.updateVariant(v.id, {
+      body_edited: editBodies.value[v.id] ?? '',
+    })
+    draftVariants.value = draftVariants.value.map((x) =>
+      x.id === v.id ? { ...x, ...updated } : x,
+    )
+    reviewNote.value = 'Edit saved.'
+  } catch (e: any) {
+    generateError.value = e?.message || 'Could not save edit'
+  } finally {
+    savingVariantId.value = null
+  }
+}
+
+async function approveOne(v: ContentVariant) {
+  reviewNote.value = ''
+  generateError.value = ''
+  try {
+    const updated = await review.approveVariant(v.id)
+    draftVariants.value = draftVariants.value.map((x) =>
+      x.id === v.id ? { ...x, ...updated } : x,
+    )
+    await loadJob()
+    reviewNote.value = `${contentTypeLabel(v.content_type)} approved.`
+  } catch (e: any) {
+    generateError.value = e?.message || 'Could not approve'
+  }
+}
+
+async function rejectOne(v: ContentVariant) {
+  if (!confirm(`Reject ${contentTypeLabel(v.content_type)}? You can regenerate later.`)) return
+  reviewNote.value = ''
+  generateError.value = ''
+  try {
+    const updated = await review.rejectVariant(v.id)
+    draftVariants.value = draftVariants.value.map((x) =>
+      x.id === v.id ? { ...x, ...updated } : x,
+    )
+    await loadJob()
+    reviewNote.value = `${contentTypeLabel(v.content_type)} rejected.`
+  } catch (e: any) {
+    generateError.value = e?.message || 'Could not reject'
+  }
+}
+
+async function doApproveAll() {
+  reviewNote.value = ''
+  generateError.value = ''
+  try {
+    const result = await review.approveAll(jobId.value)
+    applyJob(result.job)
+    draftVariants.value = result.variants || []
+    editBodies.value = {}
+    syncEditBodies(draftVariants.value)
+    readiness.value = result.readiness
+    if (result.job.status === 'approved') {
+      reviewNote.value = 'All content approved — job is ready to publish.'
+    } else {
+      reviewNote.value =
+        result.readiness.blockers?.join(' ') ||
+        'Variants approved, but job still needs requirements.'
+    }
+  } catch (e: any) {
+    generateError.value = e?.message || 'Approve all failed'
+  }
+}
+
+async function doApproveJob() {
+  reviewNote.value = ''
+  generateError.value = ''
+  try {
+    const result = await review.approveJob(jobId.value)
+    applyJob(result.job)
+    draftVariants.value = result.variants || []
+    readiness.value = result.readiness
+    reviewNote.value = 'Job approved — ready to publish.'
+  } catch (e: any) {
+    generateError.value = e?.message || 'Job approve failed'
+    await loadReadiness()
   }
 }
 
@@ -1169,5 +1519,60 @@ onBeforeUnmount(() => {
   font-size: 14px;
   line-height: 1.45;
   white-space: pre-wrap;
+}
+.draft-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.status-pill {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #475569;
+  white-space: nowrap;
+}
+.st-awaiting_review {
+  background: #fef3c7;
+  color: #92400e;
+}
+.st-approved {
+  background: #d1fae5;
+  color: #065f46;
+}
+.st-rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.st-superseded {
+  background: #f1f5f9;
+  color: #64748b;
+}
+.ready-banner {
+  background: #d1fae5;
+  border: 1px solid #6ee7b7;
+  color: #065f46;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.history-run {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+.history-variant {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 8px;
+  margin-top: 8px;
 }
 </style>

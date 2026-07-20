@@ -160,17 +160,40 @@ def compute_next_action(
             reason="Content is published.",
         )
 
+    if job.status == JobStatus.approved:
+        tip = OPTIONAL_BEFORE_TIP if counts.before == 0 else None
+        return NextAction(
+            action="ready_to_publish",
+            label="Ready to publish",
+            cta="Coming soon",
+            reason=(
+                "Content is approved. Publishing to social and directory "
+                "arrives in the next phases."
+            ),
+            optional_tip=tip,
+        )
+
+    if job.status == JobStatus.revision_requested:
+        tip = OPTIONAL_BEFORE_TIP if counts.before == 0 else None
+        return NextAction(
+            action="review_content",
+            label="Revise content",
+            cta="Review",
+            reason="Some content was rejected. Edit, regenerate, then approve again.",
+            optional_tip=tip,
+        )
+
     if job.status in {
         JobStatus.awaiting_review,
-        JobStatus.revision_requested,
-        JobStatus.approved,
         JobStatus.scheduled,
     }:
+        tip = OPTIONAL_BEFORE_TIP if counts.before == 0 else None
         return NextAction(
             action="review_content",
             label="Review content",
             cta="Review",
             reason="Generated content needs your attention.",
+            optional_tip=tip,
         )
 
     if job.status == JobStatus.generating:
@@ -275,7 +298,7 @@ def compute_timeline(
     def step(key: str, label: str, status: str) -> dict:
         return {"key": key, "label": label, "status": status}
 
-    if action in {"review_content", "view_published"} or job.status in {
+    if action in {"review_content", "view_published", "ready_to_publish"} or job.status in {
         JobStatus.awaiting_review,
         JobStatus.revision_requested,
         JobStatus.approved,
@@ -305,7 +328,7 @@ def compute_timeline(
         current = 4
     elif action == "wait_generation":
         current = 4
-    elif action in {"review_content", "view_published"}:
+    elif action in {"review_content", "view_published", "ready_to_publish"}:
         current = 4
     elif action == "none":
         current = 0
@@ -353,8 +376,9 @@ def compute_timeline(
             else:
                 status = "upcoming"
         else:  # review
-            if action == "generate_content":
-                # Phase 4 not built yet — show as current next step
+            if action == "ready_to_publish" or job.status == JobStatus.approved:
+                status = "complete"
+            elif action == "generate_content":
                 status = "current"
             elif current == 4 and action in {
                 "wait_generation",
