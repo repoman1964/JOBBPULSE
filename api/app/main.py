@@ -18,6 +18,8 @@ from app.modules.ai_generation.api import router as generation_router
 from app.modules.auth.api import router as auth_router
 from app.modules.companies.api import router as company_router
 from app.modules.content.api import router as content_router
+from app.modules.directory.api import router as directory_router
+from app.modules.directory.public_api import router as public_directory_router
 from app.modules.jobs.api import router as jobs_router
 
 settings = get_settings()
@@ -55,6 +57,8 @@ app.include_router(company_router, prefix=settings.api_v1_prefix)
 app.include_router(jobs_router, prefix=settings.api_v1_prefix)
 app.include_router(generation_router, prefix=settings.api_v1_prefix)
 app.include_router(content_router, prefix=settings.api_v1_prefix)
+app.include_router(directory_router, prefix=settings.api_v1_prefix)
+app.include_router(public_directory_router, prefix=settings.api_v1_prefix)
 
 
 @app.exception_handler(AppError)

@@ -377,11 +377,56 @@
         </p>
 
         <div
-          v-if="job.status === 'approved'"
+          v-if="job.status === 'approved' || job.status === 'published'"
           class="ready-banner"
           style="margin-bottom: 12px;"
         >
-          Content is approved. Social + directory publish comes next (Phases 6–7).
+          <template v-if="job.status === 'approved'">
+            Content is approved. Publish when you’re ready.
+          </template>
+          <template v-else>
+            Live on the JobPulse directory.
+          </template>
+          <div v-if="canApprove" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+            <button
+              v-if="job.status === 'approved' || !livePublicUrl"
+              type="button"
+              class="btn btn-primary btn-block"
+              :disabled="publish.busy.value"
+              @click="doPublish"
+            >
+              {{ publish.busy.value ? 'Publishing…' : 'Publish' }}
+            </button>
+            <a
+              v-if="livePublicUrl"
+              :href="livePublicUrl"
+              target="_blank"
+              rel="noopener"
+              class="btn btn-block"
+              style="text-align: center; text-decoration: none; background: #e2e8f0; color: #0f172a;"
+            >
+              Open live page
+            </a>
+            <button
+              v-if="job.status === 'published' && livePublicUrl"
+              type="button"
+              class="btn btn-block"
+              style="background: transparent; border: 1px solid #cbd5e1; color: #475569;"
+              :disabled="publish.busy.value"
+              @click="doUnpublish"
+            >
+              Unpublish from directory
+            </button>
+            <p class="muted" style="margin: 0; font-size: 12px;">
+              One Publish action. Social destinations will use this same button later.
+            </p>
+          </div>
+          <p v-else class="muted" style="margin: 8px 0 0; font-size: 12px;">
+            A manager or owner must publish.
+          </p>
+          <p v-if="publishNote" class="muted" style="margin: 8px 0 0; font-size: 13px; color: #166534;">
+            {{ publishNote }}
+          </p>
         </div>
 
         <div v-if="draftWarnings.length" class="tip-banner" style="margin-bottom: 12px;">
@@ -587,6 +632,7 @@ const recorder = useVoiceRecorder()
 const voiceUpload = useJobVoice()
 const gen = useGeneration()
 const review = useContentReview()
+const publish = usePublish()
 const auth = useAuth()
 const { statusLabel } = useJobs()
 
@@ -606,6 +652,8 @@ const forceRerecord = ref(false)
 const generateNote = ref('')
 const generateError = ref('')
 const reviewNote = ref('')
+const publishNote = ref('')
+const livePublicUrl = ref<string | null>(null)
 const draftVariants = ref<ContentVariant[]>([])
 const draftWarnings = ref<string[]>([])
 const editBodies = ref<Record<string, string>>({})
@@ -625,7 +673,7 @@ const canApprove = computed(
 const showReviewWorkspace = computed(() => {
   if (!job.value) return false
   if (draftVariants.value.length > 0) return true
-  return ['awaiting_review', 'revision_requested', 'approved'].includes(job.value.status)
+  return ['awaiting_review', 'revision_requested', 'approved', 'published'].includes(job.value.status)
 })
 
 function variantStatusLabel(status: string): string {
@@ -914,6 +962,33 @@ async function rejectOne(v: ContentVariant) {
     reviewNote.value = `${contentTypeLabel(v.content_type)} rejected.`
   } catch (e: any) {
     generateError.value = e?.message || 'Could not reject'
+  }
+}
+
+async function doPublish() {
+  publishNote.value = ''
+  generateError.value = ''
+  try {
+    const result = await publish.publishJob(jobId.value)
+    livePublicUrl.value = result.public_url || result.listing?.public_url || null
+    publishNote.value = 'Published — your project is live on the directory.'
+    await loadJob()
+  } catch (e: any) {
+    generateError.value = e?.message || 'Publish failed'
+  }
+}
+
+async function doUnpublish() {
+  if (!confirm('Remove this project from the public directory?')) return
+  publishNote.value = ''
+  generateError.value = ''
+  try {
+    await publish.unpublishJob(jobId.value)
+    livePublicUrl.value = null
+    publishNote.value = 'Unpublished — project is no longer public.'
+    await loadJob()
+  } catch (e: any) {
+    generateError.value = e?.message || 'Unpublish failed'
   }
 }
 

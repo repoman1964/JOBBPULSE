@@ -180,8 +180,12 @@ def assert_job_publishable(
     variants: list[ContentVariant],
     counts: job_state.PhotoCounts,
 ) -> None:
-    """Gate for Phases 6–7. Nothing publishes without contractor approval."""
-    if job.status != JobStatus.approved:
+    """Gate for Phases 6–7. Nothing publishes without contractor approval.
+
+    Status may be approved (first publish) or published (idempotent re-publish).
+    Content/media approval rules still apply either way.
+    """
+    if job.status not in {JobStatus.approved, JobStatus.published}:
         raise AppError(
             "PUBLISH_NOT_ALLOWED",
             "Job must be approved by a contractor before publishing.",

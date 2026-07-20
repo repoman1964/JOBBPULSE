@@ -87,10 +87,10 @@ See `jobpulse_agent_build_spec.md` §32 and the session plan. High level:
 1. Auth + company — **done**  
 2. Job capture + photos — **done**  
 3. Voice + transcription — **done** (mock STT; real vendor is a config swap)  
-4. AI generation (drafts) — mock provider; see [`docs/phase4_session.md`](docs/phase4_session.md)  
-5. Human review (contractor approves; not the founder) — **next** → see [`docs/phase5_session.md`](docs/phase5_session.md)  
-6. Directory publish  
-7. Social publish (third-party poster vendor)  
+4. AI generation (drafts) — **done** (mock provider)  
+5. Human review (contractor approves) — **done**  
+6. Directory publish — **done** (single **Publish** CTA → first-party directory)  
+7. Social publish (third-party poster vendor; same Publish button)  
 8. Pilot hardening  
 
 ### Third-party vendors (replaceable)
@@ -103,13 +103,14 @@ See PRD **§14.1**. MVP uses mocks; production plugs in:
 | AI generation | `AI_PROVIDER` | Mock now; pluggable LLM later |
 | Social poster | `PUBLISHING_PROVIDER` | Phase 7; e.g. Blotato-class distributor |
 
-## Phase 1–5 (try it)
+## Phase 1–6 (try it)
 
 ```bash
 make infra-up
 make api-migrate
 make api-dev          # terminal 1 — http://localhost:8000/docs
 make mobile-dev       # terminal 2 — http://localhost:3000
+make directory-dev    # terminal 3 — http://localhost:3001
 ```
 
 1. Open http://localhost:3000/register  
@@ -123,13 +124,15 @@ make mobile-dev       # terminal 2 — http://localhost:3000
 9. **Review workspace:** edit any draft body → **Save edit**. Approve or reject each piece (manager/owner).  
 10. Optional: add a regenerate instruction → **Regenerate drafts** (prior versions stay in history as superseded).  
 11. When at least one social variant + the directory listing are approved (and after photos still present), tap **Approve all & mark ready**. Job becomes **Approved** / ready to publish.  
-12. Forgot befores? Still generate, review, and approve — befores are a soft tip only.  
+12. Tap **Publish** (single action — not separate social/directory buttons). Job goes live on the JobPulse directory.  
+13. Open the **live project URL** (or browse http://localhost:3001) — public page shows title, summary, city, before/after gallery, contractor link. Private job name never appears.  
+14. **Unpublish from directory** if you need to take it down (secondary control).  
 
-**Workflow:** Create job → (optional befores) → work → **afters (required)** → **voice (required)** → **AI drafts** → **contractor review / approve** → publish (Phases 6–7).
+**Workflow:** Create job → (optional befores) → work → **afters (required)** → **voice (required)** → **AI drafts** → **contractor review / approve** → **Publish** (directory now; social uses the same button in Phase 7).
 
-**Privacy:** Job name is contractor-only. It is never sent to AI, social, or the public directory. AI invents public titles/hooks from photos + voice + coarse location. Edited transcript is preferred for generation.
+**Privacy:** Job name is contractor-only. It is never sent to AI, social, or the public directory. AI invents public titles/hooks from photos + voice + coarse location. Edited transcript / body is preferred for public summary.
 
-**Apps:** Contractor app (`mobile_app`) = jobs + capture. Public directory (`directory`) = local SEO pages; contractor analytics/admin on the directory side comes later (not a third product).
+**Apps:** Contractor app (`mobile_app`) = jobs + capture + publish. Public directory (`directory`) = SSR local SEO pages.
 
 ## Tests
 

@@ -156,8 +156,8 @@ def compute_next_action(
         return NextAction(
             action="view_published",
             label="Published",
-            cta="View results",
-            reason="Content is published.",
+            cta="View live page",
+            reason="This job is live on the JobPulse directory.",
         )
 
     if job.status == JobStatus.approved:
@@ -165,11 +165,8 @@ def compute_next_action(
         return NextAction(
             action="ready_to_publish",
             label="Ready to publish",
-            cta="Coming soon",
-            reason=(
-                "Content is approved. Publishing to social and directory "
-                "arrives in the next phases."
-            ),
+            cta="Publish",
+            reason="Content is approved. Publish when you’re ready.",
             optional_tip=tip,
         )
 

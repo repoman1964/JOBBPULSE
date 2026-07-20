@@ -109,6 +109,14 @@ class ContentVariantStatus(str, enum.Enum):
     superseded = "superseded"
 
 
+class DirectoryListingStatus(str, enum.Enum):
+    draft = "draft"
+    published = "published"
+    unpublished = "unpublished"
+    flagged = "flagged"
+    removed = "removed"
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -160,6 +168,11 @@ class Company(Base):
     services: Mapped[list[CompanyService]] = relationship(back_populates="company")
     service_areas: Mapped[list[CompanyServiceArea]] = relationship(back_populates="company")
     jobs: Mapped[list["Job"]] = relationship(back_populates="company")
+    contractor_profile: Mapped[Optional["ContractorProfile"]] = relationship(
+        back_populates="company",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
 
 class CompanyMembership(Base):
@@ -306,6 +319,11 @@ class Job(Base):
         cascade="all, delete-orphan",
     )
     structured_details: Mapped[Optional["JobStructuredDetails"]] = relationship(
+        back_populates="job",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    directory_listing: Mapped[Optional["DirectoryListing"]] = relationship(
         back_populates="job",
         uselist=False,
         cascade="all, delete-orphan",
@@ -577,3 +595,126 @@ class JobStructuredDetails(Base):
     )
 
     job: Mapped[Job] = relationship(back_populates="structured_details")
+
+
+class ContractorProfile(Base):
+    """Public contractor profile for the JobPulse directory (one per company)."""
+
+    __tablename__ = "contractor_profiles"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("companies.id", ondelete="CASCADE"),
+        unique=True,
+        index=True,
+        nullable=False,
+    )
+    public_slug: Mapped[str] = mapped_column(String(220), unique=True, index=True, nullable=False)
+    headline: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
+    public_description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    contact_phone: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    contact_email: Mapped[Optional[str]] = mapped_column(String(320), nullable=True)
+    website_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    lead_form_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    published: Mapped[bool] = mapped_column(Boolean, default=False, index=True, nullable=False)
+    seo_title: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
+    seo_description: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    company: Mapped[Company] = relationship(back_populates="contractor_profile")
+    listings: Mapped[list["DirectoryListing"]] = relationship(back_populates="contractor_profile")
+
+
+class DirectoryListing(Base):
+    """Public project page derived from an approved Job."""
+
+    __tablename__ = "directory_listings"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    job_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        unique=True,
+        index=True,
+        nullable=False,
+    )
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    contractor_profile_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("contractor_profiles.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+    slug: Mapped[str] = mapped_column(String(220), unique=True, index=True, nullable=False)
+    public_title: Mapped[str] = mapped_column(String(300), nullable=False)
+    public_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    service_key: Mapped[Optional[str]] = mapped_column(String(100), index=True, nullable=True)
+    location_display: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    city: Mapped[Optional[str]] = mapped_column(String(150), index=True, nullable=True)
+    state: Mapped[Optional[str]] = mapped_column(String(100), index=True, nullable=True)
+    postal_code: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    status: Mapped[DirectoryListingStatus] = mapped_column(
+        Enum(
+            DirectoryListingStatus,
+            name="directory_listing_status",
+            values_callable=lambda x: [e.value for e in x],
+        ),
+        default=DirectoryListingStatus.draft,
+        index=True,
+        nullable=False,
+    )
+    published_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    unpublished_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    seo_title: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
+    seo_description: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    structured_data_json: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    job: Mapped[Job] = relationship(back_populates="directory_listing")
+    contractor_profile: Mapped[ContractorProfile] = relationship(back_populates="listings")
+    media_links: Mapped[list["DirectoryListingMedia"]] = relationship(
+        back_populates="listing",
+        cascade="all, delete-orphan",
+        order_by="DirectoryListingMedia.display_order",
+    )
+
+
+class DirectoryListingMedia(Base):
+    """Media assets linked to a public directory listing (before/after gallery)."""
+
+    __tablename__ = "directory_listing_media"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    directory_listing_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("directory_listings.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+    media_asset_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("media_assets.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+    stage_label: Mapped[str] = mapped_column(String(40), nullable=False)
+    display_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    listing: Mapped[DirectoryListing] = relationship(back_populates="media_links")
+    media_asset: Mapped[MediaAsset] = relationship()
