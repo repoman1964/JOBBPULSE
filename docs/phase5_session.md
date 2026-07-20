@@ -1,10 +1,10 @@
 # Phase 5 session handoff — Human Review
 
-**Status:** Phase 5 is **complete** on main (implement in same branch after Phase 4).
+**Status:** Phase 5 is **complete** on `main` (`137e95d`). For the next session, use **[`docs/phase6_session.md`](phase6_session.md)**.
 
 | Check | Detail |
 |---|---|
-| Prior commit | `bca5175` — Phase 4 AI generation |
+| Phase 5 commit | `137e95d` — *Implement Phase 5 human review: edit, approve, reject, publish gate.* |
 | Tests | `make api-test` → **43 passed** (Phase 5 review suite included) |
 | Greenfield only | Work in `api/`, `mobile_app/`, `directory/` — **`legacy/` is reference only** |
 
