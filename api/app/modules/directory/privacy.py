@@ -246,7 +246,11 @@ def admin_listing_payload(
 ) -> dict[str, Any]:
     media: list[dict[str, Any]] = []
     if include_media:
-        for link in listing.media_links or []:
+        # Prefer already-loaded collection to avoid async lazy-load
+        links = listing.__dict__.get("media_links")
+        if links is None:
+            links = []
+        for link in links:
             item = public_media_item(link)
             item["media_asset_id"] = str(link.media_asset_id)
             media.append(item)

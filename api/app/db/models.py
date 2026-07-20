@@ -117,6 +117,27 @@ class DirectoryListingStatus(str, enum.Enum):
     removed = "removed"
 
 
+class PublishingConnectionStatus(str, enum.Enum):
+    active = "active"
+    disconnected = "disconnected"
+    error = "error"
+    pending = "pending"
+
+
+class PublicationDestinationType(str, enum.Enum):
+    social = "social"
+    directory = "directory"
+
+
+class PublicationJobStatus(str, enum.Enum):
+    pending = "pending"
+    processing = "processing"
+    published = "published"
+    failed = "failed"
+    cancelled = "cancelled"
+    scheduled = "scheduled"
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -171,6 +192,10 @@ class Company(Base):
     contractor_profile: Mapped[Optional["ContractorProfile"]] = relationship(
         back_populates="company",
         uselist=False,
+        cascade="all, delete-orphan",
+    )
+    publishing_connections: Mapped[list["PublishingConnection"]] = relationship(
+        back_populates="company",
         cascade="all, delete-orphan",
     )
 
@@ -326,6 +351,10 @@ class Job(Base):
     directory_listing: Mapped[Optional["DirectoryListing"]] = relationship(
         back_populates="job",
         uselist=False,
+        cascade="all, delete-orphan",
+    )
+    publication_jobs: Mapped[list["PublicationJob"]] = relationship(
+        back_populates="job",
         cascade="all, delete-orphan",
     )
 
@@ -718,3 +747,100 @@ class DirectoryListingMedia(Base):
 
     listing: Mapped[DirectoryListing] = relationship(back_populates="media_links")
     media_asset: Mapped[MediaAsset] = relationship()
+
+
+class PublishingConnection(Base):
+    """Connected social account for a company (via PUBLISHING_PROVIDER)."""
+
+    __tablename__ = "publishing_connections"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    provider: Mapped[str] = mapped_column(String(40), nullable=False, default="mock")
+    platform: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
+    external_account_id: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    display_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    credentials_encrypted: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    status: Mapped[PublishingConnectionStatus] = mapped_column(
+        Enum(
+            PublishingConnectionStatus,
+            name="publishing_connection_status",
+            values_callable=lambda x: [e.value for e in x],
+        ),
+        default=PublishingConnectionStatus.pending,
+        index=True,
+        nullable=False,
+    )
+    last_verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    company: Mapped[Company] = relationship(back_populates="publishing_connections")
+    publication_jobs: Mapped[list["PublicationJob"]] = relationship(back_populates="connection")
+
+
+class PublicationJob(Base):
+    """One publication attempt to social or directory (audit + retry)."""
+
+    __tablename__ = "publication_jobs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    job_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    content_variant_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("content_variants.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    destination_type: Mapped[PublicationDestinationType] = mapped_column(
+        Enum(
+            PublicationDestinationType,
+            name="publication_destination_type",
+            values_callable=lambda x: [e.value for e in x],
+        ),
+        nullable=False,
+        index=True,
+    )
+    publishing_connection_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("publishing_connections.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    provider: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    scheduled_for: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    status: Mapped[PublicationJobStatus] = mapped_column(
+        Enum(
+            PublicationJobStatus,
+            name="publication_job_status",
+            values_callable=lambda x: [e.value for e in x],
+        ),
+        default=PublicationJobStatus.pending,
+        index=True,
+        nullable=False,
+    )
+    idempotency_key: Mapped[str] = mapped_column(String(300), unique=True, index=True, nullable=False)
+    provider_request_id: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    provider_response_json: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    external_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    attempt_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    last_error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    published_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    job: Mapped[Job] = relationship(back_populates="publication_jobs")
+    connection: Mapped[Optional[PublishingConnection]] = relationship(back_populates="publication_jobs")
+    content_variant: Mapped[Optional[ContentVariant]] = relationship()

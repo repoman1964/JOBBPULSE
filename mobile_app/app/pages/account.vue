@@ -21,6 +21,63 @@
         </ul>
       </div>
 
+      <div
+        v-if="permissions?.can_approve_and_publish"
+        class="card"
+        style="margin-bottom: 12px;"
+      >
+        <div style="font-weight: 600; margin-bottom: 6px;">Social accounts</div>
+        <p class="muted" style="margin: 0 0 12px; font-size: 13px;">
+          Connect accounts for the single Publish action on a job. MVP uses a mock provider.
+        </p>
+        <div v-if="connError" class="muted" style="color: #991b1b; font-size: 13px; margin-bottom: 8px;">
+          {{ connError }}
+        </div>
+        <div v-if="!connections.length" class="muted" style="font-size: 13px; margin-bottom: 10px;">
+          No accounts connected yet.
+        </div>
+        <div
+          v-for="c in connections"
+          :key="c.id"
+          style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid var(--jp-border);"
+        >
+          <div>
+            <div style="font-weight: 600; font-size: 14px;">{{ c.display_name }}</div>
+            <div class="muted" style="font-size: 12px;">{{ c.platform }} · {{ c.status }}</div>
+          </div>
+          <button
+            v-if="c.status === 'active'"
+            type="button"
+            class="btn"
+            style="padding: 6px 10px; font-size: 12px;"
+            :disabled="connBusy"
+            @click="disconnect(c.id)"
+          >
+            Disconnect
+          </button>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;">
+          <button
+            type="button"
+            class="btn btn-primary"
+            style="flex: 1; min-width: 120px;"
+            :disabled="connBusy"
+            @click="connect('facebook')"
+          >
+            Connect Facebook
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            style="flex: 1; min-width: 120px;"
+            :disabled="connBusy"
+            @click="connect('instagram')"
+          >
+            Connect Instagram
+          </button>
+        </div>
+      </div>
+
       <button class="btn btn-primary btn-block" type="button" @click="navigateTo('/onboarding')">
         Company setup
       </button>
@@ -44,12 +101,43 @@
 
 <script setup lang="ts">
 const auth = useAuth()
+const pubConn = usePublishingConnections()
 const user = computed(() => auth.user.value)
 const company = computed(() => auth.company.value)
 const membership = computed(() => auth.membership.value)
 const permissions = computed(() => auth.permissions.value)
+const connections = computed(() => pubConn.connections.value)
+const connBusy = computed(() => pubConn.busy.value)
+const connError = computed(() => pubConn.error.value)
 
 function yesNo(v?: boolean) {
   return v ? 'Yes' : 'No'
 }
+
+async function connect(platform: string) {
+  try {
+    await pubConn.start(platform)
+  } catch {
+    /* error in composable */
+  }
+}
+
+async function disconnect(id: string) {
+  if (!confirm('Disconnect this account?')) return
+  try {
+    await pubConn.disconnect(id)
+  } catch {
+    /* error in composable */
+  }
+}
+
+onMounted(async () => {
+  if (permissions.value?.can_approve_and_publish) {
+    try {
+      await pubConn.list()
+    } catch {
+      /* optional */
+    }
+  }
+})
 </script>

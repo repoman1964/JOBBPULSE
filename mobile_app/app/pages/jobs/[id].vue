@@ -388,11 +388,29 @@
             Live on the JobPulse directory.
           </template>
           <div v-if="canApprove" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+            <label class="dest-row">
+              <input v-model="publishToDirectory" type="checkbox" />
+              <span>JobPulse directory</span>
+            </label>
+            <div v-if="connections.active.value.length" class="dest-list">
+              <div class="muted" style="font-size: 12px; margin-bottom: 4px;">Social accounts</div>
+              <label
+                v-for="c in connections.active.value"
+                :key="c.id"
+                class="dest-row"
+              >
+                <input v-model="selectedConnectionIds" type="checkbox" :value="c.id" />
+                <span>{{ c.display_name }} <span class="muted">({{ c.platform }})</span></span>
+              </label>
+            </div>
+            <p v-else class="muted" style="margin: 0; font-size: 12px;">
+              No social accounts connected.
+              <NuxtLink to="/account" style="font-weight: 600;">Connect on Account</NuxtLink>
+            </p>
             <button
-              v-if="job.status === 'approved' || !livePublicUrl"
               type="button"
               class="btn btn-primary btn-block"
-              :disabled="publish.busy.value"
+              :disabled="publish.busy.value || (!publishToDirectory && !selectedConnectionIds.length)"
               @click="doPublish"
             >
               {{ publish.busy.value ? 'Publishing…' : 'Publish' }}
@@ -417,8 +435,30 @@
             >
               Unpublish from directory
             </button>
+            <div v-if="publications.length" class="pub-list">
+              <div class="muted" style="font-size: 12px; font-weight: 600;">Publications</div>
+              <div v-for="p in publications" :key="p.id" class="pub-row">
+                <span>{{ p.destination_type }} · {{ p.status }}</span>
+                <a
+                  v-if="p.external_url"
+                  :href="p.external_url"
+                  target="_blank"
+                  rel="noopener"
+                  style="font-size: 12px;"
+                >Open</a>
+                <button
+                  v-if="p.status === 'failed'"
+                  type="button"
+                  class="linkish"
+                  :disabled="publish.busy.value"
+                  @click="doRetryPub(p.id)"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
             <p class="muted" style="margin: 0; font-size: 12px;">
-              One Publish action. Social destinations will use this same button later.
+              One Publish action for directory and social.
             </p>
           </div>
           <p v-else class="muted" style="margin: 8px 0 0; font-size: 12px;">
@@ -633,6 +673,7 @@ const voiceUpload = useJobVoice()
 const gen = useGeneration()
 const review = useContentReview()
 const publish = usePublish()
+const connections = usePublishingConnections()
 const auth = useAuth()
 const { statusLabel } = useJobs()
 
@@ -654,6 +695,16 @@ const generateError = ref('')
 const reviewNote = ref('')
 const publishNote = ref('')
 const livePublicUrl = ref<string | null>(null)
+const publishToDirectory = ref(true)
+const selectedConnectionIds = ref<string[]>([])
+const publications = ref<
+  {
+    id: string
+    destination_type: string
+    status: string
+    external_url?: string | null
+  }[]
+>([])
 const draftVariants = ref<ContentVariant[]>([])
 const draftWarnings = ref<string[]>([])
 const editBodies = ref<Record<string, string>>({})
@@ -965,16 +1016,55 @@ async function rejectOne(v: ContentVariant) {
   }
 }
 
+async function loadPublications() {
+  try {
+    publications.value = await publish.listPublications(jobId.value)
+    const dir = publications.value.find(
+      (p) => p.destination_type === 'directory' && p.status === 'published' && p.external_url,
+    )
+    if (dir?.external_url) livePublicUrl.value = dir.external_url
+  } catch {
+    /* optional */
+  }
+}
+
 async function doPublish() {
   publishNote.value = ''
   generateError.value = ''
   try {
-    const result = await publish.publishJob(jobId.value)
-    livePublicUrl.value = result.public_url || result.listing?.public_url || null
-    publishNote.value = 'Published — your project is live on the directory.'
+    const result = await publish.publishJob(jobId.value, {
+      publishToDirectory: publishToDirectory.value,
+      socialConnectionIds: selectedConnectionIds.value,
+    })
+    livePublicUrl.value =
+      result.public_url || result.listing?.public_url || livePublicUrl.value
+    publications.value = result.publications || []
+    const socialOk = (result.publications || []).filter(
+      (p) => p.destination_type === 'social' && p.status === 'published',
+    ).length
+    const parts: string[] = []
+    if (result.listing?.status === 'published' || result.public_url) {
+      parts.push('directory')
+    }
+    if (socialOk) parts.push(`${socialOk} social`)
+    publishNote.value = parts.length
+      ? `Published — ${parts.join(' + ')}.`
+      : 'Publish finished.'
     await loadJob()
+    await loadPublications()
   } catch (e: any) {
     generateError.value = e?.message || 'Publish failed'
+  }
+}
+
+async function doRetryPub(publicationId: string) {
+  generateError.value = ''
+  try {
+    await publish.retryPublication(publicationId)
+    publishNote.value = 'Retry complete.'
+    await loadPublications()
+  } catch (e: any) {
+    generateError.value = e?.message || 'Retry failed'
   }
 }
 
@@ -987,6 +1077,7 @@ async function doUnpublish() {
     livePublicUrl.value = null
     publishNote.value = 'Unpublished — project is no longer public.'
     await loadJob()
+    await loadPublications()
   } catch (e: any) {
     generateError.value = e?.message || 'Unpublish failed'
   }
@@ -1245,6 +1336,17 @@ onMounted(async () => {
     activeStage.value = qStage
   }
   await loadJob()
+  if (canApprove.value) {
+    try {
+      await connections.list()
+      selectedConnectionIds.value = connections.active.value.map((c) => c.id)
+    } catch {
+      /* optional */
+    }
+    if (job.value?.status === 'published' || job.value?.status === 'approved') {
+      await loadPublications()
+    }
+  }
   if (!route.query.stage && job.value) {
     // Default to required after stage unless they only have befores and no afters
     if (job.value.next_action.action === 'add_after_photos') activeStage.value = 'after'
@@ -1620,6 +1722,38 @@ onBeforeUnmount(() => {
 .st-approved {
   background: #d1fae5;
   color: #065f46;
+}
+.dest-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.dest-list {
+  padding: 8px 0;
+}
+.pub-list {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pub-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+.linkish {
+  background: none;
+  border: none;
+  color: var(--jp-primary, #185fa5);
+  font-weight: 600;
+  font-size: 12px;
+  padding: 0;
+  cursor: pointer;
 }
 .st-rejected {
   background: #fee2e2;

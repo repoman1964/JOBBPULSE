@@ -35,6 +35,7 @@ class Settings(BaseSettings):
 
     ai_provider: str = "mock"
     publishing_provider: str = "mock"
+    publishing_api_key: str = ""
     transcription_provider: str = "mock"
 
     @property

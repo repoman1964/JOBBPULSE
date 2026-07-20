@@ -90,7 +90,7 @@ See `jobpulse_agent_build_spec.md` §32 and the session plan. High level:
 4. AI generation (drafts) — **done** (mock provider)  
 5. Human review (contractor approves) — **done**  
 6. Directory publish — **done** (single **Publish** CTA → first-party directory)  
-7. Social publish (third-party poster vendor; same Publish button)  
+7. Social publish — **done** (mock `PUBLISHING_PROVIDER`; same Publish button)  
 8. Pilot hardening  
 
 ### Third-party vendors (replaceable)
@@ -101,7 +101,7 @@ See PRD **§14.1**. MVP uses mocks; production plugs in:
 |---|---|---|
 | Voice → text | `TRANSCRIPTION_PROVIDER` | Mock now; Whisper/Deepgram/etc. later |
 | AI generation | `AI_PROVIDER` | Mock now; pluggable LLM later |
-| Social poster | `PUBLISHING_PROVIDER` | Phase 7; e.g. Blotato-class distributor |
+| Social poster | `PUBLISHING_PROVIDER` | Mock now; real vendor is a config swap |
 
 ## Phase 1–6 (try it)
 
@@ -124,11 +124,12 @@ make directory-dev    # terminal 3 — http://localhost:3001
 9. **Review workspace:** edit any draft body → **Save edit**. Approve or reject each piece (manager/owner).  
 10. Optional: add a regenerate instruction → **Regenerate drafts** (prior versions stay in history as superseded).  
 11. When at least one social variant + the directory listing are approved (and after photos still present), tap **Approve all & mark ready**. Job becomes **Approved** / ready to publish.  
-12. Tap **Publish** (single action — not separate social/directory buttons). Job goes live on the JobPulse directory.  
-13. Open the **live project URL** (or browse http://localhost:3001) — public page shows title, summary, city, before/after gallery, contractor link. Private job name never appears.  
-14. **Unpublish from directory** if you need to take it down (secondary control).  
+12. On **Account**, connect a mock social account (Facebook / Instagram).  
+13. Tap **Publish** (single action). Choose directory and/or social checkboxes. Job goes live on the directory and mock social posts appear under Publications.  
+14. Open the **live project URL** (or browse http://localhost:3001). Private job name never appears.  
+15. **Unpublish from directory** or **Retry** a failed social publication if needed.  
 
-**Workflow:** Create job → (optional befores) → work → **afters (required)** → **voice (required)** → **AI drafts** → **contractor review / approve** → **Publish** (directory now; social uses the same button in Phase 7).
+**Workflow:** Create job → (optional befores) → work → **afters (required)** → **voice (required)** → **AI drafts** → **contractor review / approve** → **Publish** (directory + social via one button).
 
 **Privacy:** Job name is contractor-only. It is never sent to AI, social, or the public directory. AI invents public titles/hooks from photos + voice + coarse location. Edited transcript / body is preferred for public summary.
 

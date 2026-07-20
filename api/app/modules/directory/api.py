@@ -1,4 +1,7 @@
-"""Authenticated directory admin routes (§10.11) + unified job publish (§10.10)."""
+"""Authenticated directory admin routes (§10.11).
+
+Unified publish lives in publishing.api (Phase 7 orchestrator).
+"""
 
 from __future__ import annotations
 
@@ -11,7 +14,7 @@ from app.core.deps import AuthContext, get_auth_context
 from app.core.responses import success
 from app.db.session import get_db
 from app.modules.directory import service
-from app.modules.directory.schemas import JobPublishRequest, ListingUpdate, ProfileUpdate
+from app.modules.directory.schemas import ListingUpdate, ProfileUpdate
 
 router = APIRouter(tags=["directory"])
 
@@ -86,27 +89,6 @@ async def unpublish_listing(
     db: AsyncSession = Depends(get_db),
 ):
     payload = await service.unpublish_listing(db, ctx.company_id, listing_id, ctx.role)
-    return success(payload)
-
-
-@router.post("/jobs/{job_id}/publish")
-async def publish_job(
-    job_id: UUID,
-    body: JobPublishRequest | None = None,
-    ctx: AuthContext = Depends(get_auth_context),
-    db: AsyncSession = Depends(get_db),
-):
-    """Unified Publish action — directory now; social destinations in Phase 7."""
-    req = body or JobPublishRequest()
-    payload = await service.publish_job(
-        db,
-        company_id=ctx.company_id,
-        job_id=job_id,
-        role=ctx.role,
-        publish_to_directory=req.publish_to_directory,
-        social_connection_ids=req.social_connection_ids,
-        scheduled_for=req.scheduled_for,
-    )
     return success(payload)
 
 

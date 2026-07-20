@@ -21,6 +21,7 @@ from app.modules.content.api import router as content_router
 from app.modules.directory.api import router as directory_router
 from app.modules.directory.public_api import router as public_directory_router
 from app.modules.jobs.api import router as jobs_router
+from app.modules.publishing.api import router as publishing_router
 
 settings = get_settings()
 
@@ -59,6 +60,7 @@ app.include_router(generation_router, prefix=settings.api_v1_prefix)
 app.include_router(content_router, prefix=settings.api_v1_prefix)
 app.include_router(directory_router, prefix=settings.api_v1_prefix)
 app.include_router(public_directory_router, prefix=settings.api_v1_prefix)
+app.include_router(publishing_router, prefix=settings.api_v1_prefix)
 
 
 @app.exception_handler(AppError)

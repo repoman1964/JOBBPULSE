@@ -21,6 +21,8 @@ settings = get_settings()
 
 TRUNCATE_SQL = """
 TRUNCATE TABLE
+  publication_jobs,
+  publishing_connections,
   directory_listing_media,
   directory_listings,
   contractor_profiles,
