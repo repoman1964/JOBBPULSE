@@ -1,6 +1,6 @@
 # Phase 6 session handoff — Directory Publishing
 
-**Status:** Phase 6 is **complete** on `main` (`a407d35`). For the next session, use **[`docs/phase7_session.md`](phase7_session.md)**.
+**Status:** Phase 6 is **complete** on `main` (`a407d35`). Phase 7 is complete (`06ab053`). For the next session, use **[`docs/phase8_session.md`](phase8_session.md)**.
 
 | Check | Detail |
 |---|---|

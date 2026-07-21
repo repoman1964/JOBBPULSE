@@ -38,9 +38,23 @@ class Settings(BaseSettings):
     publishing_api_key: str = ""
     transcription_provider: str = "mock"
 
+    # Phase 8 — pilot hardening
+    sentry_dsn: str = ""
+    billing_enforce: bool = False
+    founder_admin_emails: str = ""  # comma-separated platform admin emails
+    stripe_webhook_secret: str = ""  # optional; verify when set
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
+    @property
+    def founder_admin_email_set(self) -> set[str]:
+        return {
+            e.strip().lower()
+            for e in self.founder_admin_emails.split(",")
+            if e.strip()
+        }
 
 
 @lru_cache

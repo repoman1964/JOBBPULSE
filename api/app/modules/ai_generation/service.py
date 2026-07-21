@@ -38,6 +38,7 @@ from app.modules.jobs.privacy import (
     fields_for_generation,
     transcript_for_generation,
 )
+from app.modules.notifications import service as notification_service
 
 REQUIRED_CONTENT_TYPES = (
     ContentType.primary_social,
@@ -404,12 +405,26 @@ async def _run_generation(
             bundle=bundle,
             generation_type=generation_type,
         )
+        await notification_service.notify_generation_complete(
+            db,
+            company_id=company_id,
+            job_id=job.id,
+            requested_by=user_id,
+            success=True,
+        )
         await db.commit()
     except AppError as exc:
         run.status = GenerationRunStatus.failed
         run.error_message = exc.message
         run.completed_at = datetime.now(timezone.utc)
         job.status = JobStatus.failed
+        await notification_service.notify_generation_complete(
+            db,
+            company_id=company_id,
+            job_id=job.id,
+            requested_by=user_id,
+            success=False,
+        )
         await db.commit()
         raise
     except Exception as exc:  # noqa: BLE001 — surface as failed run
@@ -417,6 +432,13 @@ async def _run_generation(
         run.error_message = str(exc)[:2000]
         run.completed_at = datetime.now(timezone.utc)
         job.status = JobStatus.failed
+        await notification_service.notify_generation_complete(
+            db,
+            company_id=company_id,
+            job_id=job.id,
+            requested_by=user_id,
+            success=False,
+        )
         await db.commit()
         raise AppError(
             "GENERATION_FAILED",

@@ -31,6 +31,7 @@ from app.db.models import (
     MediaStageLabel,
     MembershipRole,
 )
+from app.modules.audit import service as audit_service
 from app.modules.content.service import assert_job_publishable, effective_body
 from app.modules.directory import privacy
 from app.modules.jobs import service as job_service
@@ -535,8 +536,18 @@ async def unpublish_listing(
     _ensure_can_publish(role)
     listing = await _get_company_listing(db, company_id, listing_id)
     now = datetime.now(timezone.utc)
+    before = {"status": listing.status.value}
     listing.status = DirectoryListingStatus.unpublished
     listing.unpublished_at = now
+    await audit_service.record_event(
+        db,
+        company_id=company_id,
+        entity_type="directory_listing",
+        entity_id=listing.id,
+        action="listing.unpublished",
+        before=before,
+        after={"status": listing.status.value, "job_id": str(listing.job_id)},
+    )
     # Job stays published historically
     await db.commit()
     # Re-load with media to avoid async lazy-load on serialize
@@ -671,11 +682,12 @@ async def public_list_projects(
     limit: int = 20,
     offset: int = 0,
 ) -> list[dict]:
+    # List endpoints skip media joins (summaries only) for performance.
+    limit = min(max(limit, 1), 50)
     q = (
         select(DirectoryListing)
         .where(DirectoryListing.status == DirectoryListingStatus.published)
         .options(
-            selectinload(DirectoryListing.media_links).selectinload(DirectoryListingMedia.media_asset),
             selectinload(DirectoryListing.contractor_profile).selectinload(ContractorProfile.company),
         )
         .order_by(DirectoryListing.published_at.desc().nullslast())
@@ -693,6 +705,7 @@ async def public_list_projects(
     return [
         privacy.public_project_payload(
             l,
+            include_media=False,
             contractor=l.contractor_profile,
             company=l.contractor_profile.company if l.contractor_profile else None,
         )

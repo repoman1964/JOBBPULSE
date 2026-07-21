@@ -21,6 +21,8 @@ settings = get_settings()
 
 TRUNCATE_SQL = """
 TRUNCATE TABLE
+  audit_events,
+  notifications,
   publication_jobs,
   publishing_connections,
   directory_listing_media,
@@ -45,6 +47,8 @@ RESTART IDENTITY CASCADE
 async def client() -> AsyncGenerator[AsyncClient, None]:
     engine = create_async_engine(settings.database_url, poolclass=NullPool)
     async with engine.begin() as conn:
+        # create_all adds missing tables; columns on existing tables come from alembic.
+        # Run `make api-migrate` after pulling schema changes.
         await conn.run_sync(Base.metadata.create_all)
         await conn.execute(text(TRUNCATE_SQL))
 

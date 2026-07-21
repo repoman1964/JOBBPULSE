@@ -26,11 +26,14 @@ from app.db.models import (
     PublishingConnection,
     PublishingConnectionStatus,
 )
+from app.modules.audit import service as audit_service
+from app.modules.billing import service as billing_service
 from app.modules.content.service import SOCIAL_CONTENT_TYPES, assert_job_publishable
 from app.modules.directory import privacy as directory_privacy
 from app.modules.directory import service as directory_service
 from app.modules.jobs import service as job_service
 from app.modules.jobs import state as job_state
+from app.modules.notifications import service as notification_service
 from app.modules.publishing import privacy
 from app.modules.publishing.provider.base import PublishRequest, ScheduleRequest
 from app.modules.publishing.provider.factory import get_publishing_provider
@@ -98,6 +101,20 @@ async def start_connection(
         last_error=None,
     )
     db.add(conn)
+    await db.flush()  # assign conn.id before audit
+    await audit_service.record_event(
+        db,
+        company_id=company_id,
+        entity_type="publishing_connection",
+        entity_id=conn.id,
+        action="connection.connected",
+        after={
+            "platform": conn.platform,
+            "display_name": conn.display_name,
+            "status": conn.status.value,
+            "provider": conn.provider,
+        },
+    )
     await db.commit()
     await db.refresh(conn)
     return privacy.serialize_connection(conn)
@@ -143,8 +160,18 @@ async def disconnect_connection(
 ) -> dict:
     _ensure_manager(role)
     conn = await _get_connection(db, company_id, connection_id)
+    before = {"status": conn.status.value, "platform": conn.platform}
     conn.status = PublishingConnectionStatus.disconnected
     conn.credentials_encrypted = None
+    await audit_service.record_event(
+        db,
+        company_id=company_id,
+        entity_type="publishing_connection",
+        entity_id=conn.id,
+        action="connection.disconnected",
+        before=before,
+        after={"status": conn.status.value, "platform": conn.platform},
+    )
     await db.commit()
     await db.refresh(conn)
     return privacy.serialize_connection(conn)
@@ -255,6 +282,7 @@ async def publish_job(
 ) -> dict:
     """Unified Publish: directory (first-party) + social (provider)."""
     _ensure_manager(role)
+    await billing_service.assert_company_can_publish(db, company_id)
     social_ids = list(social_connection_ids or [])
 
     if not publish_to_directory and not social_ids:
@@ -317,6 +345,41 @@ async def publish_job(
         listing_out = directory_privacy.admin_listing_payload(listing, include_media=False)
         publications.append(privacy.serialize_publication(dir_pub))
         listing_id = listing.id
+        public_path = directory_privacy.project_path(listing)
+        await audit_service.record_event(
+            db,
+            company_id=company_id,
+            entity_type="job",
+            entity_id=job.id,
+            action="job.published",
+            after={
+                "destination": "directory",
+                "listing_id": str(listing.id),
+                "publication_id": str(dir_pub.id),
+                "status": dir_pub.status.value,
+            },
+            private_title=job.title,
+        )
+        await audit_service.record_event(
+            db,
+            company_id=company_id,
+            entity_type="publication_job",
+            entity_id=dir_pub.id,
+            action="publication.success",
+            after={
+                "destination_type": "directory",
+                "status": dir_pub.status.value,
+                "job_id": str(job.id),
+            },
+            private_title=job.title,
+        )
+        await notification_service.notify_directory_published(
+            db,
+            company_id=company_id,
+            job_id=job.id,
+            listing_id=listing.id,
+            public_path=public_path,
+        )
     else:
         listing_id = None
 
@@ -349,6 +412,34 @@ async def publish_job(
             )
             await db.refresh(pub)
             publications.append(privacy.serialize_publication(pub))
+            success = pub.status in {
+                PublicationJobStatus.published,
+                PublicationJobStatus.scheduled,
+            }
+            await audit_service.record_event(
+                db,
+                company_id=company_id,
+                entity_type="publication_job",
+                entity_id=pub.id,
+                action="publication.success" if success else "publication.failed",
+                after={
+                    "destination_type": "social",
+                    "platform": conn.platform,
+                    "status": pub.status.value,
+                    "job_id": str(job.id),
+                    "last_error": pub.last_error,
+                },
+                private_title=job.title,
+            )
+            await notification_service.notify_social_publication(
+                db,
+                company_id=company_id,
+                job_id=job.id,
+                publication_id=pub.id,
+                platform=conn.platform,
+                success=success,
+                error=pub.last_error,
+            )
 
     now = datetime.now(timezone.utc)
     # Mark job published if anything went live (or scheduled social still counts as action)
@@ -358,6 +449,19 @@ async def publish_job(
     if any_success or publish_to_directory:
         job.status = JobStatus.published
         job.published_at = job.published_at or now
+        await audit_service.record_event(
+            db,
+            company_id=company_id,
+            entity_type="job",
+            entity_id=job.id,
+            action="job.published",
+            after={
+                "status": job.status.value,
+                "destinations": [p.get("destination_type") for p in publications],
+                "publication_count": len(publications),
+            },
+            private_title=job.title,
+        )
 
     await db.commit()
 
@@ -554,6 +658,7 @@ async def list_publications(
     result = await db.execute(
         select(PublicationJob)
         .where(PublicationJob.job_id == job_id)
+        .options(selectinload(PublicationJob.connection))
         .order_by(PublicationJob.created_at.desc())
     )
     return [privacy.serialize_publication(p) for p in result.scalars().all()]
@@ -641,6 +746,30 @@ async def retry_publication(
     else:
         pub.status = PublicationJobStatus.failed
         pub.last_error = result_p.error_message or "Retry failed"
+
+    await audit_service.record_event(
+        db,
+        company_id=company_id,
+        entity_type="publication_job",
+        entity_id=pub.id,
+        action="publication.retry",
+        after={
+            "status": pub.status.value,
+            "attempt_count": pub.attempt_count,
+            "last_error": pub.last_error,
+            "job_id": str(job.id),
+        },
+        private_title=job.title,
+    )
+    await notification_service.notify_social_publication(
+        db,
+        company_id=company_id,
+        job_id=job.id,
+        publication_id=pub.id,
+        platform=conn.platform,
+        success=result_p.success,
+        error=pub.last_error,
+    )
 
     await db.commit()
     await db.refresh(pub)

@@ -21,8 +21,10 @@ from app.db.models import (
     JobStatus,
     MembershipRole,
 )
+from app.modules.audit import service as audit_service
 from app.modules.jobs import service as job_service
 from app.modules.jobs import state as job_state
+from app.modules.notifications import service as notification_service
 
 SOCIAL_CONTENT_TYPES = frozenset(
     {
@@ -357,6 +359,7 @@ async def approve_variant(
         )
 
     now = datetime.now(timezone.utc)
+    before_status = variant.status.value
     variant.status = ContentVariantStatus.approved
     variant.approved_by = user_id
     variant.approved_at = now
@@ -371,6 +374,22 @@ async def approve_variant(
         )
         if not remaining_rejects:
             job.status = JobStatus.awaiting_review
+
+    await audit_service.record_event(
+        db,
+        company_id=company_id,
+        user_id=user_id,
+        entity_type="content_variant",
+        entity_id=variant.id,
+        action="content.approved",
+        before={"status": before_status},
+        after={
+            "status": variant.status.value,
+            "content_type": variant.content_type.value,
+            "job_id": str(job.id),
+        },
+        private_title=job.title,
+    )
 
     await db.commit()
     await db.refresh(variant)
@@ -399,13 +418,13 @@ async def reject_variant(
         return serialize_variant(variant)
 
     now = datetime.now(timezone.utc)
+    before_status = variant.status.value
     variant.status = ContentVariantStatus.rejected
     variant.rejected_at = now
     variant.approved_by = None
     variant.approved_at = None
     # reason not persisted as a column in MVP; ignore or could log later
     _ = reason
-    _ = user_id
 
     # Rejecting any piece pulls job out of approved and into revision
     _clear_job_approval(job)
@@ -415,6 +434,23 @@ async def reject_variant(
         JobStatus.revision_requested,
     }:
         job.status = JobStatus.revision_requested
+
+    await audit_service.record_event(
+        db,
+        company_id=company_id,
+        user_id=user_id,
+        entity_type="content_variant",
+        entity_id=variant.id,
+        action="content.rejected",
+        before={"status": before_status},
+        after={
+            "status": variant.status.value,
+            "content_type": variant.content_type.value,
+            "job_id": str(job.id),
+            "reason": reason,
+        },
+        private_title=job.title,
+    )
 
     await db.commit()
     await db.refresh(variant)
@@ -468,6 +504,19 @@ async def approve_all(
     if readiness.can_approve_job:
         job.status = JobStatus.approved
         job.approved_at = now
+        await audit_service.record_event(
+            db,
+            company_id=company_id,
+            user_id=user_id,
+            entity_type="job",
+            entity_id=job.id,
+            action="job.approved",
+            after={"status": job.status.value, "via": "approve_all"},
+            private_title=job.title,
+        )
+        await notification_service.notify_job_approved(
+            db, company_id=company_id, job_id=job.id, user_id=user_id
+        )
     else:
         # Variants may all be approved but hard media rules fail
         if job.status not in {JobStatus.awaiting_review, JobStatus.revision_requested}:
@@ -517,7 +566,20 @@ async def approve_job(
     now = datetime.now(timezone.utc)
     job.status = JobStatus.approved
     job.approved_at = now
-    _ = user_id
+
+    await audit_service.record_event(
+        db,
+        company_id=company_id,
+        user_id=user_id,
+        entity_type="job",
+        entity_id=job.id,
+        action="job.approved",
+        after={"status": job.status.value, "via": "approve_job"},
+        private_title=job.title,
+    )
+    await notification_service.notify_job_approved(
+        db, company_id=company_id, job_id=job.id, user_id=user_id
+    )
 
     await db.commit()
 

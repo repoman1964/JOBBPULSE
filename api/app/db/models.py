@@ -138,6 +138,18 @@ class PublicationJobStatus(str, enum.Enum):
     scheduled = "scheduled"
 
 
+class NotificationChannel(str, enum.Enum):
+    in_app = "in_app"
+    email = "email"
+
+
+class NotificationStatus(str, enum.Enum):
+    pending = "pending"
+    sent = "sent"
+    read = "read"
+    failed = "failed"
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -175,6 +187,8 @@ class Company(Base):
         String(40), default="trial", index=True, nullable=False
     )
     subscription_plan: Mapped[str] = mapped_column(String(40), default="core", nullable=False)
+    billing_customer_id: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    trial_ends_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     timezone: Mapped[str] = mapped_column(String(64), default="America/New_York", nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
@@ -844,3 +858,69 @@ class PublicationJob(Base):
     job: Mapped[Job] = relationship(back_populates="publication_jobs")
     connection: Mapped[Optional[PublishingConnection]] = relationship(back_populates="publication_jobs")
     content_variant: Mapped[Optional[ContentVariant]] = relationship()
+
+
+class Notification(Base):
+    """In-app (and stub email) notifications for contractors."""
+
+    __tablename__ = "notifications"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    type: Mapped[str] = mapped_column(String(80), index=True, nullable=False)
+    title: Mapped[str] = mapped_column(String(300), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    channel: Mapped[NotificationChannel] = mapped_column(
+        Enum(
+            NotificationChannel,
+            name="notification_channel",
+            values_callable=lambda x: [e.value for e in x],
+        ),
+        default=NotificationChannel.in_app,
+        nullable=False,
+    )
+    status: Mapped[NotificationStatus] = mapped_column(
+        Enum(
+            NotificationStatus,
+            name="notification_status",
+            values_callable=lambda x: [e.value for e in x],
+        ),
+        default=NotificationStatus.pending,
+        index=True,
+        nullable=False,
+    )
+    read_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    sent_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    metadata_json: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class AuditEvent(Base):
+    """Immutable-ish audit trail for sensitive contractor actions."""
+
+    __tablename__ = "audit_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True
+    )
+    entity_type: Mapped[str] = mapped_column(String(80), index=True, nullable=False)
+    entity_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), index=True, nullable=False)
+    action: Mapped[str] = mapped_column(String(100), index=True, nullable=False)
+    before_json: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    after_json: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    ip_address: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    user_agent: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True, nullable=False
+    )
