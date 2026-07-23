@@ -303,3 +303,90 @@ async def test_approved_next_action_is_publish(client: AsyncClient):
     na = res.json()["data"]["next_action"]
     assert na["action"] == "ready_to_publish"
     assert na["cta"] == "Publish"
+
+
+@pytest.mark.asyncio
+async def test_public_paths_use_v2_url_shape(client: AsyncClient):
+    token = await _owner(client)
+    job_id = await _approved_job(client, token)
+    pub = await client.post(f"/api/v1/jobs/{job_id}/publish", headers=_auth(token), json={})
+    assert pub.status_code == 200, pub.text
+    listing = pub.json()["data"]["listing"]
+    assert listing["public_path"] == f"/projects/{listing['slug']}"
+
+    profile = await client.get("/api/v1/directory/profile", headers=_auth(token))
+    contractor_slug = profile.json()["data"]["public_slug"]
+    assert profile.json()["data"]["public_path"] == f"/contractors/{contractor_slug}"
+
+    public = await client.get(f"/api/v1/public/projects/{listing['slug']}")
+    assert public.status_code == 200
+    data = public.json()["data"]
+    assert data["public_path"] == f"/projects/{listing['slug']}"
+    assert data["contractor"]["public_path"] == f"/contractors/{contractor_slug}"
+    assert "primary_image_url" in data or data.get("media")
+
+
+@pytest.mark.asyncio
+async def test_create_lead_persists_with_project_attribution(client: AsyncClient):
+    token = await _owner(client)
+    job_id = await _approved_job(client, token)
+    pub = await client.post(f"/api/v1/jobs/{job_id}/publish", headers=_auth(token), json={})
+    slug = pub.json()["data"]["listing"]["slug"]
+    profile = await client.get("/api/v1/directory/profile", headers=_auth(token))
+    contractor_slug = profile.json()["data"]["public_slug"]
+
+    res = await client.post(
+        "/api/v1/public/leads",
+        json={
+            "contractor_slug": contractor_slug,
+            "name": "Homeowner Pat",
+            "email": "pat@example.com",
+            "phone": "404-555-0100",
+            "message": "Need similar exterior paint",
+            "project_slug": slug,
+            "source_page_type": "project",
+            "source_page_url": f"/projects/{slug}",
+            "preferred_contact_method": "phone",
+        },
+    )
+    assert res.status_code == 200, res.text
+    data = res.json()["data"]
+    assert data["ok"] is True
+    assert data["id"]
+    assert data["contractor_slug"] == contractor_slug
+    assert data["source_project_id"]
+
+
+@pytest.mark.asyncio
+async def test_public_home_and_catalog_endpoints(client: AsyncClient):
+    token = await _owner(client)
+    job_id = await _approved_job(client, token)
+    await client.post(f"/api/v1/jobs/{job_id}/publish", headers=_auth(token), json={})
+
+    home = await client.get("/api/v1/public/home")
+    assert home.status_code == 200, home.text
+    h = home.json()["data"]
+    assert len(h["recent_projects"]) >= 1
+    assert "popular_services" in h
+    assert "popular_locations" in h
+
+    services = await client.get("/api/v1/public/services")
+    assert services.status_code == 200
+    svc_items = services.json()["data"]["items"]
+    assert len(svc_items) >= 1
+    svc_slug = svc_items[0]["slug"]
+    svc = await client.get(f"/api/v1/public/services/{svc_slug}")
+    assert svc.status_code == 200
+    assert len(svc.json()["data"]["projects"]) >= 1
+
+    locations = await client.get("/api/v1/public/locations")
+    assert locations.status_code == 200
+    loc_items = locations.json()["data"]["items"]
+    assert len(loc_items) >= 1
+    loc = await client.get(f"/api/v1/public/locations/{loc_items[0]['slug']}")
+    assert loc.status_code == 200
+    assert len(loc.json()["data"]["projects"]) >= 1
+
+    search = await client.get("/api/v1/public/search", params={"q": "paint"})
+    assert search.status_code == 200
+    assert "projects" in search.json()["data"]

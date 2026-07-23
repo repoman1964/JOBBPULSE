@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -20,6 +20,8 @@ from app.db.models import (
     ContentVariant,
     ContentVariantStatus,
     ContractorProfile,
+    DirectoryLead,
+    DirectoryLeadStatus,
     DirectoryListing,
     DirectoryListingMedia,
     DirectoryListingStatus,
@@ -34,6 +36,14 @@ from app.db.models import (
 from app.modules.audit import service as audit_service
 from app.modules.content.service import assert_job_publishable, effective_body
 from app.modules.directory import privacy
+from app.modules.directory.catalog import (
+    location_slug,
+    parse_location_slug,
+    service_description,
+    service_display_name,
+    service_key_from_slug,
+    service_slug,
+)
 from app.modules.jobs import service as job_service
 from app.modules.jobs import state as job_state
 
@@ -578,15 +588,58 @@ async def unpublish_for_job(
 # ---- Public API ----
 
 
+def _listing_query_options(*, with_media: bool = True):
+    opts = [
+        selectinload(DirectoryListing.contractor_profile).selectinload(ContractorProfile.company),
+    ]
+    if with_media:
+        opts.append(
+            selectinload(DirectoryListing.media_links).selectinload(DirectoryListingMedia.media_asset)
+        )
+    return opts
+
+
+async def _published_listings_for_profile(
+    db: AsyncSession, profile_id: UUID, *, limit: int = 20, offset: int = 0
+) -> list[DirectoryListing]:
+    result = await db.execute(
+        select(DirectoryListing)
+        .where(
+            DirectoryListing.contractor_profile_id == profile_id,
+            DirectoryListing.status == DirectoryListingStatus.published,
+        )
+        .options(*_listing_query_options(with_media=True))
+        .order_by(DirectoryListing.published_at.desc().nullslast())
+        .limit(limit)
+        .offset(offset)
+    )
+    return list(result.scalars().all())
+
+
+async def _count_published_for_profile(db: AsyncSession, profile_id: UUID) -> int:
+    result = await db.execute(
+        select(func.count())
+        .select_from(DirectoryListing)
+        .where(
+            DirectoryListing.contractor_profile_id == profile_id,
+            DirectoryListing.status == DirectoryListingStatus.published,
+        )
+    )
+    return int(result.scalar_one() or 0)
+
+
 async def public_list_contractors(
     db: AsyncSession,
     *,
     city: Optional[str] = None,
     state: Optional[str] = None,
     trade: Optional[str] = None,
+    service_key: Optional[str] = None,
+    featured: Optional[bool] = None,
     limit: int = 20,
     offset: int = 0,
 ) -> list[dict]:
+    limit = min(max(limit, 1), 50)
     q = (
         select(ContractorProfile)
         .join(Company, Company.id == ContractorProfile.company_id)
@@ -595,12 +648,17 @@ async def public_list_contractors(
             selectinload(ContractorProfile.company).selectinload(Company.services),
             selectinload(ContractorProfile.company).selectinload(Company.service_areas),
         )
-        .order_by(ContractorProfile.updated_at.desc())
+        .order_by(
+            ContractorProfile.featured.desc(),
+            ContractorProfile.updated_at.desc(),
+        )
         .limit(limit)
         .offset(offset)
     )
     if trade:
         q = q.where(Company.trade.ilike(trade))
+    if featured is True:
+        q = q.where(ContractorProfile.featured.is_(True))
     result = await db.execute(q)
     profiles = list(result.scalars().all())
 
@@ -608,16 +666,14 @@ async def public_list_contractors(
     for profile in profiles:
         company = profile.company
         if city or state:
-            # Filter by service areas or listings
             areas = company.service_areas or []
             match_area = any(
                 (not city or (a.city and a.city.lower() == city.lower()))
                 and (not state or (a.state and a.state.lower() == state.lower()))
                 for a in areas
             )
-            if not match_area and areas:
-                # Also check published listings
-                listings = await _published_listings_for_profile(db, profile.id, limit=1)
+            if not match_area:
+                listings = await _published_listings_for_profile(db, profile.id, limit=5)
                 match_listing = any(
                     (not city or (l.city and l.city.lower() == city.lower()))
                     and (not state or (l.state and l.state.lower() == state.lower()))
@@ -625,20 +681,36 @@ async def public_list_contractors(
                 )
                 if not match_listing:
                     continue
-            elif not match_area and not areas:
-                continue
-        projects = await _published_listings_for_profile(db, profile.id, limit=5)
+        if service_key:
+            projects_check = await _published_listings_for_profile(db, profile.id, limit=50)
+            if not any(p.service_key == service_key for p in projects_check):
+                # also company services
+                if not any(s.service_key == service_key for s in (company.services or [])):
+                    continue
+            projects = [p for p in projects_check if p.service_key == service_key][:5]
+            if not projects:
+                projects = projects_check[:5]
+        else:
+            projects = await _published_listings_for_profile(db, profile.id, limit=5)
+        count = await _count_published_for_profile(db, profile.id)
         out.append(
             privacy.public_contractor_payload(
                 profile,
                 company,
                 recent_projects=projects,
+                project_count=count,
             )
         )
     return out
 
 
-async def public_get_contractor(db: AsyncSession, slug: str) -> dict:
+async def public_get_contractor(
+    db: AsyncSession,
+    slug: str,
+    *,
+    project_limit: int = 50,
+    project_offset: int = 0,
+) -> dict:
     result = await db.execute(
         select(ContractorProfile)
         .where(ContractorProfile.public_slug == slug, ContractorProfile.published.is_(True))
@@ -650,67 +722,112 @@ async def public_get_contractor(db: AsyncSession, slug: str) -> dict:
     profile = result.scalar_one_or_none()
     if profile is None or not profile.company or not profile.company.is_active:
         raise not_found("CONTRACTOR_NOT_FOUND", "Contractor not found.")
-    projects = await _published_listings_for_profile(db, profile.id, limit=20)
-    return privacy.public_contractor_payload(profile, profile.company, recent_projects=projects)
-
-
-async def _published_listings_for_profile(
-    db: AsyncSession, profile_id: UUID, *, limit: int = 20
-) -> list[DirectoryListing]:
-    result = await db.execute(
-        select(DirectoryListing)
-        .where(
-            DirectoryListing.contractor_profile_id == profile_id,
-            DirectoryListing.status == DirectoryListingStatus.published,
-        )
-        .options(
-            selectinload(DirectoryListing.media_links).selectinload(DirectoryListingMedia.media_asset),
-            selectinload(DirectoryListing.contractor_profile),
-        )
-        .order_by(DirectoryListing.published_at.desc().nullslast())
-        .limit(limit)
+    projects = await _published_listings_for_profile(
+        db, profile.id, limit=project_limit, offset=project_offset
     )
-    return list(result.scalars().all())
+    count = await _count_published_for_profile(db, profile.id)
+    return privacy.public_contractor_payload(
+        profile,
+        profile.company,
+        recent_projects=projects,
+        project_count=count,
+    )
 
 
 async def public_list_projects(
     db: AsyncSession,
     *,
+    q: Optional[str] = None,
     city: Optional[str] = None,
     state: Optional[str] = None,
     service_key: Optional[str] = None,
+    contractor_slug: Optional[str] = None,
+    featured: Optional[bool] = None,
+    has_before_after: Optional[bool] = None,
     limit: int = 20,
     offset: int = 0,
 ) -> list[dict]:
-    # List endpoints skip media joins (summaries only) for performance.
     limit = min(max(limit, 1), 50)
-    q = (
+    query = (
         select(DirectoryListing)
         .where(DirectoryListing.status == DirectoryListingStatus.published)
-        .options(
-            selectinload(DirectoryListing.contractor_profile).selectinload(ContractorProfile.company),
+        .options(*_listing_query_options(with_media=True))
+        .order_by(
+            DirectoryListing.featured.desc(),
+            DirectoryListing.published_at.desc().nullslast(),
         )
-        .order_by(DirectoryListing.published_at.desc().nullslast())
         .limit(limit)
         .offset(offset)
     )
     if city:
-        q = q.where(DirectoryListing.city.ilike(city))
+        query = query.where(DirectoryListing.city.ilike(city))
     if state:
-        q = q.where(DirectoryListing.state.ilike(state))
+        query = query.where(DirectoryListing.state.ilike(state))
     if service_key:
-        q = q.where(DirectoryListing.service_key == service_key)
-    result = await db.execute(q)
-    listings = list(result.scalars().all())
-    return [
-        privacy.public_project_payload(
-            l,
-            include_media=False,
-            contractor=l.contractor_profile,
-            company=l.contractor_profile.company if l.contractor_profile else None,
+        # Accept slug or raw key
+        key = service_key_from_slug(service_key) if "-" in service_key else service_key
+        query = query.where(
+            or_(
+                DirectoryListing.service_key == key,
+                DirectoryListing.service_key == service_key,
+            )
         )
-        for l in listings
-    ]
+    if featured is True:
+        query = query.where(DirectoryListing.featured.is_(True))
+    needs_profile_join = bool(contractor_slug or q)
+    if needs_profile_join:
+        query = query.join(
+            ContractorProfile, ContractorProfile.id == DirectoryListing.contractor_profile_id
+        ).outerjoin(Company, Company.id == ContractorProfile.company_id)
+    if contractor_slug:
+        query = query.where(ContractorProfile.public_slug == contractor_slug)
+    if q:
+        term = f"%{q.strip()}%"
+        query = query.where(
+            or_(
+                DirectoryListing.public_title.ilike(term),
+                DirectoryListing.public_summary.ilike(term),
+                DirectoryListing.service_key.ilike(term),
+                DirectoryListing.city.ilike(term),
+                Company.name.ilike(term),
+            )
+        )
+    result = await db.execute(query)
+    listings = list(result.scalars().unique().all())
+    cards: list[dict] = []
+    for listing in listings:
+        card = privacy.public_project_card(
+            listing,
+            company=listing.contractor_profile.company if listing.contractor_profile else None,
+        )
+        if has_before_after is True and not card.get("has_before_after"):
+            continue
+        cards.append(card)
+    return cards
+
+
+async def _related_projects(
+    db: AsyncSession,
+    listing: DirectoryListing,
+    *,
+    limit: int = 4,
+) -> dict[str, list[dict]]:
+    async def _fetch(**filters) -> list[dict]:
+        items = await public_list_projects(db, limit=limit + 2, **filters)
+        return [i for i in items if i["slug"] != listing.slug][:limit]
+
+    same_contractor: list[dict] = []
+    if listing.contractor_profile:
+        same_contractor = await _fetch(contractor_slug=listing.contractor_profile.public_slug)
+    same_city = await _fetch(city=listing.city) if listing.city else []
+    same_service = await _fetch(service_key=listing.service_key) if listing.service_key else []
+    nearby = await _fetch(state=listing.state) if listing.state else []
+    return {
+        "same_contractor": same_contractor,
+        "same_city": same_city,
+        "same_service": same_service,
+        "nearby": nearby,
+    }
 
 
 async def public_get_project(db: AsyncSession, slug: str) -> dict:
@@ -720,22 +837,303 @@ async def public_get_project(db: AsyncSession, slug: str) -> dict:
             DirectoryListing.slug == slug,
             DirectoryListing.status == DirectoryListingStatus.published,
         )
-        .options(
-            selectinload(DirectoryListing.media_links).selectinload(DirectoryListingMedia.media_asset),
-            selectinload(DirectoryListing.contractor_profile).selectinload(ContractorProfile.company),
-        )
+        .options(*_listing_query_options(with_media=True))
     )
     listing = result.scalar_one_or_none()
     if listing is None:
         raise not_found("PROJECT_NOT_FOUND", "Project not found.")
+    related = await _related_projects(db, listing)
     return privacy.public_project_payload(
         listing,
         contractor=listing.contractor_profile,
         company=listing.contractor_profile.company if listing.contractor_profile else None,
+        related=related,
     )
 
 
-async def create_lead_stub(
+async def public_list_services(db: AsyncSession) -> list[dict]:
+    result = await db.execute(
+        select(
+            DirectoryListing.service_key,
+            func.count().label("project_count"),
+        )
+        .where(
+            DirectoryListing.status == DirectoryListingStatus.published,
+            DirectoryListing.service_key.is_not(None),
+        )
+        .group_by(DirectoryListing.service_key)
+        .order_by(func.count().desc())
+    )
+    rows = result.all()
+    out: list[dict] = []
+    for service_key, count in rows:
+        if not service_key:
+            continue
+        out.append(
+            {
+                "service_key": service_key,
+                "slug": service_slug(service_key),
+                "name": service_display_name(service_key),
+                "description": service_description(service_key),
+                "project_count": int(count),
+                "public_path": f"/services/{service_slug(service_key)}",
+            }
+        )
+    return out
+
+
+async def public_get_service(db: AsyncSession, slug: str) -> dict:
+    key = service_key_from_slug(slug)
+    # Match either exact key or slugified form against inventory
+    services = await public_list_services(db)
+    match = next((s for s in services if s["slug"] == service_slug(slug) or s["service_key"] == key), None)
+    if match is None:
+        # Try loose match on slug
+        match = next((s for s in services if s["slug"] == slug or service_slug(s["service_key"]) == slug), None)
+    if match is None:
+        raise not_found("SERVICE_NOT_FOUND", "No published projects for this service.")
+    service_key = match["service_key"]
+    projects = await public_list_projects(db, service_key=service_key, limit=24)
+    contractors = await public_list_contractors(db, service_key=service_key, limit=12)
+    # Locations for this service
+    loc_result = await db.execute(
+        select(
+            DirectoryListing.city,
+            DirectoryListing.state,
+            func.count().label("project_count"),
+        )
+        .where(
+            DirectoryListing.status == DirectoryListingStatus.published,
+            DirectoryListing.service_key == service_key,
+            DirectoryListing.city.is_not(None),
+        )
+        .group_by(DirectoryListing.city, DirectoryListing.state)
+        .order_by(func.count().desc())
+        .limit(20)
+    )
+    locations = [
+        {
+            "city": city,
+            "state": state,
+            "slug": location_slug(city, state),
+            "project_count": int(count),
+            "public_path": f"/locations/{location_slug(city, state)}/{service_slug(service_key)}",
+        }
+        for city, state, count in loc_result.all()
+        if city
+    ]
+    return {
+        **match,
+        "projects": projects,
+        "contractors": contractors,
+        "locations": locations,
+    }
+
+
+async def public_list_locations(db: AsyncSession) -> list[dict]:
+    result = await db.execute(
+        select(
+            DirectoryListing.city,
+            DirectoryListing.state,
+            func.count().label("project_count"),
+        )
+        .where(
+            DirectoryListing.status == DirectoryListingStatus.published,
+            DirectoryListing.city.is_not(None),
+        )
+        .group_by(DirectoryListing.city, DirectoryListing.state)
+        .order_by(func.count().desc())
+    )
+    out: list[dict] = []
+    for city, state, count in result.all():
+        if not city:
+            continue
+        slug = location_slug(city, state)
+        out.append(
+            {
+                "city": city,
+                "state": state,
+                "slug": slug,
+                "name": f"{city}{', ' + state if state else ''}",
+                "project_count": int(count),
+                "public_path": f"/locations/{slug}",
+            }
+        )
+    return out
+
+
+async def public_get_location(db: AsyncSession, slug: str) -> dict:
+    city, state = parse_location_slug(slug)
+    # Prefer exact inventory match on slug
+    locations = await public_list_locations(db)
+    match = next((loc for loc in locations if loc["slug"] == slug), None)
+    if match is None and city:
+        match = next(
+            (
+                loc
+                for loc in locations
+                if loc["city"]
+                and loc["city"].lower() == city.lower()
+                and (not state or (loc["state"] and loc["state"].lower() == state.lower()))
+            ),
+            None,
+        )
+    if match is None:
+        raise not_found("LOCATION_NOT_FOUND", "No published projects in this location.")
+    projects = await public_list_projects(
+        db, city=match["city"], state=match.get("state"), limit=24
+    )
+    contractors = await public_list_contractors(
+        db, city=match["city"], state=match.get("state"), limit=12
+    )
+    svc_result = await db.execute(
+        select(DirectoryListing.service_key, func.count().label("project_count"))
+        .where(
+            DirectoryListing.status == DirectoryListingStatus.published,
+            DirectoryListing.city.ilike(match["city"]),
+            DirectoryListing.service_key.is_not(None),
+        )
+        .group_by(DirectoryListing.service_key)
+        .order_by(func.count().desc())
+    )
+    services = [
+        {
+            "service_key": sk,
+            "slug": service_slug(sk),
+            "name": service_display_name(sk),
+            "project_count": int(count),
+            "public_path": f"/locations/{match['slug']}/{service_slug(sk)}",
+        }
+        for sk, count in svc_result.all()
+        if sk
+    ]
+    return {
+        **match,
+        "projects": projects,
+        "contractors": contractors,
+        "services": services,
+    }
+
+
+async def public_get_location_service(db: AsyncSession, location_slug_value: str, service_slug_value: str) -> dict:
+    loc = await public_get_location(db, location_slug_value)
+    key = service_key_from_slug(service_slug_value)
+    projects = await public_list_projects(
+        db,
+        city=loc["city"],
+        state=loc.get("state"),
+        service_key=key,
+        limit=24,
+    )
+    if not projects:
+        # try raw slug as service_key
+        projects = await public_list_projects(
+            db,
+            city=loc["city"],
+            state=loc.get("state"),
+            service_key=service_slug_value,
+            limit=24,
+        )
+    if not projects:
+        raise not_found(
+            "LOCATION_SERVICE_NOT_FOUND",
+            "No published projects for this service in this location.",
+        )
+    contractors = await public_list_contractors(
+        db, city=loc["city"], state=loc.get("state"), service_key=key, limit=12
+    )
+    resolved_key = projects[0].get("service_key") or key
+    return {
+        "location": {
+            "city": loc["city"],
+            "state": loc.get("state"),
+            "slug": loc["slug"],
+            "name": loc["name"],
+            "public_path": loc["public_path"],
+        },
+        "service": {
+            "service_key": resolved_key,
+            "slug": service_slug(resolved_key),
+            "name": service_display_name(resolved_key),
+            "description": service_description(resolved_key),
+            "public_path": f"/services/{service_slug(resolved_key)}",
+        },
+        "title": f"{service_display_name(resolved_key)} Projects in {loc['name']}",
+        "project_count": len(projects),
+        "projects": projects,
+        "contractors": contractors,
+        "public_path": f"/locations/{loc['slug']}/{service_slug(resolved_key)}",
+    }
+
+
+async def public_search(
+    db: AsyncSession,
+    *,
+    q: Optional[str] = None,
+    city: Optional[str] = None,
+    state: Optional[str] = None,
+    service_key: Optional[str] = None,
+    contractor_slug: Optional[str] = None,
+    limit: int = 20,
+    offset: int = 0,
+) -> dict:
+    projects = await public_list_projects(
+        db,
+        q=q,
+        city=city,
+        state=state,
+        service_key=service_key,
+        contractor_slug=contractor_slug,
+        limit=limit,
+        offset=offset,
+    )
+    contractors: list[dict] = []
+    if q or city or state or service_key:
+        contractors = await public_list_contractors(
+            db,
+            city=city,
+            state=state,
+            service_key=service_key,
+            limit=min(limit, 10),
+        )
+        if q:
+            term = q.strip().lower()
+            contractors = [
+                c
+                for c in contractors
+                if term in (c.get("company_name") or "").lower()
+                or term in (c.get("headline") or "").lower()
+                or term in (c.get("trade") or "").lower()
+            ]
+    return {
+        "query": q,
+        "projects": projects,
+        "contractors": contractors,
+        "limit": limit,
+        "offset": offset,
+    }
+
+
+async def public_home(db: AsyncSession) -> dict:
+    recent = await public_list_projects(db, limit=12)
+    featured_projects = await public_list_projects(db, featured=True, limit=6)
+    if not featured_projects:
+        featured_projects = recent[:6]
+    featured_contractors = await public_list_contractors(db, featured=True, limit=6)
+    if not featured_contractors:
+        featured_contractors = await public_list_contractors(db, limit=6)
+    services = await public_list_services(db)
+    locations = await public_list_locations(db)
+    return {
+        "recent_projects": recent,
+        "featured_projects": featured_projects,
+        "featured_contractors": featured_contractors,
+        "popular_services": services[:8],
+        "popular_locations": locations[:8],
+    }
+
+
+async def create_lead(
     db: AsyncSession,
     *,
     contractor_slug: str,
@@ -744,13 +1142,26 @@ async def create_lead_stub(
     phone: Optional[str] = None,
     message: Optional[str] = None,
     project_slug: Optional[str] = None,
+    project_location: Optional[str] = None,
+    service_requested: Optional[str] = None,
+    preferred_contact_method: Optional[str] = None,
+    source_page_type: Optional[str] = None,
+    source_page_url: Optional[str] = None,
 ) -> dict:
-    """MVP lead form: validate contractor exists; log and return ack (no CRM)."""
+    """Persist a homeowner lead with project/page attribution."""
+    if not email and not phone:
+        raise AppError(
+            "CONTACT_REQUIRED",
+            "Provide at least an email or phone number.",
+            status_code=400,
+        )
     result = await db.execute(
-        select(ContractorProfile).where(
+        select(ContractorProfile)
+        .where(
             ContractorProfile.public_slug == contractor_slug,
             ContractorProfile.published.is_(True),
         )
+        .options(selectinload(ContractorProfile.company))
     )
     profile = result.scalar_one_or_none()
     if profile is None:
@@ -761,17 +1172,58 @@ async def create_lead_stub(
             "This contractor is not accepting leads right now.",
             status_code=400,
         )
+
+    source_project_id = None
+    if project_slug:
+        listing_result = await db.execute(
+            select(DirectoryListing).where(
+                DirectoryListing.slug == project_slug,
+                DirectoryListing.status == DirectoryListingStatus.published,
+            )
+        )
+        listing = listing_result.scalar_one_or_none()
+        if listing is not None:
+            source_project_id = listing.id
+            if not service_requested and listing.service_key:
+                service_requested = listing.service_key
+            if not project_location and listing.location_display:
+                project_location = listing.location_display
+
+    lead = DirectoryLead(
+        contractor_profile_id=profile.id,
+        company_id=profile.company_id,
+        source_project_id=source_project_id,
+        source_page_type=source_page_type,
+        source_page_url=source_page_url,
+        name=name.strip(),
+        phone=phone,
+        email=email,
+        project_location=project_location,
+        service_requested=service_requested,
+        message=message,
+        preferred_contact_method=preferred_contact_method,
+        lead_status=DirectoryLeadStatus.new,
+    )
+    db.add(lead)
+    await db.commit()
+    await db.refresh(lead)
+
     logger.info(
-        "directory_lead contractor=%s name=%s email=%s phone=%s project=%s message=%s",
+        "directory_lead id=%s contractor=%s project=%s name=%s",
+        lead.id,
         contractor_slug,
-        name,
-        email,
-        phone,
         project_slug,
-        (message or "")[:200],
+        name,
     )
     return {
         "ok": True,
+        "id": str(lead.id),
         "message": "Thanks — your message was received.",
         "contractor_slug": contractor_slug,
+        "source_project_id": str(source_project_id) if source_project_id else None,
     }
+
+
+# Backward-compatible alias
+async def create_lead_stub(db: AsyncSession, **kwargs) -> dict:
+    return await create_lead(db, **kwargs)

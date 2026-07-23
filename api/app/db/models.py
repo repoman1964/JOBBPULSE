@@ -661,6 +661,7 @@ class ContractorProfile(Base):
     website_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     lead_form_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     published: Mapped[bool] = mapped_column(Boolean, default=False, index=True, nullable=False)
+    featured: Mapped[bool] = mapped_column(Boolean, default=False, index=True, nullable=False)
     seo_title: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
     seo_description: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -672,6 +673,7 @@ class ContractorProfile(Base):
 
     company: Mapped[Company] = relationship(back_populates="contractor_profile")
     listings: Mapped[list["DirectoryListing"]] = relationship(back_populates="contractor_profile")
+    leads: Mapped[list["DirectoryLead"]] = relationship(back_populates="contractor_profile")
 
 
 class DirectoryListing(Base):
@@ -716,6 +718,7 @@ class DirectoryListing(Base):
     )
     published_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     unpublished_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    featured: Mapped[bool] = mapped_column(Boolean, default=False, index=True, nullable=False)
     seo_title: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
     seo_description: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     structured_data_json: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
@@ -733,6 +736,7 @@ class DirectoryListing(Base):
         cascade="all, delete-orphan",
         order_by="DirectoryListingMedia.display_order",
     )
+    leads: Mapped[list["DirectoryLead"]] = relationship(back_populates="source_project")
 
 
 class DirectoryListingMedia(Base):
@@ -761,6 +765,63 @@ class DirectoryListingMedia(Base):
 
     listing: Mapped[DirectoryListing] = relationship(back_populates="media_links")
     media_asset: Mapped[MediaAsset] = relationship()
+
+
+class DirectoryLeadStatus(str, enum.Enum):
+    new = "new"
+    contacted = "contacted"
+    booked = "booked"
+    won = "won"
+    lost = "lost"
+    spam = "spam"
+
+
+class DirectoryLead(Base):
+    """Homeowner inquiry routed to a contractor from a public portfolio page."""
+
+    __tablename__ = "directory_leads"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    contractor_profile_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("contractor_profiles.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    source_project_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("directory_listings.id", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
+    )
+    source_page_type: Mapped[Optional[str]] = mapped_column(String(60), nullable=True)
+    source_page_url: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    phone: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    email: Mapped[Optional[str]] = mapped_column(String(320), nullable=True)
+    project_location: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    service_requested: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    preferred_contact_method: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    lead_status: Mapped[DirectoryLeadStatus] = mapped_column(
+        Enum(
+            DirectoryLeadStatus,
+            name="directory_lead_status",
+            values_callable=lambda x: [e.value for e in x],
+        ),
+        default=DirectoryLeadStatus.new,
+        index=True,
+        nullable=False,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    contractor_profile: Mapped[ContractorProfile] = relationship(back_populates="leads")
+    source_project: Mapped[Optional[DirectoryListing]] = relationship(back_populates="leads")
 
 
 class PublishingConnection(Base):

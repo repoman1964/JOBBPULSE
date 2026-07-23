@@ -14,7 +14,8 @@ Core loop:
 |---|---|
 | `api/` | FastAPI modular monolith (PostgreSQL, Redis, S3) |
 | `mobile_app/` | Contractor phone-first Nuxt app (browser / PWA for MVP) |
-| `directory/` | Public local directory (Nuxt SSR) |
+| `directory_v2/` | Public local project portfolio (Nuxt SSR) |
+| `directory_v1/` | Archived earlier directory UI (do not use for new work) |
 | `infra/` | Docker Compose for local dependencies |
 | `legacy/` | **Frozen prototype** — reference only, not production |
 | `docs/` | Product docs (PRD + build spec) |
@@ -45,8 +46,9 @@ make mobile-install
 make mobile-dev
 # → http://localhost:3000
 
-# 4. Public directory
+# 4. Public project portfolio (directory_v2)
 make directory-install
+make directory-seed   # optional Georgia demo inventory
 make directory-dev
 # → http://localhost:3001
 ```

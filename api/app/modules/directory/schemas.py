@@ -44,3 +44,8 @@ class LeadCreate(BaseModel):
     phone: Optional[str] = Field(default=None, max_length=40)
     message: Optional[str] = Field(default=None, max_length=2000)
     project_slug: Optional[str] = Field(default=None, max_length=220)
+    project_location: Optional[str] = Field(default=None, max_length=200)
+    service_requested: Optional[str] = Field(default=None, max_length=100)
+    preferred_contact_method: Optional[str] = Field(default=None, max_length=40)
+    source_page_type: Optional[str] = Field(default=None, max_length=60)
+    source_page_url: Optional[str] = Field(default=None, max_length=1000)

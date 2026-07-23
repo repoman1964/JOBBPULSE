@@ -25,6 +25,7 @@ TRUNCATE TABLE
   notifications,
   publication_jobs,
   publishing_connections,
+  directory_leads,
   directory_listing_media,
   directory_listings,
   contractor_profiles,
