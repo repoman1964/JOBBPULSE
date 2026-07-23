@@ -24,4 +24,16 @@ export default defineNuxtConfig({
     },
   },
   css: ['~/assets/css/main.css'],
+  // Allow temporary tunnel hosts (ngrok / cloudflare quick tunnels) for dev demos
+  vite: {
+    server: {
+      allowedHosts: true,
+    },
+  },
+  nitro: {
+    // SSR / reverse-proxy host header acceptance in some Nuxt versions
+    experimental: {
+      websocket: false,
+    },
+  },
 })
