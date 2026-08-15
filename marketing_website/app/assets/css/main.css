@@ -537,21 +537,6 @@ p {
   margin-top: 28px;
 }
 
-.close-beats {
-  display: grid;
-  gap: 12px;
-  margin: 36px 0 8px;
-}
-
-.close-beats p {
-  margin: 0;
-  padding: 16px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  color: var(--cream);
-  font-weight: 700;
-}
-
 .close-list {
   margin-top: 32px;
 }
@@ -625,11 +610,6 @@ p {
 
   .hero-grid {
     grid-template-columns: 1.05fr 0.95fr;
-  }
-
-  .close-beats {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
   }
 
   .output-grid {

@@ -308,11 +308,6 @@ const trades = [
           website, and a project page a homeowner can actually look at — and helps you stay on top
           of the opportunities that marketing creates.
         </p>
-        <div class="close-beats">
-          <p>Finish the job.</p>
-          <p>Take the pictures.</p>
-          <p>Talk for about 30 seconds.</p>
-        </div>
         <ul class="no-list close-list">
           <li>No content calendar.</li>
           <li>No writing captions at night.</li>
