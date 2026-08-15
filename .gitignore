@@ -13,6 +13,7 @@ node_modules/
 .nuxt/
 .output/
 dist/
+.wrangler/
 *.log
 
 # Env / secrets

@@ -1,8 +1,8 @@
-# JobPulse
+# JobbPulse
 
 Contractor-first **job-to-marketing** platform for visual home-service businesses.
 
-> Finish the job. Show JobPulse what you did. JobPulse turns it into marketing.
+> Finish the job. Show JobbPulse what you did. JobbPulse turns it into marketing.
 
 Core loop:
 
@@ -17,6 +17,7 @@ Core loop:
 | `contractor_app/` | Newest contractor app (Nuxt frontend + its own FastAPI engine) |
 | `portfolio_website/` | Public local project portfolio (Nuxt SSR) |
 | `red_clay_website/` | Red Clay Cabinet Installers demo marketing site |
+| `marketing_website/` | One-page JobbPulse sales landing page |
 | `legacy/` | **Frozen prototype** — reference only, not production |
 | `docs/` | Product docs (PRD + build spec) |
 | `jobpulse_prd.md` | Product requirements |
@@ -53,7 +54,9 @@ Its Docker API also binds **:8000**, same as `make api-dev`. Do not run both API
 
 The **public project portfolio** is `portfolio_website/`. From there: `make install && make dev` → http://localhost:3001
 
-The **Red Clay Cabinet Installers** demo marketing site is `red_clay_website/`. It consumes JobPulse’s public API when both are running.
+The **Red Clay Cabinet Installers** demo marketing site is `red_clay_website/`. It consumes JobbPulse’s public API when both are running.
+
+The **JobbPulse sales landing page** is `marketing_website/`. From there: `make install && make dev` → http://localhost:3003. Production deploys as Cloudflare Worker **`jobbpulse-website`** (`make -C marketing_website deploy`).
 
 
 ### Local infra ports
