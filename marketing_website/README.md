@@ -42,7 +42,7 @@ In the [Cloudflare dashboard](https://dash.cloudflare.com) → **Workers & Pages
 | **Production branch** | `main` |
 | **Root directory** | `marketing_website` |
 | **Build command** | `npm run generate` |
-| **Deploy command** | `npx wrangler deploy` |
+| **Deploy command** | `npx wrangler deploy --config wrangler.jsonc` |
 | **Non-production deploy** (optional) | `npx wrangler versions upload` |
 | **Build watch paths (include)** | `marketing_website/**` |
 

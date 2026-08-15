@@ -39,6 +39,12 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
+    // Workers Builds auto-selects cloudflare-module when wrangler.jsonc exists.
+    // This site is prerendered assets only (same as dailydialz-website).
+    preset: 'static',
+    cloudflare: {
+      deployConfig: false,
+    },
     prerender: {
       crawlLinks: true,
       routes: ['/', '/privacy', '/terms'],
