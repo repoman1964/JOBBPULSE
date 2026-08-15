@@ -4,7 +4,7 @@ One-page sales site. Not a full marketing website.
 
 Warm paper, ink type, and clay accents on the page. Dark charcoal and electric lime stay on the Contractor App screenshots.
 
-Deploy target: Cloudflare Workers — Worker name `jobbpulse-website`.
+Deploy target: Cloudflare Workers — Worker name `jobbpulse-website`, domain `jobbpulse.com`.
 
 ## Quick start
 
