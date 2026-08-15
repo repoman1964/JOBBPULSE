@@ -1,13 +1,7 @@
 <script setup lang="ts">
 const config = useRuntimeConfig()
-const email = config.public.contactEmail as string
 const vslUrl = config.public.vslUrl as string
 const vslPoster = config.public.vslPoster as string
-
-const name = ref('')
-const fromEmail = ref('')
-const trade = ref('Painting')
-const note = ref('')
 
 const trades = [
   'Painting',
@@ -19,14 +13,6 @@ const trades = [
   'Roofing',
   'Remodeling',
 ]
-
-const mailto = computed(() => {
-  const subject = encodeURIComponent('JobbPulse demo request')
-  const body = encodeURIComponent(
-    `Name: ${name.value}\nEmail: ${fromEmail.value}\nTrade: ${trade.value}\n\n${note.value}`,
-  )
-  return `mailto:${email}?subject=${subject}&body=${body}`
-})
 </script>
 
 <template>
@@ -310,49 +296,34 @@ const mailto = computed(() => {
     </section>
 
     <section class="section close" id="demo">
-      <div class="container close-grid">
-        <div class="close-copy stack">
-          <p class="eyebrow">Start simple</p>
-          <h2>You do the work. JobbPulse makes sure the next customer sees it.</h2>
+      <div class="container close-copy">
+        <p class="eyebrow">Start simple</p>
+        <h2>You do the work. JobbPulse makes sure the next customer sees it.</h2>
+        <p class="close-lead">
+          Finish the job. Take the pictures. Talk for about 30 seconds. Then get back to the next
+          driveway.
+        </p>
+        <p>
+          JobbPulse turns the work you already did into ongoing marketing — social posts, a fresher
+          website, and a project page a homeowner can actually look at — and helps you stay on top
+          of the opportunities that marketing creates.
+        </p>
+        <div class="close-beats">
           <p>Finish the job.</p>
           <p>Take the pictures.</p>
           <p>Talk for about 30 seconds.</p>
-          <p>
-            JobbPulse turns the work you already did into ongoing marketing — and helps you stay
-            on top of the opportunities that marketing creates.
-          </p>
-          <ul class="no-list">
-            <li>No content calendar.</li>
-            <li>No writing captions at night.</li>
-            <li>No remembering to update the website.</li>
-            <li>No complicated marketing system to operate.</li>
-          </ul>
-          <p>Just keep doing good work.</p>
-          <p>We’ll help make sure people see it.</p>
-          <p class="hero-note">A few taps. About 30 seconds. Back to work.</p>
         </div>
-        <form class="form" @submit.prevent>
-          <label>
-            Name
-            <input v-model="name" type="text" name="name" autocomplete="name">
-          </label>
-          <label>
-            Email
-            <input v-model="fromEmail" type="email" name="email" autocomplete="email" required>
-          </label>
-          <label>
-            Trade
-            <select v-model="trade">
-              <option v-for="item in trades" :key="item" :value="item">{{ item }}</option>
-            </select>
-          </label>
-          <label>
-            Anything we should know
-            <textarea v-model="note" name="note" />
-          </label>
-          <a class="btn btn-primary btn-block" href="#watch">See JobbPulse in action</a>
-          <a class="link-quiet" :href="mailto">Or request a demo by email</a>
-        </form>
+        <ul class="no-list close-list">
+          <li>No content calendar.</li>
+          <li>No writing captions at night.</li>
+          <li>No remembering to update the website.</li>
+          <li>No complicated marketing system to operate.</li>
+        </ul>
+        <p>Just keep doing good work. We’ll help make sure people see it.</p>
+        <p class="hero-note">A few taps. About 30 seconds. Back to work.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#watch">See JobbPulse in action</a>
+        </div>
       </div>
     </section>
   </div>

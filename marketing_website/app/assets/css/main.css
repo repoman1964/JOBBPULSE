@@ -501,6 +501,15 @@ p {
 .close {
   background: var(--ink-soft);
   color: var(--cream);
+  padding: 96px 0;
+}
+
+.close-copy {
+  max-width: 760px;
+}
+
+.close-copy h2 {
+  max-width: 18ch;
 }
 
 .close .muted,
@@ -509,52 +518,50 @@ p {
   color: #c8c2b6;
 }
 
+.close-copy > p {
+  margin-top: 20px;
+  font-size: 1.12rem;
+  line-height: 1.65;
+}
+
+.close-copy > .close-lead {
+  color: var(--cream);
+  font-size: 1.28rem;
+  font-weight: 600;
+  line-height: 1.45;
+  max-width: 34ch;
+}
+
 .close .hero-note {
   color: var(--cream);
+  margin-top: 28px;
 }
 
-.close-grid {
-  display: grid;
-  gap: 32px;
-}
-
-.form {
+.close-beats {
   display: grid;
   gap: 12px;
-  background: #24302e;
-  padding: 20px;
-  border-radius: var(--radius);
+  margin: 36px 0 8px;
 }
 
-.form label {
-  display: grid;
-  gap: 6px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.form input,
-.form select,
-.form textarea {
-  width: 100%;
-  min-height: 46px;
-  border: 1px solid #3a4a47;
-  border-radius: 10px;
-  background: #1a2422;
+.close-beats p {
+  margin: 0;
+  padding: 16px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
   color: var(--cream);
-  padding: 10px 12px;
-  font: inherit;
+  font-weight: 700;
 }
 
-.form textarea {
-  min-height: 96px;
-  resize: vertical;
+.close-list {
+  margin-top: 32px;
 }
 
-.form .link-quiet {
-  color: #c8c2b6;
-  text-align: center;
-  padding: 6px 0 2px;
+.close-list li + li {
+  margin-top: 8px;
+}
+
+.close .hero-actions {
+  margin-top: 32px;
 }
 
 .legal {
@@ -616,9 +623,13 @@ p {
     display: none;
   }
 
-  .hero-grid,
-  .close-grid {
+  .hero-grid {
     grid-template-columns: 1.05fr 0.95fr;
+  }
+
+  .close-beats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
   }
 
   .output-grid {
