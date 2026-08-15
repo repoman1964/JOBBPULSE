@@ -2,8 +2,14 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "jobbpulse-website",
   "compatibility_date": "2026-08-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": ".output/server/index.mjs",
   "assets": {
     "directory": "./.output/public",
+    "binding": "ASSETS",
     "not_found_handling": "404-page"
+  },
+  "observability": {
+    "enabled": true
   }
 }

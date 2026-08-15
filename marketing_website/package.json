@@ -8,10 +8,10 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
-    "generate": "NITRO_PRESET=static nuxt generate && rm -rf .wrangler/deploy",
+    "generate": "nuxt build",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "deploy": "npm run generate && wrangler deploy --config wrangler.jsonc"
+    "deploy": "nuxt build && wrangler --cwd .output deploy"
   },
   "dependencies": {
     "nuxt": "^4.5.0",

@@ -5,9 +5,9 @@ help:
 	@echo "  make install    npm install"
 	@echo "  make dev        Dev server on :3003"
 	@echo "  make build      Production SSR build"
-	@echo "  make generate   Static build for Cloudflare Workers"
+	@echo "  make generate   Cloudflare Worker production build"
 	@echo "  make preview    Preview production build"
-	@echo "  make deploy     Generate + wrangler deploy (jobbpulse-website)"
+	@echo "  make deploy     Build + wrangler deploy (jobbpulse-website)"
 
 install:
 	npm install

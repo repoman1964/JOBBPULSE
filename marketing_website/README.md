@@ -4,7 +4,7 @@ One-page sales site. Not a full marketing website.
 
 Warm paper, ink type, and clay accents on the page. Dark charcoal and electric lime stay on the Contractor App screenshots.
 
-Deploy target: Cloudflare Workers (static assets) — Worker name `jobbpulse-website`.
+Deploy target: Cloudflare Workers — Worker name `jobbpulse-website`.
 
 ## Quick start
 
@@ -42,7 +42,7 @@ In the [Cloudflare dashboard](https://dash.cloudflare.com) → **Workers & Pages
 | **Production branch** | `main` |
 | **Root directory** | `marketing_website` |
 | **Build command** | `npm run generate` |
-| **Deploy command** | `npx wrangler deploy --config wrangler.jsonc` |
+| **Deploy command** | `npx wrangler deploy` |
 | **Non-production deploy** (optional) | `npx wrangler versions upload` |
 | **Build watch paths (include)** | `marketing_website/**` |
 
@@ -66,7 +66,7 @@ npm ci
 npm run deploy
 ```
 
-`npm run deploy` prerenders the site with `nuxt generate` (output: `.output/public`) and runs `wrangler deploy`.
+`npm run deploy` runs `nuxt build` (Nitro `cloudflare-module`) then `wrangler --cwd .output deploy`.
 
 ## Requirements
 
@@ -82,7 +82,7 @@ nvm use 22
 ```bash
 npm install
 npm run dev        # local dev server
-npm run generate   # static production build → .output/public
+npm run generate   # production Worker build (alias of nuxt build)
 npm run preview    # preview production build
-npm run deploy     # generate + wrangler deploy
+npm run deploy     # build + wrangler --cwd .output deploy
 ```
