@@ -22,7 +22,7 @@ Core loop:
 | `jobpulse_prd.md` | Product requirements |
 | `jobpulse_agent_build_spec.md` | Implementation specification |
 
-`contractor_app/` is part of this project (no nested git remote). `portfolio_website/` and `red_clay_website/` still keep their own `.git` remotes and are gitignored here so they are not committed as nested gitlinks.
+`contractor_app/`, `portfolio_website/`, and `red_clay_website/` all live in this repo.
 
 ## Prerequisites
 

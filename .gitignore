@@ -33,6 +33,4 @@ uploads/
 # Docker volumes (local)
 infra/data/
 
-# Nested app repos (each keeps its own .git / GitHub remote)
-portfolio_website/
-red_clay_website/
+

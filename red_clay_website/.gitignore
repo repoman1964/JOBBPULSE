@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Nuxt / Nitro
+.nuxt/
+.output/
+.data/
+dist/
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Logs & OS
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Test / coverage
+coverage/
