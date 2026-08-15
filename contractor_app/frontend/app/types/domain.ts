@@ -17,6 +17,7 @@ export type SocialPlatform =
   | 'instagram'
   | 'google_business'
   | 'tiktok'
+  | 'youtube'
   | 'x'
   | 'linkedin'
 
@@ -32,6 +33,7 @@ export type DestinationType =
   | 'instagram'
   | 'google_business'
   | 'tiktok'
+  | 'youtube'
   | 'x'
   | 'linkedin'
   | 'conversion_site'

@@ -185,10 +185,9 @@ export function buildSeedSocial(): SocialConnection[] {
   return [
     { platform: 'facebook', status: 'connected', accountName: 'Johnson Outdoor Living', reason: null },
     { platform: 'instagram', status: 'connected', accountName: '@johnsonoutdoorliving', reason: null },
-    { platform: 'google_business', status: 'not_connected', accountName: null, reason: 'Connection gated until provider verified' },
+    { platform: 'google_business', status: 'not_connected', accountName: null, reason: null },
     { platform: 'tiktok', status: 'not_connected', accountName: null, reason: null },
-    { platform: 'x', status: 'not_connected', accountName: null, reason: null },
-    { platform: 'linkedin', status: 'not_connected', accountName: null, reason: null },
+    { platform: 'youtube', status: 'not_connected', accountName: null, reason: null },
   ]
 }
 

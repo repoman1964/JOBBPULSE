@@ -67,7 +67,7 @@ const trades = [
       <div class="container">
         <div class="section-head stack">
           <p class="eyebrow">The work is done. Make it keep working.</p>
-          <h2>Your camera roll is full of marketing you never use.</h2>
+          <h2>Right now, your camera is full of marketing you don't use.</h2>
           <p>You already did the hard part.</p>
           <p>You sold the job. Did the work. Got the result.</p>
           <p>But once you leave the driveway, most of that proof disappears into your phone.</p>
@@ -109,12 +109,12 @@ const trades = [
       <div class="container">
         <div class="section-head">
           <p class="eyebrow">This is your part</p>
-          <h2 class="headline-one-line">Finish the job. Show us what you did.</h2>
+          <h2 class="headline-one-line">Finish the job. Show off what you did.</h2>
         </div>
         <div class="step-grid">
           <article class="card">
             <div class="step-num">1</div>
-            <h3>Create the job</h3>
+            <h3>Create a project for the job</h3>
             <p class="muted">Add the customer area and basic job information. Nothing complicated.</p>
           </article>
           <article class="card">

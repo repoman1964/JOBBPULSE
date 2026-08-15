@@ -103,6 +103,7 @@ export function destinationLabel(type: string): string {
     instagram: 'Instagram',
     google_business: 'Google Business Profile',
     tiktok: 'TikTok',
+    youtube: 'YouTube Shorts',
     x: 'X',
     linkedin: 'LinkedIn',
     conversion_site: 'Project Page',

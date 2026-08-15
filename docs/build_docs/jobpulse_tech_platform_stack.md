@@ -1,15 +1,15 @@
-# JobPulse Technology and Platform Stack
+# JobbPulse Technology and Platform Stack
 
 ## Overview
 
-JobPulse combines a custom application stack with established marketing, automation and publishing platforms.
+JobbPulse combines a custom application stack with established marketing, automation and publishing platforms.
 
 The current confirmed stack is:
 
 - Nuxt for the front end
 - FastAPI for the back end
 - GoHighLevel for Smart Websites, CRM and lead-conversion automation
-- Blotato, or a similar social publishing platform, for social distribution
+- Upload-Post for social distribution
 - AI services connected through the FastAPI back end
 
 Several infrastructure choices remain open and have not yet been formally locked in.
@@ -18,7 +18,7 @@ Several infrastructure choices remain open and have not yet been formally locked
 
 ### Nuxt
 
-Nuxt is the planned front-end framework for the custom JobPulse software.
+Nuxt is the planned front-end framework for the custom JobbPulse software.
 
 It will be used to build:
 
@@ -30,7 +30,7 @@ It will be used to build:
 - AI-generated content review and approval screens
 - Contractor dashboards
 - Job history and publishing status views
-- The JobPulse Directory
+- The JobbPulse Directory
 - Contractor portfolio pages
 - Individual completed-project pages
 - Administrative interfaces where appropriate
@@ -41,7 +41,7 @@ Nuxt supports a modern component-based front end and can serve both interactive 
 
 ### FastAPI
 
-FastAPI is the planned back-end framework for JobPulse.
+FastAPI is the planned back-end framework for JobbPulse.
 
 It will manage:
 
@@ -61,13 +61,13 @@ It will manage:
 - Notifications and reminders
 - API access for the Nuxt front end
 
-FastAPI will act as the central orchestration layer connecting the custom JobPulse experience to outside services.
+FastAPI will act as the central orchestration layer connecting the custom JobbPulse experience to outside services.
 
 ## Smart Website and Automation Platform
 
 ### GoHighLevel
 
-GoHighLevel is the service-delivery platform for the JobPulse Smart Website and lead-conversion layer.
+GoHighLevel is the service-delivery platform for the JobbPulse Smart Website and lead-conversion layer.
 
 It will provide or support:
 
@@ -88,26 +88,36 @@ It will provide or support:
 - Customer reactivation and remarketing
 - Phone-number and communication workflows
 
-The Smart Website will also receive approved completed-job content from the custom JobPulse system so the contractor's gallery, feed or portfolio can update automatically.
+The Smart Website will also receive approved completed-job content from the custom JobbPulse system so the contractor's gallery, feed or portfolio can update automatically.
 
-GoHighLevel provides the familiar automation and CRM capabilities. The proprietary JobPulse value sits in the job-capture workflow, content engine, publishing orchestration and owned directory.
+GoHighLevel provides the familiar automation and CRM capabilities. The proprietary JobbPulse value sits in the job-capture workflow, content engine, publishing orchestration and owned directory.
 
 ## Social Publishing
 
-### Blotato or Comparable Platform
+### Upload-Post
 
-Blotato is the currently identified platform for distributing approved content to contractors' social media accounts.
+[Upload-Post](https://www.upload-post.com/) is the social publishing provider for distributing approved content to contractors' social accounts.
 
 Its role is to:
 
-- Receive approved social content from JobPulse
+- Receive approved social content from JobbPulse
 - Publish or schedule content across supported social networks
 - Reduce the need to build and maintain separate direct integrations for every social platform
 - Support centralized publishing from the Contractor App workflow
 
 The publishing process includes human approval before content is distributed.
 
-The final social publishing provider may be Blotato or a comparable platform if another service provides better reliability, pricing or integration coverage.
+JobbPulse talks to Upload-Post through the replaceable `PublishingProvider` adapter. The contractor never has to use the Upload-Post dashboard.
+
+First-ship social destinations (locked):
+
+- Google Business Profile
+- Facebook
+- Instagram
+- TikTok
+- YouTube Shorts
+
+Later platforms (Pinterest, LinkedIn, Threads, Nextdoor, and others) stay off the first ship.
 
 ## Artificial Intelligence Layer
 
@@ -152,7 +162,7 @@ The specific transcription provider has not yet been locked in.
 
 ## Media Storage
 
-JobPulse must store or manage:
+JobbPulse must store or manage:
 
 - Before photos
 - After photos
@@ -206,7 +216,7 @@ The system will need role-based access for:
 - Contractor owners
 - Crew members
 - Office staff
-- JobPulse administrators
+- JobbPulse administrators
 - Potential agency or partner users
 
 It should also support secure sessions, password recovery, account invitations and organization-level separation.
@@ -230,7 +240,7 @@ The deployment architecture will need to support:
 
 ## Background Jobs and Workflow Processing
 
-Some JobPulse processes should run asynchronously, including:
+Some JobbPulse processes should run asynchronously, including:
 
 - Audio transcription
 - AI content generation
@@ -257,14 +267,14 @@ Transcription and AI Services
 Human Review and Approval
         ↓
 ┌─────────────────────┬─────────────────────┬─────────────────────┐
-│ Social Publishing   │ GoHighLevel Smart   │ JobPulse Directory  │
-│ via Blotato         │ Website             │                     │
+│ Social Publishing   │ GoHighLevel Smart   │ JobbPulse Directory  │
+│ via Upload-Post     │ Website             │                     │
 └─────────────────────┴─────────────────────┴─────────────────────┘
 ```
 
 ## Ownership and Control
 
-JobPulse intends to own and control:
+JobbPulse intends to own and control:
 
 - The Contractor App
 - The FastAPI application layer
@@ -273,10 +283,10 @@ JobPulse intends to own and control:
 - Approval and publishing logic
 - Contractor profile pages
 - Individual completed-project pages
-- The JobPulse Directory
+- The JobbPulse Directory
 - The accumulated project, performance and marketing data
 
-Third-party platforms will provide supporting capabilities, but the core contractor workflow and owned distribution asset remain under JobPulse control.
+Third-party platforms will provide supporting capabilities, but the core contractor workflow and owned distribution asset remain under JobbPulse control.
 
 ## Confirmed Versus Open Decisions
 
@@ -285,10 +295,10 @@ Third-party platforms will provide supporting capabilities, but the core contrac
 - Nuxt front end
 - FastAPI back end
 - GoHighLevel Smart Website and automation layer
-- Blotato or a comparable social publishing platform
+- Upload-Post for social publishing
 - Human approval before publishing
 - AI connected through the FastAPI back end
-- Automatic publishing to social media, Smart Websites and the JobPulse Directory
+- Automatic publishing to social media, Smart Websites and the JobbPulse Directory
 
 ### Not Yet Locked In
 

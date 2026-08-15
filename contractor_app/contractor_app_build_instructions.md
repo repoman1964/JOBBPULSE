@@ -1024,7 +1024,7 @@ Request values should include:
 - `show_calendar: false`
 - English or detected supported language
 
-The initial Settings UI contains Facebook, Instagram, Google Business Profile, TikTok, X and LinkedIn.
+The initial Settings UI contains the first-ship destinations: Facebook, Instagram, Google Business Profile, TikTok, and YouTube Shorts.
 
 **Provider contract warning:** the supplied Upload-Post schema's `generate-jwt` platform filter explicitly lists Facebook, Instagram, TikTok, X and LinkedIn but does not list Google Business Profile. Other provider enums and webhook examples do list `google_business`. Treat Google Business Profile connection as a production integration gate:
 
@@ -1055,16 +1055,15 @@ Use `POST /upload_photos` for photo-based completed-job content. Use asynchronou
 
 Generate a separate payload per platform even when Upload-Post can accept multiple platforms in one call. This preserves asset-specific review, clean retry behavior and accurate delivery status.
 
-Required initial destination adapters:
+Required first-ship destination adapters:
 
 - Facebook
 - Instagram
 - Google Business Profile, subject to the provider gate above
-- TikTok photo post
-- X
-- LinkedIn
+- TikTok
+- YouTube Shorts
 
-Map platform-specific fields inside the backend adapter, including Facebook Page ID, LinkedIn organization target and platform-specific titles or descriptions when required. Contractors do not see these controls.
+Map platform-specific fields inside the backend adapter, including Facebook Page ID and platform-specific titles or descriptions when required. Contractors do not see these controls.
 
 Publishing rules:
 

@@ -38,14 +38,14 @@ from app.modules.publishing import privacy
 from app.modules.publishing.provider.base import PublishRequest, ScheduleRequest
 from app.modules.publishing.provider.factory import get_publishing_provider
 
+# First-ship Upload-Post destinations. Later platforms stay off this list.
 ALLOWED_PLATFORMS = frozenset(
     {
         "facebook",
         "instagram",
         "google_business",
-        "linkedin",
-        "nextdoor",
         "tiktok",
+        "youtube",
     }
 )
 

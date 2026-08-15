@@ -1,6 +1,6 @@
-# JobPulse Product Requirements Document
+# JobbPulse Product Requirements Document
 
-**Product:** JobPulse  
+**Product:** JobbPulse  
 **Document type:** Product Requirements Document  
 **Status:** Working PRD  
 **Version:** 1.0  
@@ -12,21 +12,21 @@
 
 ## 1. Product Summary
 
-JobPulse is a contractor-first marketing automation platform for visual home-service businesses.
+JobbPulse is a contractor-first marketing automation platform for visual home-service businesses.
 
-The contractor creates a **Job**, captures before-and-after photos, records a short voice description of the work completed and submits those materials to JobPulse. The system uses the photos and voice description to generate authentic marketing content based on the actual job.
+The contractor creates a **Job**, captures before-and-after photos, records a short voice description of the work completed and submits those materials to JobbPulse. The system uses the photos and voice description to generate authentic marketing content based on the actual job.
 
-The contractor reviews the generated content, approves or rejects it and continues revising or regenerating it until satisfied. Once approved, JobPulse publishes the content through a third-party distribution platform to the contractor’s connected social media accounts and also publishes the completed-job content to a locally focused web directory owned and controlled by JobPulse.
+The contractor reviews the generated content, approves or rejects it and continues revising or regenerating it until satisfied. Once approved, JobbPulse publishes the content through a third-party distribution platform to the contractor’s connected social media accounts and also publishes the completed-job content to a locally focused web directory owned and controlled by JobbPulse.
 
 The core promise is:
 
-> Finish the job. Show JobPulse what you did. JobPulse turns it into marketing.
+> Finish the job. Show JobbPulse what you did. JobbPulse turns it into marketing.
 
 ---
 
 ## 2. Product Vision
 
-JobPulse will become the marketing layer that sits directly on top of a contractor’s completed work.
+JobbPulse will become the marketing layer that sits directly on top of a contractor’s completed work.
 
 Every completed job can become:
 
@@ -43,19 +43,19 @@ The long-term product loop is:
 
 **Create a Job → capture the work → generate content → human approval → distribute content → build local visibility → generate inquiries → complete more jobs**
 
-JobPulse is not primarily a social media scheduler. Its wedge is converting real completed work into marketing with minimal effort from the contractor.
+JobbPulse is not primarily a social media scheduler. Its wedge is converting real completed work into marketing with minimal effort from the contractor.
 
 ---
 
 ## 3. Strategic Principle: Ownership and Control
 
-JobPulse will not depend on automated posting to local Facebook groups.
+JobbPulse will not depend on automated posting to local Facebook groups.
 
-Automating activity inside Facebook groups can put a contractor’s personal or business account at risk. It also forces JobPulse to build a core distribution strategy on a third-party platform that JobPulse does not control.
+Automating activity inside Facebook groups can put a contractor’s personal or business account at risk. It also forces JobbPulse to build a core distribution strategy on a third-party platform that JobbPulse does not control.
 
-Instead, JobPulse will create and operate its own locally focused web directory.
+Instead, JobbPulse will create and operate its own locally focused web directory.
 
-The directory is a core strategic asset because JobPulse controls:
+The directory is a core strategic asset because JobbPulse controls:
 
 - The content format
 - The publishing rules
@@ -73,7 +73,7 @@ The owned directory is not a side feature. It is one of the two primary destinat
 The two content destinations are:
 
 1. The contractor’s connected social media platforms
-2. The JobPulse-owned local web directory
+2. The JobbPulse-owned local web directory
 
 ---
 
@@ -94,7 +94,7 @@ Common problems include:
 - Valuable proof of work disappears quickly in social feeds
 - Contractors lack a permanent local destination for completed projects
 
-Most social media products begin after the content already exists. JobPulse begins at the jobsite.
+Most social media products begin after the content already exists. JobbPulse begins at the jobsite.
 
 ---
 
@@ -132,7 +132,7 @@ Typical characteristics:
 
 ### 5.3 Niche Selection Criteria
 
-A strong JobPulse niche should have:
+A strong JobbPulse niche should have:
 
 - Strong before-and-after visuals
 - Clear project completion points
@@ -171,7 +171,7 @@ The product must fit the contractor’s natural workflow, especially the moment 
 
 ## 7. Core Product Object: The Job
 
-The central object in JobPulse is a **Job**.
+The central object in JobbPulse is a **Job**.
 
 A Job represents a real project completed for a customer.
 
@@ -199,7 +199,7 @@ The Job is the source record from which all content is created.
 
 ### Step 1: Create a Job
 
-The contractor creates a new Job in JobPulse.
+The contractor creates a new Job in JobbPulse.
 
 Creating a Job must be extremely easy and should require as little typing as possible.
 
@@ -259,7 +259,7 @@ Voice is preferred over typing because it is faster and more natural for contrac
 
 The contractor submits the completed Job.
 
-JobPulse processes:
+JobbPulse processes:
 
 - Before photos
 - After photos
@@ -271,7 +271,7 @@ JobPulse processes:
 
 ### Step 7: Generate Content
 
-JobPulse creates content grounded in the actual Job.
+JobbPulse creates content grounded in the actual Job.
 
 Potential outputs include:
 
@@ -312,19 +312,19 @@ Once approved, the content is sent to two destinations.
 
 #### Destination A: Social Media
 
-JobPulse sends the approved content through a third-party publishing platform such as Blotato or a similar service.
+JobbPulse sends the approved content through Upload-Post.
 
-Potential destinations include:
+First-ship destinations (locked):
 
+- Google Business Profile
 - Facebook business pages
 - Instagram
-- Google Business Profile, when practical
-- LinkedIn, when relevant
-- Other supported platforms
+- TikTok
+- YouTube Shorts
 
-#### Destination B: JobPulse Local Directory
+#### Destination B: JobbPulse Local Directory
 
-The approved Job is also published as a structured project listing in the JobPulse-owned local directory.
+The approved Job is also published as a structured project listing in the JobbPulse-owned local directory.
 
 The directory listing may include:
 
@@ -412,7 +412,7 @@ The MVP should generate:
 1. One primary social post
 2. One shorter caption
 3. One before-and-after version
-4. One JobPulse directory listing
+4. One JobbPulse directory listing
 5. One suggested call to action
 6. Suggested hashtags when appropriate
 
@@ -438,7 +438,7 @@ The MVP must:
 - Record success or failure
 - Prevent duplicate posting
 - Notify users of publishing errors
-- Publish the approved Job to the JobPulse directory
+- Publish the approved Job to the JobbPulse directory
 - Record the directory page status
 
 ### 9.8 Content and Job Library
@@ -584,7 +584,7 @@ The system should eventually learn from contractor edits and approvals.
 
 ### 13.1 Directory Purpose
 
-The JobPulse directory will create a permanent local destination for completed-job proof.
+The JobbPulse directory will create a permanent local destination for completed-job proof.
 
 Unlike a social post, a directory project page should remain discoverable and reusable.
 
@@ -662,7 +662,7 @@ SEO is important but should not block the initial MVP.
 
 ## 14. Third-Party Publishing Integration
 
-JobPulse should initially use a third-party publishing platform rather than building and maintaining direct integrations with every social network.
+JobbPulse should initially use a third-party publishing platform rather than building and maintaining direct integrations with every social network.
 
 ### Required Integration Functions
 
@@ -677,7 +677,7 @@ JobPulse should initially use a third-party publishing platform rather than buil
 - Retry failed publications
 - Prevent duplicate distribution
 
-The publishing layer should be replaceable so JobPulse is not permanently dependent on one provider.
+The publishing layer should be replaceable so JobbPulse is not permanently dependent on one provider.
 
 ---
 
@@ -939,7 +939,7 @@ The value should be positioned against:
 
 ### Potential Plans
 
-#### JobPulse Core — $197 per month
+#### JobbPulse Core — $197 per month
 
 - One company
 - Basic Job workflow
@@ -950,7 +950,7 @@ The value should be positioned against:
 - Basic content library
 - Usage limits
 
-#### JobPulse Pro — $297 per month
+#### JobbPulse Pro — $297 per month
 
 - More users
 - More Jobs
@@ -1083,7 +1083,7 @@ The MVP must answer:
 4. Is voice faster and easier than typed descriptions?
 5. Will contractors approve AI-generated content?
 6. How many revision loops are typically required?
-7. Will contractors publish to both social media and the JobPulse directory?
+7. Will contractors publish to both social media and the JobbPulse directory?
 8. Which niche creates the highest volume of publishable Jobs?
 9. Which niche retains best?
 10. Does the directory improve perceived value?
@@ -1108,17 +1108,17 @@ The MVP is ready for initial customer testing when a contractor can:
 10. Review and revise the content
 11. Approve the content
 12. Publish through a third-party service to a connected social account
-13. Publish the same approved Job to the JobPulse-owned local directory
+13. Publish the same approved Job to the JobbPulse-owned local directory
 14. View the Job and publication status afterward
 
 ---
 
 ## 26. Final Product Definition
 
-JobPulse is a job-to-marketing platform for visual home-service contractors.
+JobbPulse is a job-to-marketing platform for visual home-service contractors.
 
 Its core product flow is:
 
-**Create a Job → capture before photos → complete the work → capture after photos → record a voice summary → generate content → human review and revision → approve → publish to social media and the JobPulse-owned local directory**
+**Create a Job → capture before photos → complete the work → capture after photos → record a voice summary → generate content → human review and revision → approve → publish to social media and the JobbPulse-owned local directory**
 
 The product wins by making that flow easy enough for a working contractor to use consistently.

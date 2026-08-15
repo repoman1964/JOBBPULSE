@@ -56,6 +56,7 @@ class DestinationType(str, enum.Enum):
     instagram = "instagram"
     google_business = "google_business"
     tiktok = "tiktok"
+    youtube = "youtube"
     x = "x"
     linkedin = "linkedin"
     conversion_site = "conversion_site"
@@ -67,6 +68,7 @@ class SocialPlatform(str, enum.Enum):
     instagram = "instagram"
     google_business = "google_business"
     tiktok = "tiktok"
+    youtube = "youtube"
     x = "x"
     linkedin = "linkedin"
 

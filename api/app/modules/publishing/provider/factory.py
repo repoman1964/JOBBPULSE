@@ -18,6 +18,6 @@ def get_publishing_provider() -> PublishingProvider:
     name = (settings.publishing_provider or "mock").strip().lower()
     if name == "mock":
         return MockPublishingProvider()
-    # Real vendors (Blotato-class, etc.) plug in here with publishing_api_key.
+    # Real vendors (Upload-Post, etc.) plug in here with publishing_api_key.
     logger.warning("Unknown PUBLISHING_PROVIDER=%s; using mock", name)
     return MockPublishingProvider()

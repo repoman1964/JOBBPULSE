@@ -36,14 +36,16 @@ from app.publishers.social import FakeSocialPublisher
 
 logger = logging.getLogger(__name__)
 
-SOCIAL_DESTINATIONS = {
+# First-ship Upload-Post destinations.
+FIRST_SHIP_SOCIAL = (
     DestinationType.facebook.value,
     DestinationType.instagram.value,
     DestinationType.google_business.value,
     DestinationType.tiktok.value,
-    DestinationType.x.value,
-    DestinationType.linkedin.value,
-}
+    DestinationType.youtube.value,
+)
+
+SOCIAL_DESTINATIONS = set(FIRST_SHIP_SOCIAL)
 
 
 async def run_content_pipeline(
@@ -112,14 +114,7 @@ async def run_content_pipeline(
     connected = {c.platform for c in result.scalars().all()}
 
     destinations: list[str] = []
-    for p in (
-        DestinationType.facebook.value,
-        DestinationType.instagram.value,
-        DestinationType.google_business.value,
-        DestinationType.tiktok.value,
-        DestinationType.x.value,
-        DestinationType.linkedin.value,
-    ):
+    for p in FIRST_SHIP_SOCIAL:
         if p in connected:
             destinations.append(p)
     # Always generate first-party destinations

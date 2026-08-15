@@ -15,6 +15,7 @@ const platformLabel: Record<string, string> = {
   instagram: 'Instagram',
   google_business: 'Google Business Profile',
   tiktok: 'TikTok',
+  youtube: 'YouTube Shorts',
   x: 'X',
   linkedin: 'LinkedIn',
 }
@@ -108,13 +109,6 @@ onMounted(async () => {
                 <strong>{{ platformLabel[row.platform] || row.platform }}</strong>
                 <p v-if="row.accountName" class="muted" style="margin: 2px 0 0; font-size: 0.85rem">
                   {{ row.accountName }}
-                </p>
-                <p
-                  v-else-if="row.platform === 'google_business'"
-                  class="dim"
-                  style="margin: 2px 0 0; font-size: 0.8rem"
-                >
-                  Gated until provider verified
                 </p>
               </div>
               <span

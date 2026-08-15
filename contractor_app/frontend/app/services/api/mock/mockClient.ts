@@ -692,16 +692,16 @@ export function createMockApiClient(): ApiClient {
     async completeSocialReturn(status = 'connected') {
       requireSession()
       await delay()
-      // Mark non-GBP platforms connected for demo manage flow
+      // Mark first-ship platforms connected for the demo manage flow
       state.social = state.social.map((s) => {
-        if (s.platform === 'google_business') {
-          return {
-            ...s,
-            status: 'provider_unavailable' as const,
-            reason: 'Google Business Profile is gated until Upload-Post support is verified.',
-          }
-        }
-        if (status === 'connected' && (s.platform === 'facebook' || s.platform === 'instagram')) {
+        if (
+          status === 'connected' &&
+          (s.platform === 'facebook' ||
+            s.platform === 'instagram' ||
+            s.platform === 'tiktok' ||
+            s.platform === 'youtube' ||
+            s.platform === 'google_business')
+        ) {
           return {
             ...s,
             status: 'connected' as const,
