@@ -4,6 +4,7 @@ const appUrl = config.public.appUrl as string
 const open = ref(false)
 
 const nav = [
+  { href: '/#watch', label: 'Watch' },
   { href: '/#how-it-works', label: 'How it works' },
   { href: '/#what-you-get', label: 'What you get' },
   { href: '/#lead-desk', label: 'Lead Desk' },
@@ -18,7 +19,6 @@ function close() {
   <header class="site-header">
     <div class="container header-inner">
       <NuxtLink class="brand" to="/" @click="close">
-        <span class="brand-mark" aria-hidden="true">JP</span>
         <span class="brand-name">Jobb<span>Pulse</span></span>
       </NuxtLink>
 
