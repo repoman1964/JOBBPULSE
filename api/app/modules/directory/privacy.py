@@ -33,12 +33,18 @@ def path_segment(value: Optional[str], fallback: str = "local") -> str:
 
 
 def contractor_path(profile: ContractorProfile, company: Optional[Company] = None) -> str:
-    """v2 portfolio path: /contractors/{slug}."""
+    """v2 profile path: /contractors/{slug}."""
     return f"/contractors/{profile.public_slug}"
 
 
 def contractor_about_path(profile: ContractorProfile) -> str:
+    """Legacy alias for the profile page."""
     return f"/contractors/{profile.public_slug}/about"
+
+
+def contractor_portfolio_path(profile: ContractorProfile) -> str:
+    """v2 portfolio (project gallery) path: /contractors/{slug}/portfolio."""
+    return f"/contractors/{profile.public_slug}/portfolio"
 
 
 def project_path(listing: DirectoryListing) -> str:
@@ -160,6 +166,7 @@ def public_project_payload(
     media_summary = _media_summary(listing)
     contractor_slug = profile.public_slug if profile else None
     contractor_public_path = contractor_path(profile, company) if profile else None
+    contractor_portfolio = contractor_portfolio_path(profile) if profile else None
     svc_key = listing.service_key
     loc_slug = location_slug(listing.city, listing.state) if listing.city else None
 
@@ -195,6 +202,7 @@ def public_project_payload(
                 absolute_directory_url(contractor_public_path) if contractor_public_path else None
             ),
             "about_path": contractor_about_path(profile) if profile else None,
+            "portfolio_path": contractor_portfolio,
             "trade": company.trade if company else None,
             "contact_phone": profile.contact_phone if profile else None,
             "website_url": profile.website_url if profile else None,
@@ -236,6 +244,7 @@ def public_project_card(listing: DirectoryListing, *, company: Optional[Company]
             "slug": profile.public_slug if profile else None,
             "company_name": company.name if company else None,
             "public_path": contractor_path(profile, company) if profile else None,
+            "portfolio_path": contractor_portfolio_path(profile) if profile else None,
         },
         **media_summary,
     }
@@ -283,6 +292,7 @@ def public_contractor_payload(
     )
 
     path = contractor_path(profile, company)
+    portfolio = contractor_portfolio_path(profile)
     state, city = _profile_location(profile, company)
     return {
         "id": str(profile.id),
@@ -300,6 +310,7 @@ def public_contractor_payload(
         "seo_description": profile.seo_description,
         "public_path": path,
         "about_path": contractor_about_path(profile),
+        "portfolio_path": portfolio,
         "public_url": absolute_directory_url(path),
         "primary_city": city,
         "primary_state": state,
@@ -344,6 +355,7 @@ def admin_profile_payload(profile: ContractorProfile, company: Company) -> dict[
         "seo_description": profile.seo_description,
         "public_path": path,
         "about_path": contractor_about_path(profile),
+        "portfolio_path": contractor_portfolio_path(profile),
         "public_url": absolute_directory_url(path),
         "created_at": profile.created_at,
         "updated_at": profile.updated_at,

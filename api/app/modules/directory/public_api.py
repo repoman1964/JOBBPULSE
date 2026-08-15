@@ -23,6 +23,7 @@ async def home(db: AsyncSession = Depends(get_db)):
 
 @router.get("/contractors")
 async def list_contractors(
+    q: Optional[str] = Query(default=None),
     city: Optional[str] = Query(default=None),
     state: Optional[str] = Query(default=None),
     trade: Optional[str] = Query(default=None),
@@ -34,6 +35,7 @@ async def list_contractors(
 ):
     items = await service.public_list_contractors(
         db,
+        q=q,
         city=city,
         state=state,
         trade=trade,

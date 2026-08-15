@@ -631,6 +631,7 @@ async def _count_published_for_profile(db: AsyncSession, profile_id: UUID) -> in
 async def public_list_contractors(
     db: AsyncSession,
     *,
+    q: Optional[str] = None,
     city: Optional[str] = None,
     state: Optional[str] = None,
     trade: Optional[str] = None,
@@ -640,7 +641,7 @@ async def public_list_contractors(
     offset: int = 0,
 ) -> list[dict]:
     limit = min(max(limit, 1), 50)
-    q = (
+    query = (
         select(ContractorProfile)
         .join(Company, Company.id == ContractorProfile.company_id)
         .where(ContractorProfile.published.is_(True), Company.is_active.is_(True))
@@ -655,11 +656,20 @@ async def public_list_contractors(
         .limit(limit)
         .offset(offset)
     )
+    if q and q.strip():
+        term = f"%{q.strip()}%"
+        query = query.where(
+            or_(
+                Company.name.ilike(term),
+                ContractorProfile.headline.ilike(term),
+                Company.trade.ilike(term),
+            )
+        )
     if trade:
-        q = q.where(Company.trade.ilike(trade))
+        query = query.where(Company.trade.ilike(trade))
     if featured is True:
-        q = q.where(ContractorProfile.featured.is_(True))
-    result = await db.execute(q)
+        query = query.where(ContractorProfile.featured.is_(True))
+    result = await db.execute(query)
     profiles = list(result.scalars().all())
 
     out: list[dict] = []
@@ -1091,20 +1101,12 @@ async def public_search(
     if q or city or state or service_key:
         contractors = await public_list_contractors(
             db,
+            q=q,
             city=city,
             state=state,
             service_key=service_key,
             limit=min(limit, 10),
         )
-        if q:
-            term = q.strip().lower()
-            contractors = [
-                c
-                for c in contractors
-                if term in (c.get("company_name") or "").lower()
-                or term in (c.get("headline") or "").lower()
-                or term in (c.get("trade") or "").lower()
-            ]
     return {
         "query": q,
         "projects": projects,

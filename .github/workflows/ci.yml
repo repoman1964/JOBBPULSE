@@ -22,29 +22,3 @@ jobs:
           pip install -r requirements.txt
       - name: Test
         run: PYTHONPATH=. pytest -q
-
-  mobile_app:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: mobile_app
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-      - run: npm install
-      - run: npm run build
-
-  directory:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: directory
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-      - run: npm install
-      - run: npm run build

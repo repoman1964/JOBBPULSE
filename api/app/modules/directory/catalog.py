@@ -64,6 +64,22 @@ SERVICE_CATALOG: dict[str, dict[str, str]] = {
         "name": "Paver Patio",
         "description": "Paver patio and hardscape patio installations.",
     },
+    "cabinet_installation": {
+        "name": "Cabinet Installation",
+        "description": "Kitchen, bath, and custom cabinet installation projects.",
+    },
+    "kitchen_cabinets": {
+        "name": "Kitchen Cabinets",
+        "description": "Kitchen cabinet installation and refresh projects for local homes.",
+    },
+    "bathroom_vanity": {
+        "name": "Bath Vanities",
+        "description": "Bathroom vanity installation and upgrade projects.",
+    },
+    "pantry_built_ins": {
+        "name": "Pantries & Built-ins",
+        "description": "Custom pantry and built-in cabinet installations.",
+    },
 }
 
 

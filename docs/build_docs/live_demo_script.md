@@ -12,14 +12,25 @@ Use a **phone-width browser** (or Chrome DevTools → device toolbar) for the co
 
 Terminals:
 
+The current contractor app is `contractor_app/` (August rewrite). It has its own engine on **:8000**, so do not also run `make api-dev` in the same session.
+
 ```bash
-cd "/path/to/JOBPULSE"
-make infra-up
-make api-migrate
-make api-dev          # :8000
-make mobile-dev       # :3000
-make directory-dev    # :3001
+cd "/path/to/JOBBPULSE/contractor_app"
+cp -n backend/.env.example backend/.env
+make up
+make seed
+# other terminal
+cd frontend && npm install
+NUXT_PUBLIC_API_MODE=http NUXT_PUBLIC_API_BASE_URL=http://localhost:8000 npm run dev
+# → :3000   seed:  mike@johnsonoutdoor.example  /  123456
+
+# optional public portfolio (uses the platform API, not the contractor engine)
+cd "/path/to/JOBBPULSE"
+make infra-up && make api-dev     # only if contractor engine is NOT on :8000
+make -C portfolio_website dev     # :3001
 ```
+
+See `contractor_app/LOCAL_SETUP.md`. The click-through below was written for the previous contractor UI (register / onboarding / one-page job). The current app uses OTP sign-in and a job workspace with photo categories and asset-level approval.
 
 Optional: open http://localhost:8000/docs in a second tab if you want to flash the API later.
 

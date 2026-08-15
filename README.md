@@ -13,14 +13,16 @@ Core loop:
 | Path | Purpose |
 |---|---|
 | `api/` | FastAPI modular monolith (PostgreSQL, Redis, S3) |
-| `mobile_app/` | Contractor phone-first Nuxt app (browser / PWA for MVP) |
-| `directory_v2/` | Public local project portfolio (Nuxt SSR) |
-| `directory_v1/` | Archived earlier directory UI (do not use for new work) |
 | `infra/` | Docker Compose for local dependencies |
+| `contractor_app/` | Newest contractor app (Nuxt frontend + its own FastAPI engine) |
+| `portfolio_website/` | Public local project portfolio (Nuxt SSR) |
+| `red_clay_website/` | Red Clay Cabinet Installers demo marketing site |
 | `legacy/` | **Frozen prototype** — reference only, not production |
 | `docs/` | Product docs (PRD + build spec) |
 | `jobpulse_prd.md` | Product requirements |
 | `jobpulse_agent_build_spec.md` | Implementation specification |
+
+`contractor_app/` is part of this project (no nested git remote). `portfolio_website/` and `red_clay_website/` still keep their own `.git` remotes and are gitignored here so they are not committed as nested gitlinks.
 
 ## Prerequisites
 
@@ -41,17 +43,18 @@ make api-migrate
 make api-dev
 # → http://localhost:8000/docs
 
-# 3. Contractor app (phone-first)
-make mobile-install
-make mobile-dev
-# → http://localhost:3000
-
-# 4. Public project portfolio (directory_v2)
-make directory-install
-make directory-seed   # optional Georgia demo inventory
-make directory-dev
-# → http://localhost:3001
+# 3. Seed public portfolio demo data (optional)
+make portfolio-seed   # Georgia demo inventory (includes Red Clay contractor)
 ```
+
+The **contractor phone app** is `contractor_app/` (August rewrite: frontend + its own engine). See `contractor_app/LOCAL_SETUP.md`. Frontend-only mock: `cd contractor_app/frontend && npm install && npm run dev` → http://localhost:3000
+
+Its Docker API also binds **:8000**, same as `make api-dev`. Do not run both APIs at once.
+
+The **public project portfolio** is `portfolio_website/`. From there: `make install && make dev` → http://localhost:3001
+
+The **Red Clay Cabinet Installers** demo marketing site is `red_clay_website/`. It consumes JobPulse’s public API when both are running.
+
 
 ### Local infra ports
 
@@ -109,32 +112,33 @@ See PRD **§14.1**. MVP uses mocks; production plugs in:
 
 ## Phase 1–6 (try it)
 
+Contractor app (current):
+
+```bash
+cd contractor_app
+cp -n backend/.env.example backend/.env
+make up
+make seed
+# other terminal
+cd contractor_app/frontend
+npm install
+NUXT_PUBLIC_API_MODE=http NUXT_PUBLIC_API_BASE_URL=http://localhost:8000 npm run dev
+```
+
+Or frontend-only with the mock API: `cd contractor_app/frontend && npm run dev`. Sign-in: `mike@johnsonoutdoor.example` / code `123456`. Full steps: `contractor_app/LOCAL_SETUP.md`.
+
+Platform API + public sites (separate from the contractor engine):
+
 ```bash
 make infra-up
 make api-migrate
-make api-dev          # terminal 1 — http://localhost:8000/docs
-make mobile-dev       # terminal 2 — http://localhost:3000
-make directory-dev    # terminal 3 — http://localhost:3001
+make api-dev                              # terminal 1 — http://localhost:8000/docs
+make -C portfolio_website dev              # terminal 2 — http://localhost:3001
 ```
 
-1. Open http://localhost:3000/register  
-2. Create account (user + company + owner role)  
-3. Complete short onboarding  
-4. Tap **Create Job** → **required private job name** (e.g. “Johnson / Oak St” — only you see it)  
-5. **Before photos optional** (recommended). **After photos required.**  
-6. **Record voice summary** on the job (mic → upload → mock transcript appears).  
-7. **Edit the transcript** if needed → Save. Next action becomes **Generate content**.  
-8. Tap **Generate content** → mock AI produces draft variants (primary social, short caption, before/after, directory). Job moves to **Needs review**.  
-9. **Review workspace:** edit any draft body → **Save edit**. Approve or reject each piece (manager/owner).  
-10. Optional: add a regenerate instruction → **Regenerate drafts** (prior versions stay in history as superseded).  
-11. When at least one social variant + the directory listing are approved (and after photos still present), tap **Approve all & mark ready**. Job becomes **Approved** / ready to publish.  
-12. On **Account**, connect a mock social account (Facebook / Instagram).  
-13. Tap **Publish** (single action). Choose directory and/or social checkboxes. Job goes live on the directory and mock social posts appear under Publications.  
-14. Open the **live project URL** (or browse http://localhost:3001). Private job name never appears.  
-15. **Unpublish from directory** or **Retry** a failed social publication if needed.  
-16. On **Account**, check **Notifications** (generation ready, approved, published). Managers can list **audit events** via `GET /api/v1/audit-events`.  
+The current contractor UI is OTP sign-in → jobs → photo categories → finish with voice → asset approval. It is **not** wired to this repo’s `api/` yet (own engine on :8000).
 
-**Workflow:** Create job → (optional befores) → work → **afters (required)** → **voice (required)** → **AI drafts** → **contractor review / approve** → **Publish** (directory + social via one button).
+The older capture → generate → approve → publish loop against `api/` + `portfolio_website` is still valid for the platform API; that client is no longer in this folder.
 
 **Privacy:** Job name is contractor-only. It is never sent to AI, social, public directory, notification bodies, or audit payloads. AI invents public titles/hooks from photos + voice + coarse location. Edited transcript / body is preferred for public summary.
 
@@ -144,7 +148,7 @@ make directory-dev    # terminal 3 — http://localhost:3001
 - Flag listing: `POST /api/v1/directory/listings/{id}/flag` (manager+). Platform remove: set `FOUNDER_ADMIN_EMAILS` and `POST /api/v1/admin/directory/listings/{id}/remove`
 - Billing: `GET /api/v1/billing/status`; set `BILLING_ENFORCE=true` to block canceled companies at publish (402)
 
-**Apps:** Contractor app (`mobile_app`) = jobs + capture + publish. Public directory (`directory`) = SSR local SEO pages.
+**Apps:** Contractor app (`contractor_app/`) = jobs + capture + publish. Public portfolio (`portfolio_website/`) = SSR local SEO pages.
 
 ## Tests
 
@@ -154,4 +158,4 @@ make api-test
 
 ## Legacy
 
-`legacy/` contains an earlier FastAPI + SQLite + Nuxt/Capacitor prototype. It is useful for UX patterns and prompt ideas. Do **not** extend it for production—new work goes in `api/`, `mobile_app/`, and `directory/`.
+`legacy/` contains an earlier FastAPI + SQLite + Nuxt/Capacitor prototype. It is useful for UX patterns and prompt ideas. Do **not** extend it for production—new work goes in `api/` and the apps (`contractor_app/`, `portfolio_website/`).

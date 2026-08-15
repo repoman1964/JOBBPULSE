@@ -317,12 +317,14 @@ async def test_public_paths_use_v2_url_shape(client: AsyncClient):
     profile = await client.get("/api/v1/directory/profile", headers=_auth(token))
     contractor_slug = profile.json()["data"]["public_slug"]
     assert profile.json()["data"]["public_path"] == f"/contractors/{contractor_slug}"
+    assert profile.json()["data"]["portfolio_path"] == f"/contractors/{contractor_slug}/portfolio"
 
     public = await client.get(f"/api/v1/public/projects/{listing['slug']}")
     assert public.status_code == 200
     data = public.json()["data"]
     assert data["public_path"] == f"/projects/{listing['slug']}"
     assert data["contractor"]["public_path"] == f"/contractors/{contractor_slug}"
+    assert data["contractor"]["portfolio_path"] == f"/contractors/{contractor_slug}/portfolio"
     assert "primary_image_url" in data or data.get("media")
 
 
