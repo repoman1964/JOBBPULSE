@@ -551,6 +551,12 @@ p {
   resize: vertical;
 }
 
+.form .link-quiet {
+  color: #c8c2b6;
+  text-align: center;
+  padding: 6px 0 2px;
+}
+
 .legal {
   padding: 64px 0 96px;
   max-width: 720px;

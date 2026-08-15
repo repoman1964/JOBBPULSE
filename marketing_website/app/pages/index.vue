@@ -43,7 +43,7 @@ const mailto = computed(() => {
             they reach out.
           </p>
           <div class="hero-actions">
-            <a class="btn btn-primary" href="#demo">See JobbPulse in action</a>
+            <a class="btn btn-primary" href="#watch">See JobbPulse in action</a>
             <a class="btn btn-secondary" href="#watch">Watch the walkthrough</a>
           </div>
           <p class="hero-note">A few taps. A quick description. Back to work.</p>
@@ -350,7 +350,8 @@ const mailto = computed(() => {
             Anything we should know
             <textarea v-model="note" name="note" />
           </label>
-          <a class="btn btn-primary btn-block" :href="mailto">See JobbPulse in action</a>
+          <a class="btn btn-primary btn-block" href="#watch">See JobbPulse in action</a>
+          <a class="link-quiet" :href="mailto">Or request a demo by email</a>
         </form>
       </div>
     </section>

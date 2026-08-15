@@ -29,7 +29,7 @@ function close() {
 
       <div class="header-actions">
         <a class="link-quiet" :href="appUrl">Sign in</a>
-        <a class="btn btn-primary" href="#demo">See JobbPulse in action</a>
+        <a class="btn btn-primary" href="#watch">See JobbPulse in action</a>
         <button
           type="button"
           class="nav-toggle"
@@ -48,7 +48,7 @@ function close() {
     <nav v-if="open" id="mobile-nav" class="nav-mobile" aria-label="Mobile">
       <a v-for="item in nav" :key="item.href" :href="item.href" @click="close">{{ item.label }}</a>
       <a :href="appUrl" @click="close">Sign in</a>
-      <a class="btn btn-primary" href="#demo" @click="close">See JobbPulse in action</a>
+      <a class="btn btn-primary" href="#watch" @click="close">See JobbPulse in action</a>
     </nav>
   </header>
 </template>
