@@ -30,6 +30,8 @@ export default defineNuxtConfig({
     public: {
       appUrl: process.env.NUXT_PUBLIC_APP_URL || 'http://localhost:3000',
       contactEmail: process.env.NUXT_PUBLIC_CONTACT_EMAIL || 'hello@jobbpulse.com',
+      vslUrl: process.env.NUXT_PUBLIC_VSL_URL || '',
+      vslPoster: process.env.NUXT_PUBLIC_VSL_POSTER || '/images/jobs-page-clay.png',
     },
   },
   css: ['~/assets/css/main.css'],

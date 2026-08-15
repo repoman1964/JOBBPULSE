@@ -1,6 +1,8 @@
 <script setup lang="ts">
 const config = useRuntimeConfig()
 const email = config.public.contactEmail as string
+const vslUrl = config.public.vslUrl as string
+const vslPoster = config.public.vslPoster as string
 
 const name = ref('')
 const fromEmail = ref('')
@@ -42,7 +44,7 @@ const mailto = computed(() => {
           </p>
           <div class="hero-actions">
             <a class="btn btn-primary" href="#demo">See JobbPulse in action</a>
-            <a class="btn btn-secondary" href="#how-it-works">How it works</a>
+            <a class="btn btn-secondary" href="#watch">Watch the walkthrough</a>
           </div>
           <p class="hero-note">A few taps. A quick description. Back to work.</p>
         </div>
@@ -57,7 +59,25 @@ const mailto = computed(() => {
       </div>
     </section>
 
-    <section class="section section-alt" id="problem">
+    <section class="section section-alt" id="watch">
+      <div class="container vsl">
+        <div class="section-head">
+          <p class="eyebrow">Watch</p>
+          <h2>See JobbPulse turn a finished job into marketing.</h2>
+          <p>
+            A short walkthrough of the contractor app — photos, a 30-second voice note, and what
+            comes out the other side.
+          </p>
+        </div>
+        <SalesVideo
+          :src="vslUrl"
+          :poster="vslPoster"
+          title="JobbPulse walkthrough"
+        />
+      </div>
+    </section>
+
+    <section class="section" id="problem">
       <div class="container">
         <div class="section-head stack">
           <p class="eyebrow">The work is done. Make it keep working.</p>
@@ -99,7 +119,7 @@ const mailto = computed(() => {
       </div>
     </section>
 
-    <section class="section" id="how-it-works">
+    <section class="section section-alt" id="how-it-works">
       <div class="container">
         <div class="section-head">
           <p class="eyebrow">This is your part</p>
@@ -137,7 +157,7 @@ const mailto = computed(() => {
       </div>
     </section>
 
-    <section class="section section-alt" id="what-you-get">
+    <section class="section" id="what-you-get">
       <div class="container">
         <div class="section-head">
           <p class="eyebrow">JobbPulse takes it from here</p>
@@ -196,7 +216,7 @@ const mailto = computed(() => {
       </div>
     </section>
 
-    <section class="section" id="why">
+    <section class="section section-alt" id="why">
       <div class="container why">
         <p class="eyebrow">Why it matters</p>
         <h2>The job you finished today can help sell the one you do next.</h2>
@@ -222,7 +242,7 @@ const mailto = computed(() => {
       </div>
     </section>
 
-    <section class="section section-alt" id="lead-desk">
+    <section class="section" id="lead-desk">
       <div class="container">
         <div class="section-head stack">
           <p class="eyebrow">And when someone reaches out</p>
