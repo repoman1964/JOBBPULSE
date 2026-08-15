@@ -20,7 +20,7 @@ const trades = [
     <section class="hero">
       <div class="container hero-grid">
         <div class="hero-copy">
-          <p class="eyebrow">For visual home-service contractors</p>
+          <p class="eyebrow">For home-services pros</p>
           <h1>Turn every finished job into marketing for the next one.</h1>
           <p class="lead">Take a few before-and-after photos. Talk for about 30 seconds.</p>
           <p class="lead">
