@@ -35,3 +35,33 @@ export function persistCheckout(
     /* private mode */
   }
 }
+
+export function readCheckout(): {
+  email: string
+  name: string
+  provider: string
+  product: string
+  amount: string
+} | null {
+  try {
+    const raw = sessionStorage.getItem('jobbpulse_checkout')
+    if (!raw) return null
+    const data = JSON.parse(raw) as {
+      email?: string
+      name?: string
+      provider?: string
+      product?: string
+      amount?: string
+    }
+    if (!data.email) return null
+    return {
+      email: data.email,
+      name: data.name || '',
+      provider: data.provider || '',
+      product: data.product || '',
+      amount: data.amount || '',
+    }
+  } catch {
+    return null
+  }
+}

@@ -17,7 +17,7 @@ const year = new Date().getFullYear()
         <a href="#how-it-works">How it works</a>
         <a href="#what-you-get">What you get</a>
         <a href="#lead-desk">Lead Desk</a>
-        <NuxtLink to="/buy">Buy JobbPulse</NuxtLink>
+        <NuxtLink to="/get">Get JobbPulse</NuxtLink>
         <a :href="appUrl">Sign in</a>
       </div>
       <div>

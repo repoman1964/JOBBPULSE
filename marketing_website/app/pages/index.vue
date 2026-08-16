@@ -30,7 +30,7 @@ const trades = [
             they reach out.
           </p>
           <div class="hero-actions">
-            <a class="btn btn-primary" href="#watch">See JobbPulse in action</a>
+            <NuxtLink class="btn btn-buy" :to="buyUrl">Get JobbPulse</NuxtLink>
             <a class="btn btn-secondary" href="#watch">Watch the walkthrough</a>
           </div>
           <p class="hero-note">A few taps. A quick description. Back to work.</p>
@@ -62,7 +62,7 @@ const trades = [
           title="JobbPulse walkthrough"
         />
         <div class="vsl-buy">
-          <NuxtLink class="btn btn-buy" :to="buyUrl">Buy JobbPulse</NuxtLink>
+          <NuxtLink class="btn btn-buy" :to="buyUrl">Get JobbPulse</NuxtLink>
         </div>
       </div>
     </section>
@@ -321,7 +321,7 @@ const trades = [
         <p>Just keep doing good work. We’ll help make sure people see it.</p>
         <p class="hero-note">A few taps. About 30 seconds. Back to work.</p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="#watch">See JobbPulse in action</a>
+          <NuxtLink class="btn btn-buy" :to="buyUrl">Get JobbPulse</NuxtLink>
         </div>
       </div>
     </section>

@@ -573,8 +573,24 @@ p {
   letter-spacing: -0.03em;
 }
 
-.legal p + p {
+.legal h3 {
+  font-size: 1.05rem;
+  margin: 20px 0 8px;
+}
+
+.legal p + p,
+.legal p + ul,
+.legal ul + p {
   margin-top: 12px;
+}
+
+.legal ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.legal li + li {
+  margin-top: 6px;
 }
 
 .legal a {
@@ -603,16 +619,6 @@ p {
   font-size: 0.92rem;
   font-weight: 600;
   color: var(--ink);
-}
-
-.checkout-secure {
-  display: none;
-  margin: 0;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--clay);
 }
 
 .checkout-footer {
@@ -829,49 +835,8 @@ p {
   font-weight: 800;
 }
 
-.buy-guarantee-link {
-  display: inline-block;
-  margin-top: 10px;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--clay);
-}
-
-.buy-guarantee-link:hover {
-  color: var(--clay-dark);
-}
-
-.buy-guarantee-full {
-  margin-top: 48px;
-  padding: 32px 28px;
-  background: var(--cream);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  scroll-margin-top: 24px;
-}
-
-.buy-guarantee-full h2 {
-  font-size: clamp(1.5rem, 3vw, 2rem);
-  letter-spacing: -0.03em;
-}
-
-.buy-guarantee-full h3 {
-  margin-top: 32px;
-  font-size: 1.35rem;
-  letter-spacing: -0.03em;
-}
-
-.buy-guarantee-copy {
+.buy-guarantee p.buy-guarantee-refund {
   margin-top: 16px;
-  max-width: 62ch;
-}
-
-.buy-guarantee-copy p {
-  color: var(--text);
-}
-
-.buy-guarantee-copy p + p {
-  margin-top: 10px;
 }
 
 .buy-checkout h2 {
@@ -1021,11 +986,6 @@ p {
   color: #635bff;
 }
 
-.pay-icon-paypal {
-  background: rgba(0, 112, 186, 0.12);
-  color: #0070ba;
-}
-
 .pay-copy {
   min-width: 0;
   flex: 1;
@@ -1084,6 +1044,97 @@ p {
   gap: 8px;
 }
 
+.thanks {
+  padding: 48px 0 72px;
+}
+
+.thanks-wrap {
+  max-width: 760px;
+}
+
+.thanks-intro {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.thanks-intro h1 {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  letter-spacing: -0.03em;
+}
+
+.thanks-intro h1 span {
+  display: block;
+}
+
+.thanks-intro .lead {
+  margin-top: 12px;
+}
+
+.thanks-email {
+  margin-top: 12px;
+  color: var(--muted);
+}
+
+.thanks-steps {
+  margin-top: 40px;
+}
+
+.thanks-steps h2 {
+  font-size: 1.6rem;
+  letter-spacing: -0.03em;
+  margin: 8px 0 20px;
+}
+
+.thanks-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.thanks-list li {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.thanks-list .step-num {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.thanks-list h3 {
+  font-size: 1.02rem;
+}
+
+.thanks-list .muted {
+  margin-top: 4px;
+}
+
+.thanks-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.thanks-note {
+  margin-top: 16px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.thanks-note a {
+  color: var(--clay);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .site-footer {
   background: var(--bg-alt);
   border-top: 1px solid var(--line);
@@ -1118,8 +1169,8 @@ p {
 }
 
 @media (min-width: 800px) {
-  .checkout-secure {
-    display: block;
+  .thanks {
+    padding: 64px 0 96px;
   }
 
   .buy {
@@ -1153,11 +1204,6 @@ p {
   aside.buy-card {
     position: sticky;
     top: 20px;
-  }
-
-  .buy-guarantee-full {
-    margin-top: 56px;
-    padding: 40px 36px;
   }
 
   .nav-desktop,

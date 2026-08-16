@@ -13,12 +13,12 @@ export const offer = {
     'Take a few photos. Talk for about 30 seconds. JobbPulse takes it from there.',
   guaranteeTitle: 'The JobbPulse 90-Day Work Guarantee',
   guaranteeBody:
-    'Give JobbPulse 90 days and actually put it to work. Complete onboarding and submit at least four completed jobs with the required photos and short voice description. If you do your part and don’t believe it has made it substantially easier to turn completed work into consistent marketing while building a stronger online presence, tell us.',
+    "Give JobbPulse 90 days and actually put it to work. Submit at least four completed jobs with the required photos and short voice description. Do that and if you don't see how easy it is to turn your completed jobs into consistent marketing and builds you a stronger online presence, tell us.",
   guaranteeRefund: 'We’ll refund every monthly payment from those first 90 days.',
-  promiseTitle: 'The 2-Day Publishing Promise',
+  promiseTitle: 'The 48 Hour Publishing Promise',
   promiseBody:
-    'Once you approve a completed-job content package, we’ll publish it to the applicable JobbPulse destinations within two business days.',
-  promiseMiss: 'If we miss that deadline, your next month of JobbPulse is free.',
+    "Once you approve a completed-job package, we'll publish it to all your connected social media accounts and to your website and our local JobbPulse directory listing within 48 hours.",
+  promiseMiss: "If we don't, your next month of JobbPulse is free.",
 } as const
 
 export const workGuarantee = {
@@ -49,11 +49,11 @@ export const workGuarantee = {
 } as const
 
 export const publishingPromise = {
-  title: 'The 2-Day Publishing Promise',
+  title: 'The 48 Hour Publishing Promise',
   paragraphs: [
     { text: 'And we back the ongoing service with another promise.' },
     {
-      text: 'Once you approve a completed-job content package, we’ll publish it to the applicable JobbPulse destinations within two business days.',
+      text: 'Once you approve a completed-job package, we’ll publish it to all your connected social media accounts and to your website and our local JobbPulse directory listing within 48 hours.',
     },
     {
       text: 'If we miss that deadline, your next month of JobbPulse is free.',
@@ -72,14 +72,12 @@ export const priceIncludesShort = [
 ] as const
 
 export const offerIncludes = [
-  'One company workspace',
-  'Job capture from the field',
-  'AI content from your photos and voice note',
-  'Human approval before publishing',
+  'Easy job capture',
+  'Auto generated content',
+  'Approve before posting',
   'Social publishing',
-  'Website project updates',
+  'Website updates',
   'JobbPulse project page',
-  'Missed-call and inquiry follow-up',
-  '90-Day Work Guarantee if you put it to work',
-  '2-Day Publishing Promise after you approve',
+  'Missed-call follow-up',
+  '90-Day Guarantee',
 ] as const

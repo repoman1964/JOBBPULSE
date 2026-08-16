@@ -25,6 +25,8 @@ This page is meant to stay short until JobbPulse is selling. Do not add pricing,
 | `NUXT_PUBLIC_CONTACT_EMAIL` | `hello@jobbpulse.com` |
 | `NUXT_PUBLIC_VSL_URL` | empty — YouTube, Vimeo, or `.mp4` URL for the Watch section |
 | `NUXT_PUBLIC_VSL_POSTER` | `/images/jobs-page-clay.png` |
+| `NUXT_PUBLIC_THANK_YOU_VIDEO_URL` | empty — founder welcome video on `/thank-you` |
+| `NUXT_PUBLIC_THANK_YOU_VIDEO_POSTER` | `/images/jobs-page-clay.png` |
 
 ## Cloudflare deploy (monorepo)
 
@@ -58,6 +60,7 @@ Optional build variables:
 | `NUXT_PUBLIC_APP_URL` | production Contractor App URL |
 | `NUXT_PUBLIC_CONTACT_EMAIL` | `hello@jobbpulse.com` |
 | `NUXT_PUBLIC_VSL_URL` | YouTube, Vimeo, or `.mp4` URL |
+| `NUXT_PUBLIC_THANK_YOU_VIDEO_URL` | Founder welcome video on the confirmation page |
 
 After saving, push a commit that touches `marketing_website/` (or trigger a manual build) to verify.
 

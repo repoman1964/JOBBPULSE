@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { offer } from '~/data/offer'
-
 const year = new Date().getFullYear()
 </script>
 
@@ -12,9 +10,6 @@ const year = new Date().getFullYear()
           <span aria-hidden="true">←</span>
           Back to JobbPulse
         </NuxtLink>
-        <p class="checkout-secure">
-          Secure checkout · {{ offer.priceLabel }} {{ offer.pricePeriod }}
-        </p>
       </div>
     </div>
     <main class="site-main">
