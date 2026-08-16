@@ -2,6 +2,7 @@
 const config = useRuntimeConfig()
 const vslUrl = config.public.vslUrl as string
 const vslPoster = config.public.vslPoster as string
+const buyUrl = config.public.buyUrl as string
 
 const trades = [
   'Painting',
@@ -60,6 +61,9 @@ const trades = [
           :poster="vslPoster"
           title="JobbPulse walkthrough"
         />
+        <div class="vsl-buy">
+          <NuxtLink class="btn btn-buy" :to="buyUrl">Buy JobbPulse</NuxtLink>
+        </div>
       </div>
     </section>
 

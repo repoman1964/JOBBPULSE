@@ -17,6 +17,7 @@ const year = new Date().getFullYear()
         <a href="#how-it-works">How it works</a>
         <a href="#what-you-get">What you get</a>
         <a href="#lead-desk">Lead Desk</a>
+        <NuxtLink to="/buy">Buy JobbPulse</NuxtLink>
         <a :href="appUrl">Sign in</a>
       </div>
       <div>
@@ -24,6 +25,7 @@ const year = new Date().getFullYear()
         <a :href="`mailto:${email}`">{{ email }}</a>
         <NuxtLink to="/privacy">Privacy Policy</NuxtLink>
         <NuxtLink to="/terms">Terms of Service</NuxtLink>
+        <NuxtLink to="/refund">Refund Policy</NuxtLink>
       </div>
     </div>
     <div class="container footer-bottom">

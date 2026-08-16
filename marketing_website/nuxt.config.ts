@@ -29,9 +29,14 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       appUrl: process.env.NUXT_PUBLIC_APP_URL || 'http://localhost:3000',
+      buyUrl: process.env.NUXT_PUBLIC_BUY_URL || '/buy',
       contactEmail: process.env.NUXT_PUBLIC_CONTACT_EMAIL || 'hello@jobbpulse.com',
       vslUrl: process.env.NUXT_PUBLIC_VSL_URL || '',
       vslPoster: process.env.NUXT_PUBLIC_VSL_POSTER || '/images/jobs-page-clay.png',
+      stripePaymentLink:
+        process.env.NUXT_PUBLIC_STRIPE_PAYMENT_LINK ||
+        'https://buy.stripe.com/5kQ9AU70TckD1b3bAjgrS09',
+      paypalPaymentLink: process.env.NUXT_PUBLIC_PAYPAL_PAYMENT_LINK || '',
     },
   },
   css: ['~/assets/css/main.css'],
@@ -49,7 +54,7 @@ export default defineNuxtConfig({
     },
     prerender: {
       crawlLinks: true,
-      routes: ['/', '/privacy', '/terms'],
+      routes: ['/', '/privacy', '/terms', '/buy', '/refund'],
     },
   },
 })
