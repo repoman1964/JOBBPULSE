@@ -1,9 +1,9 @@
 export const offer = {
   productName: 'JobbPulse',
   sku: 'jobbpulse-core',
-  price: 297,
-  priceLabel: '$297',
-  priceAmount: '297.00',
+  price: 97,
+  priceLabel: '$97',
+  priceAmount: '97.00',
   priceCurrency: 'USD',
   pricePeriod: 'per month',
   planLabel: 'Founder plan',

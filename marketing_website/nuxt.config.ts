@@ -38,7 +38,7 @@ export default defineNuxtConfig({
         process.env.NUXT_PUBLIC_THANK_YOU_VIDEO_POSTER || '/images/jobs-page-clay.png',
       stripePaymentLink:
         process.env.NUXT_PUBLIC_STRIPE_PAYMENT_LINK ||
-        'https://buy.stripe.com/5kQ9AU70TckD1b3bAjgrS09',
+        'https://buy.stripe.com/7sY14ofxp4Sb8DvcEngrS0a',
     },
   },
   routeRules: {
