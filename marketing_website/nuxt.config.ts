@@ -4,7 +4,7 @@ export default defineNuxtConfig({
   ssr: true,
   app: {
     head: {
-      title: 'JobbPulse | Marketing from the jobs you already finish',
+      title: 'JobbPulse | Marketing everywhere from your finished jobs',
       htmlAttrs: { lang: 'en' },
       meta: [
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },

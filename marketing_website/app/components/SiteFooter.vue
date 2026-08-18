@@ -10,7 +10,7 @@ const year = new Date().getFullYear()
     <div class="container footer-grid">
       <div>
         <p class="brand-name footer-brand">Jobb<span>Pulse</span></p>
-        <p class="muted">Marketing from the jobs you already finish.</p>
+        <p class="muted">Marketing everywhere from your finished jobs.</p>
       </div>
       <div>
         <p class="footer-label">Product</p>
