@@ -62,7 +62,7 @@ const trades = [
           title="JobbPulse walkthrough"
         />
         <div class="vsl-buy">
-          <NuxtLink class="btn btn-buy" :to="buyUrl">Get JobbPulse</NuxtLink>
+          <NuxtLink class="btn btn-buy" :to="buyUrl">I want JobbPulse</NuxtLink>
         </div>
       </div>
     </section>
