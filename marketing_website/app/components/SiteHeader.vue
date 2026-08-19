@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const config = useRuntimeConfig()
 const appUrl = config.public.appUrl as string
-const buyUrl = config.public.buyUrl as string
+const { show } = useAskModal()
 const open = ref(false)
 
 const nav = [
@@ -13,6 +13,11 @@ const nav = [
 
 function close() {
   open.value = false
+}
+
+function openAsk() {
+  close()
+  show()
 }
 </script>
 
@@ -29,7 +34,7 @@ function close() {
 
       <div class="header-actions">
         <a class="link-quiet" :href="appUrl">Sign in</a>
-        <NuxtLink class="btn btn-buy" :to="buyUrl">Get JobbPulse</NuxtLink>
+        <button type="button" class="btn btn-buy" @click="openAsk">Ask us</button>
         <button
           type="button"
           class="nav-toggle"
@@ -48,7 +53,7 @@ function close() {
     <nav v-if="open" id="mobile-nav" class="nav-mobile" aria-label="Mobile">
       <a v-for="item in nav" :key="item.href" :href="item.href" @click="close">{{ item.label }}</a>
       <a :href="appUrl" @click="close">Sign in</a>
-      <NuxtLink class="btn btn-buy" :to="buyUrl" @click="close">Get JobbPulse</NuxtLink>
+      <button type="button" class="btn btn-buy" @click="openAsk">Ask us</button>
     </nav>
   </header>
 </template>

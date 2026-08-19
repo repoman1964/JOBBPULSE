@@ -2,18 +2,52 @@
 const config = useRuntimeConfig()
 const vslUrl = config.public.vslUrl as string
 const vslPoster = config.public.vslPoster as string
-const buyUrl = config.public.buyUrl as string
+const { show } = useAskModal()
 
 const trades = [
-  'Painting',
-  'Tree Service',
-  'Hardscaping',
-  'Landscaping',
-  'Flooring',
-  'Fences & Decks',
-  'Roofing',
-  'Remodeling',
+  {
+    name: 'Painting',
+    before: '/images/trades/painting-before.jpg',
+    after: '/images/trades/painting-after.jpg',
+  },
+  {
+    name: 'Tree Service',
+    before: '/images/trades/tree-before.jpg',
+    after: '/images/trades/tree-after.jpg',
+  },
+  {
+    name: 'Hardscaping',
+    before: '/images/trades/hardscape-before.jpg',
+    after: '/images/trades/hardscape-after.jpg',
+  },
+  {
+    name: 'Landscaping',
+    before: '/images/trades/landscape-before.jpg',
+    after: '/images/trades/landscape-after.jpg',
+  },
+  {
+    name: 'Flooring',
+    before: '/images/trades/flooring-before.jpg',
+    after: '/images/trades/flooring-after.jpg',
+  },
+  {
+    name: 'Fences & Decks',
+    before: '/images/trades/deck-before.jpg',
+    after: '/images/trades/deck-after.jpg',
+  },
+  {
+    name: 'Roofing',
+    before: '/images/trades/roofing-before.jpg',
+    after: '/images/trades/roofing-after.jpg',
+  },
+  {
+    name: 'Remodeling',
+    before: '/images/trades/remodel-before.jpg',
+    after: '/images/trades/remodel-after.jpg',
+  },
 ]
+
+const galleryTrades = [...trades, ...trades]
 </script>
 
 <template>
@@ -30,7 +64,7 @@ const trades = [
             they reach out.
           </p>
           <div class="hero-actions">
-            <NuxtLink class="btn btn-buy" :to="buyUrl">Get JobbPulse</NuxtLink>
+            <button type="button" class="btn btn-buy" @click="show">Ask about JobbPulse</button>
             <a class="btn btn-secondary" href="#watch">Watch the walkthrough</a>
           </div>
           <p class="hero-note">A few taps. A quick description. Back to work.</p>
@@ -62,7 +96,7 @@ const trades = [
           title="JobbPulse walkthrough"
         />
         <div class="vsl-buy">
-          <NuxtLink class="btn btn-buy" :to="buyUrl">I want JobbPulse</NuxtLink>
+          <button type="button" class="btn btn-buy" @click="show">Ask about JobbPulse</button>
         </div>
       </div>
     </section>
@@ -158,124 +192,98 @@ const trades = [
           </p>
           <p>That can include:</p>
         </div>
-        <div class="output-grid">
-          <div class="output-cards">
-            <article class="card">
-              <h3>Social media content</h3>
-              <p class="muted">
-                Professional posts built from your real projects and published across your
-                connected social accounts.
-              </p>
-            </article>
-            <article class="card">
-              <h3>Fresh website projects</h3>
-              <p class="muted">
-                Recent jobs added to your website so potential customers can see current examples
-                of your work.
-              </p>
-            </article>
-            <article class="card">
-              <h3>A JobbPulse project page</h3>
-              <p class="muted">
-                Each completed job can also become part of your JobbPulse portfolio, giving you
-                another place to show the work.
-              </p>
-            </article>
-            <article class="card">
-              <h3>Review and customer follow-up</h3>
-              <p class="muted">
-                JobbPulse can trigger follow-up that helps you collect more reviews and stay in
-                touch without relying on memory.
-              </p>
-            </article>
-          </div>
-          <div class="phone">
-            <img
-              src="/images/approval-clay.png"
-              width="390"
-              height="844"
-              alt="Review and approve screen showing social posts and a website project from one job"
-            >
-          </div>
+        <figure class="output-visual">
+          <img
+            src="/images/marketing-everywhere.png?v=2"
+            width="1672"
+            height="941"
+            alt="One completed job becomes marketing everywhere: social posts, website, project page, and local listing"
+          >
+        </figure>
+        <div class="output-cards">
+          <article class="card">
+            <h3>Social media content</h3>
+            <p class="muted">
+              Professional posts built from your real projects and published across your
+              connected social accounts.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Fresh website projects</h3>
+            <p class="muted">
+              Recent jobs added to your website so potential customers can see current examples
+              of your work.
+            </p>
+          </article>
+          <article class="card">
+            <h3>A JobbPulse project page</h3>
+            <p class="muted">
+              Each completed job can also become part of your JobbPulse portfolio, giving you
+              another place to show the work.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Review and customer follow-up</h3>
+            <p class="muted">
+              JobbPulse can trigger follow-up that helps you collect more reviews and stay in
+              touch without relying on memory.
+            </p>
+          </article>
         </div>
-        <div class="closing-lines">
-          <p>One job.</p>
-          <p>More places showing what your company can do.</p>
-          <p>And almost none of the marketing work lands on you.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="section section-alt" id="why">
-      <div class="container why">
-        <p class="eyebrow">Why it matters</p>
-        <h2>The job you finished today can help sell the one you do next.</h2>
-        <p class="lead">Homeowners want proof.</p>
-        <p class="lead">They want to see the deck.</p>
-        <p class="lead">The kitchen.</p>
-        <p class="lead">The roof.</p>
-        <p class="lead">The yard.</p>
-        <p class="lead">The paint job.</p>
-        <p class="lead">The before.</p>
-        <p class="lead">The after.</p>
-        <p class="lead">
-          They want to know you’ve done this kind of work before — and done it well.
-        </p>
-        <p class="lead">Every completed project gives you another piece of that proof.</p>
-        <p class="lead">
-          <strong>JobbPulse makes sure it doesn’t die in your camera roll.</strong>
-        </p>
-        <p class="lead">
-          The more work you complete, the more real projects future customers can see when they
-          check you out.
-        </p>
       </div>
     </section>
 
     <section class="section" id="lead-desk">
       <div class="container">
-        <div class="section-head stack">
-          <p class="eyebrow">And when someone reaches out</p>
-          <h2>Don’t let a good lead die because you were busy doing the actual work.</h2>
-          <p>Marketing only matters if somebody answers when the phone rings.</p>
-          <p>And contractors miss calls.</p>
-          <p>You’re driving.</p>
-          <p>Running equipment.</p>
-          <p>Talking to a customer.</p>
-          <p>Standing on a roof.</p>
-          <p>
-            JobbPulse Lead Desk helps keep new inquiries moving even when you can’t respond
-            immediately.
-          </p>
-        </div>
-        <div class="lead-grid">
-          <article class="card">
-            <h3>Missed-call text back</h3>
-            <p class="muted">
-              If you miss a call, the conversation can start by text instead of ending at voicemail.
+        <div class="lead-layout">
+          <div class="section-head stack">
+            <p class="eyebrow">When someone reaches out</p>
+            <h2>Don’t lose a good lead just because you were busy doing the actual work.</h2>
+            <p>Marketing only matters if somebody answers when the phone rings.</p>
+            <p>And contractors miss calls, all the time.</p>
+            <p>You’re driving. Running equipment. Talking to a customer. Standing on a roof.</p>
+            <p>
+              Lead Desk keeps in touch with current customers and new prospects even when you
+              can’t.
             </p>
-          </article>
-          <article class="card">
-            <h3>Fast website response</h3>
-            <p class="muted">
-              New website inquiries can receive an immediate response instead of waiting until you
-              get back to the office.
-            </p>
-          </article>
-          <article class="card">
-            <h3>SMS and email follow-up</h3>
-            <p class="muted">
-              Keep the conversation moving when a homeowner doesn’t respond the first time.
-            </p>
-          </article>
-          <article class="card">
-            <h3>Estimate and appointment booking</h3>
-            <p class="muted">Give qualified prospects a simple path toward the next step.</p>
-          </article>
-        </div>
-        <div class="closing-lines">
-          <p>The goal isn’t to give you another CRM to babysit.</p>
-          <p>The goal is to help fewer opportunities fall through the cracks.</p>
+          </div>
+          <figure class="lead-scene">
+            <img
+              src="/images/lead-desk.jpg?v=2"
+              width="864"
+              height="1152"
+              alt="A painter on a ladder working on a house while a call comes in on the phone in his pocket"
+            >
+            <figcaption class="lead-toast">
+              <p class="lead-toast-label">Lead Desk</p>
+              <p>He can’t pick up. The call still gets answered.</p>
+            </figcaption>
+          </figure>
+          <div class="lead-grid">
+            <article class="card">
+              <h3>Missed-call text back</h3>
+              <p class="muted">
+                If you miss a call, the conversation can start by text instead of ending at voicemail.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Fast website response</h3>
+              <p class="muted">
+                New website inquiries can receive an immediate response instead of waiting until you
+                get back to the office.
+              </p>
+            </article>
+            <article class="card">
+              <h3>SMS and email follow-up</h3>
+              <p class="muted">
+                Keep the conversation moving when a homeowner doesn’t respond the first time.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Estimate and appointment booking</h3>
+              <p class="muted">Give qualified prospects a simple path toward the next step.</p>
+            </article>
+          </div>
         </div>
       </div>
     </section>
@@ -283,18 +291,29 @@ const trades = [
     <section class="section" id="who">
       <div class="container">
         <div class="section-head">
-          <p class="eyebrow">Built for visual contractors</p>
+          <p class="eyebrow">Built to be seen</p>
           <h2>If your finished work looks good, people should be seeing it.</h2>
           <p>
             JobbPulse is built for home-service businesses where the result helps sell the next job.
           </p>
         </div>
-        <div class="trade-grid">
-          <article v-for="item in trades" :key="item" class="card trade">{{ item }}</article>
+      </div>
+      <div class="trade-gallery" aria-label="Before and after project gallery">
+        <div class="trade-track">
+          <article v-for="(item, index) in galleryTrades" :key="`${item.name}-${index}`" class="trade-shot">
+            <div class="trade-split">
+              <img :src="item.before" :alt="`Before ${item.name} project`" width="720" height="480">
+              <img :src="item.after" :alt="`After ${item.name} project`" width="720" height="480">
+            </div>
+            <span class="trade-badge">{{ item.name }}</span>
+            <span class="ba-label ba-before">Before</span>
+            <span class="ba-label ba-after">After</span>
+          </article>
         </div>
+      </div>
+      <div class="container">
         <p class="who-note">
-          If before-and-after photos help customers understand the quality of your work, JobbPulse
-          gives you a simple way to put those photos to work.
+          If before-and-after photos help customers understand the quality of your work, JobbPulse gives you a simple way to put those photos to work.
         </p>
       </div>
     </section>
@@ -321,7 +340,7 @@ const trades = [
         <p>Just keep doing good work. We’ll help make sure people see it.</p>
         <p class="hero-note">A few taps. About 30 seconds. Back to work.</p>
         <div class="hero-actions">
-          <NuxtLink class="btn btn-buy" :to="buyUrl">Get JobbPulse</NuxtLink>
+          <button type="button" class="btn btn-buy" @click="show">Ask about JobbPulse</button>
         </div>
       </div>
     </section>

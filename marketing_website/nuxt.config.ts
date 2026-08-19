@@ -27,6 +27,10 @@ export default defineNuxtConfig({
     },
   },
   runtimeConfig: {
+    inquiryWebhookUrl: process.env.INQUIRY_WEBHOOK_URL || '',
+    resendApiKey: process.env.RESEND_API_KEY || '',
+    inquiryFromEmail: process.env.INQUIRY_FROM_EMAIL || 'onboarding@resend.dev',
+    inquiryToEmail: process.env.INQUIRY_TO_EMAIL || '',
     public: {
       appUrl: process.env.NUXT_PUBLIC_APP_URL || 'http://localhost:3000',
       buyUrl: process.env.NUXT_PUBLIC_BUY_URL || '/get',

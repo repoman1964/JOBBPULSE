@@ -3,6 +3,7 @@ const config = useRuntimeConfig()
 const appUrl = config.public.appUrl as string
 const email = config.public.contactEmail as string
 const year = new Date().getFullYear()
+const { show } = useAskModal()
 </script>
 
 <template>
@@ -17,7 +18,7 @@ const year = new Date().getFullYear()
         <a href="#how-it-works">How it works</a>
         <a href="#what-you-get">What you get</a>
         <a href="#lead-desk">Lead Desk</a>
-        <NuxtLink to="/get">Get JobbPulse</NuxtLink>
+        <button type="button" class="footer-ask" @click="show">Ask about JobbPulse</button>
         <a :href="appUrl">Sign in</a>
       </div>
       <div>

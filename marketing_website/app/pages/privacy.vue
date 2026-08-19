@@ -94,6 +94,22 @@ useSeoMeta({
       we can market JobbPulse to those homeowners.
     </p>
 
+    <h3>Marketing Site Questions</h3>
+    <p>
+      If you use the question form on jobbpulse.com, we process the information you submit so we can
+      reply. That may include:
+    </p>
+    <ul>
+      <li>Your name</li>
+      <li>Your email address</li>
+      <li>Company name, if you provide one</li>
+      <li>The question or message you send</li>
+    </ul>
+    <p>
+      We use that information to continue the conversation you started. We do not add you to a
+      marketing list from that form alone.
+    </p>
+
     <h3>Website and Device Information</h3>
     <p>
       JobbPulse may collect limited technical information when you visit the marketing site, use the
@@ -116,6 +132,7 @@ useSeoMeta({
     <p>This may include:</p>
     <ul>
       <li>Creating and maintaining your account</li>
+      <li>Replying to questions submitted through the marketing site</li>
       <li>Generating marketing content from the jobs you submit</li>
       <li>Showing you that content for approval</li>
       <li>Publishing approved content to connected social accounts</li>
