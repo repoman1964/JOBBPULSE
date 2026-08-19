@@ -275,23 +275,25 @@ p {
   gap: 14px;
 }
 
-.header-actions .link-quiet,
-.header-actions .btn {
+.header-actions .link-quiet {
   display: none;
 }
 
 .nav-toggle {
+  appearance: none;
   width: 44px;
   height: 44px;
   border: 0;
+  border-radius: 0;
   background: transparent;
+  color: var(--ink);
   display: grid;
   place-content: center;
   gap: 5px;
   padding: 0;
 }
 
-.nav-toggle span {
+.nav-toggle span:not(.sr-only) {
   display: block;
   width: 20px;
   height: 2px;
@@ -310,11 +312,6 @@ p {
   display: flex;
   align-items: center;
   font-weight: 600;
-}
-
-.nav-mobile .btn {
-  justify-content: center;
-  margin-top: 4px;
 }
 
 .hero {
@@ -1448,14 +1445,13 @@ p {
   }
 
   .nav-desktop,
-  .header-actions .link-quiet,
-  .header-actions .btn {
+  .header-actions .link-quiet {
     display: flex;
   }
 
   .nav-toggle,
   .nav-mobile {
-    display: none;
+    display: none !important;
   }
 
   .hero-grid {

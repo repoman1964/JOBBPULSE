@@ -18,7 +18,7 @@ const { show } = useAskModal()
         <a href="#how-it-works">How it works</a>
         <a href="#what-you-get">What you get</a>
         <a href="#lead-desk">Lead Desk</a>
-        <button type="button" class="footer-ask" @click="show">Ask about JobbPulse</button>
+        <button type="button" class="footer-ask" @click="show">Ask us about JobbPulse</button>
         <a :href="appUrl">Sign in</a>
       </div>
       <div>

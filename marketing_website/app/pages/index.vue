@@ -64,7 +64,7 @@ const galleryTrades = [...trades, ...trades]
             they reach out.
           </p>
           <div class="hero-actions">
-            <button type="button" class="btn btn-buy" @click="show">Ask about JobbPulse</button>
+            <button type="button" class="btn btn-buy" @click="show">Ask us about JobbPulse</button>
             <a class="btn btn-secondary" href="#watch">Watch the walkthrough</a>
           </div>
           <p class="hero-note">A few taps. A quick description. Back to work.</p>
@@ -96,7 +96,7 @@ const galleryTrades = [...trades, ...trades]
           title="JobbPulse walkthrough"
         />
         <div class="vsl-buy">
-          <button type="button" class="btn btn-buy" @click="show">Ask about JobbPulse</button>
+          <button type="button" class="btn btn-buy" @click="show">Ask us about JobbPulse</button>
         </div>
       </div>
     </section>
@@ -340,7 +340,7 @@ const galleryTrades = [...trades, ...trades]
         <p>Just keep doing good work. We’ll help make sure people see it.</p>
         <p class="hero-note">A few taps. About 30 seconds. Back to work.</p>
         <div class="hero-actions">
-          <button type="button" class="btn btn-buy" @click="show">Ask about JobbPulse</button>
+          <button type="button" class="btn btn-buy" @click="show">Ask us about JobbPulse</button>
         </div>
       </div>
     </section>
