@@ -60,7 +60,7 @@ const galleryTrades = [...trades, ...trades]
           <p class="lead">Take a few before-and-after photos. Talk for about 30 seconds.</p>
           <p class="lead">
             JobbPulse turns the work you already completed into social content, fresh website
-            projects, and proof future customers can actually see — then helps you respond when
+            projects, and proof future customers can actually see, then helps you respond when
             they reach out.
           </p>
           <div class="hero-actions">
@@ -86,7 +86,7 @@ const galleryTrades = [...trades, ...trades]
           <p class="eyebrow">Watch</p>
           <h2>See JobbPulse turn a finished job into marketing.</h2>
           <p>
-            A short walkthrough of the contractor app — photos, a 30-second voice note, and what
+            A short walkthrough of the contractor app: photos, a 30-second voice note, and what
             comes out the other side.
           </p>
         </div>
@@ -136,7 +136,7 @@ const galleryTrades = [...trades, ...trades]
             <h3>Your website keeps showing recent work</h3>
             <p class="muted">
               New projects can be added as you finish them, so prospects see what your company is
-              doing now — not what it did years ago.
+              doing now, not what it did years ago.
             </p>
           </article>
         </div>
@@ -327,8 +327,8 @@ const galleryTrades = [...trades, ...trades]
           driveway.
         </p>
         <p>
-          JobbPulse turns the work you already did into ongoing marketing — social posts, a fresher
-          website, and a project page a homeowner can actually look at — and helps you stay on top
+          JobbPulse turns the work you already did into ongoing marketing: social posts, a fresher
+          website, and a project page a homeowner can actually look at. It also helps you stay on top
           of the opportunities that marketing creates.
         </p>
         <ul class="no-list close-list">

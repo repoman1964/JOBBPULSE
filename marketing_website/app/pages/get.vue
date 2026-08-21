@@ -151,7 +151,7 @@ function onSubmit(event: Event) {
           </p>
 
           <p v-if="canceled" class="buy-notice" role="status">
-            Checkout was canceled. No charge was made — pick a payment method when you’re ready.
+            Checkout was canceled. No charge was made. Pick a payment method when you’re ready.
           </p>
 
           <form class="buy-form" novalidate @submit="onSubmit">

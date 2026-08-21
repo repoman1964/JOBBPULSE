@@ -47,7 +47,7 @@ const embedSrc = computed(() => (fileSrc.value ? '' : vslEmbedSrc(props.src)))
           <path d="M8 5v14l11-7L8 5z" />
         </svg>
       </div>
-      <p class="sr-only">{{ title }} — video coming soon</p>
+      <p class="sr-only">{{ title }}: video coming soon</p>
     </div>
   </div>
 </template>

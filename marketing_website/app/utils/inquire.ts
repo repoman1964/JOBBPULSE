@@ -59,7 +59,7 @@ export function mailtoInquiry(
   const body = [
     inquiry.message,
     '',
-    '—',
+    '-',
     inquiry.name,
     inquiry.email,
     inquiry.company,

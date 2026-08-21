@@ -5,7 +5,7 @@ const email = config.public.contactEmail as string
 useSeoMeta({
   title: 'Privacy Policy | JobbPulse',
   description:
-    'Privacy Policy for JobbPulse — how Dimension Seven Systems accesses, uses, stores, and discloses information when you use JobbPulse.',
+    'Privacy Policy for JobbPulse: how Dimension Seven Systems accesses, uses, stores, and discloses information when you use JobbPulse.',
 })
 </script>
 
