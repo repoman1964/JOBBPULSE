@@ -23,27 +23,26 @@ Suggested custom domains (add in the dashboard after the first deploy):
 
 ## 1. Cloudflare R2 (photos)
 
-1. In Cloudflare: **R2** → create a bucket named `jobbpulse` (or match `S3_BUCKET`).
-2. Create an R2 API token with Object Read & Write on that bucket.
-3. Note the S3 API URL: `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`
-4. Bucket **Settings → CORS policy** — allow PUT/GET from the app origin:
+Production object storage is **Cloudflare R2** on the Dimension Seven Systems account. The bucket **`jobbpulse`** already exists (WNAM). CORS for the Render app origin and `https://app.jobbpulse.com` is applied from [`backend/r2-cors.json`](./backend/r2-cors.json).
 
-```json
-[
-  {
-    "AllowedOrigins": [
-      "https://jobbpulse-app.onrender.com",
-      "https://app.jobbpulse.com"
-    ],
-    "AllowedMethods": ["GET", "PUT", "HEAD"],
-    "AllowedHeaders": ["*"],
-    "ExposeHeaders": ["ETag", "Content-Type"],
-    "MaxAgeSeconds": 3600
-  }
-]
+S3 API endpoint (use for both Render `S3_ENDPOINT_URL` and `S3_PUBLIC_ENDPOINT_URL`):
+
+```text
+https://b6120b2d531b6d97dfe538cc57780ea9.r2.cloudflarestorage.com
 ```
 
-Replace the onrender.com origin with the real static-site URL after the first deploy. Browsers upload **directly to R2** with a presigned PUT; the API never sees the file bytes.
+`S3_BUCKET=jobbpulse`  
+`S3_REGION=auto`
+
+Create an **R2 API token** (dashboard → R2 → Manage R2 API Tokens) with Object Read & Write on `jobbpulse`. Put the access key id and secret into Render as `S3_ACCESS_KEY` / `S3_SECRET_KEY`. Wrangler login cannot be used as S3 credentials.
+
+Presigned PUT/GET go to the S3 API host above. They do **not** work on an R2 custom domain. Browsers upload directly to R2; the API never sees the file bytes.
+
+To refresh CORS after adding origins:
+
+```bash
+npx wrangler r2 bucket cors set jobbpulse --file contractor_app/backend/r2-cors.json
+```
 
 ## 2. Apply the blueprint
 
@@ -57,10 +56,10 @@ Replace the onrender.com origin with the real static-site URL after the first de
 | `NUXT_PUBLIC_API_BASE_URL` | `jobbpulse-app` | `https://jobbpulse-api.onrender.com` (or `https://api.jobbpulse.com`) |
 | `FRONTEND_BASE_URL` | engine group | `https://jobbpulse-app.onrender.com` (or `https://app.jobbpulse.com`) |
 | `CORS_ORIGINS` | engine group | Same as the app origin (comma-separated if both onrender + custom domain) |
-| `S3_ENDPOINT_URL` | engine group | `https://<ACCOUNT_ID>.r2.cloudflarestorage.com` |
+| `S3_ENDPOINT_URL` | engine group | `https://b6120b2d531b6d97dfe538cc57780ea9.r2.cloudflarestorage.com` |
 | `S3_PUBLIC_ENDPOINT_URL` | engine group | Same as `S3_ENDPOINT_URL` |
-| `S3_ACCESS_KEY` | engine group | R2 access key id |
-| `S3_SECRET_KEY` | engine group | R2 secret access key |
+| `S3_ACCESS_KEY` | engine group | R2 API token access key id |
+| `S3_SECRET_KEY` | engine group | R2 API token secret |
 
 `JWT_SECRET` is generated. `APP_ENV=production` turns off the `123456` dev sign-in code.
 
