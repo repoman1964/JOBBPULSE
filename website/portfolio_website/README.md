@@ -1,14 +1,14 @@
-# JobPulse Portfolio Website
+# JobbPulse Portfolio Website
 
-Public-facing **local project portfolio** (Nuxt SSR). Presents JobPulse as a living gallery of completed contractor projects—not a traditional company directory.
+Public-facing **local project portfolio** (Nuxt SSR). Presents JobbPulse as a living gallery of completed contractor projects—not a traditional company directory.
 
-This site lives under the JobPulse project folder and talks to the JobPulse public API over HTTP when that stack is running. It keeps its own git remote.
+This site lives under the JobbPulse project folder and talks to the JobbPulse public API over HTTP when that stack is running. It keeps its own git remote.
 
 ## Stack
 
 - Nuxt 4 / Vue 3 (SSR)
-- JobPulse FastAPI (`/api/v1/public/*`)
-- PostgreSQL via the shared JobPulse API
+- JobbPulse FastAPI (`/api/v1/public/*`)
+- PostgreSQL via the shared JobbPulse API
 
 ## Features
 
@@ -20,11 +20,11 @@ This site lives under the JobPulse project folder and talks to the JobPulse publ
 | Services × locations SEO pages | `/services`, `/locations`, `/locations/{slug}/{service}` |
 | Search, how it works, for contractors | `/search`, `/how-it-works`, `/for-contractors` |
 
-### JobPulse API (required for live data)
+### JobbPulse API (required for live data)
 
-The app expects the JobPulse API at `NUXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000`).
+The app expects the JobbPulse API at `NUXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000`).
 
-Run the platform from the JobPulse project root:
+Run the platform from the JobbPulse project root:
 
 ```bash
 cd ..
@@ -72,6 +72,6 @@ For phone-on-LAN demos, set all three to your machine’s LAN IP (and allow CORS
 
 | Path | Purpose |
 |---|---|
-| `../` (JobPulse root) | API, infra, seed scripts |
+| `../` (JobbPulse root) | API, infra, seed scripts |
 | `../contractor_app` | Contractor phone app (capture → publish) |
 | `../red_clay_website` | Red Clay marketing demo site |

@@ -1,0 +1,85 @@
+**JobPulse (also referred to as JobbPulse) is a contractor growth system built around one core idea:**
+
+> A completed job should not disappear when the contractor gets paid.
+
+Contractors already produce their best marketing material every day—they complete jobs, take photos, and know exactly what happened. Most of that material dies in the camera roll. JobPulse turns completed work into ongoing business assets while also helping contractors convert the leads that come in.
+
+### Core Product Thesis
+JobPulse does **not** ask contractors to become marketers. The contractor’s required behavior stays extremely simple:
+
+**Create job → capture photos → record a short voice summary → submit.**
+
+Everything else is handled by the system. The product is deliberately *not* a full CRM, field-service management tool, scheduling app, or general business operating system. Its wedge is: **turn completed work into future business**.
+
+### Main Components
+1. **Contractor App**  
+   The simple, mobile-first capture layer. Contractors (or crew/office staff) upload before / in-progress / after photos and record a short voice summary. This is the input mechanism for the entire system.
+
+2. **JobPulse Engine**  
+   The proprietary processing layer. It takes photos + voice + job data, generates marketing assets (social posts, project descriptions, website content, directory pages, etc.), stores revisions, and routes them through approval and publishing. The contractor does not have to review every generated piece of content.
+
+3. **JobPulse Conversion Site (Smart Website)**  
+   The contractor’s primary customer-facing website, powered by GoHighLevel. It includes the usual contractor-site elements plus a strong conversion layer: missed-call text-back, AI SMS conversations, AI phone answering, website chat, lead nurturing, appointment/estimate booking, and automated review requests. Completed jobs automatically refresh the site with fresh proof.
+
+4. **JobPulse Lead Desk**  
+   The lead-handling and automation layer (also powered by GoHighLevel). It recovers missed calls, follows up, nurtures, and books. It is infrastructure supporting the larger promise, not the primary marketing category.
+
+5. **Portfolio Website / JobPulse Directory**  
+   A JobPulse-owned distribution layer built around real completed projects (not traditional business listings). Homeowners discover work first; contractors, services, and locations are organized around those projects. Each project gets its own permanent public page. This is a long-term compounding asset, not the initial sales wedge.
+
+6. **Social Publishing**  
+   Approved content is distributed to the contractor’s social accounts (via Upload-Post / Blotato or comparable platform).
+
+### The Flywheel
+Complete job → document it (photos + voice) → JobPulse generates assets → assets appear on Conversion Site, Portfolio/Directory, and social → proof accumulates → leads arrive → Lead Desk responds and converts → contractor books more work → cycle repeats.
+
+### Benefits
+- **Immediate value**: Faster lead response, missed-call recovery, AI conversations, booking, and review requests.
+- **Compounding value**: Growing project portfolio, living website proof, social content, local project pages, directory presence, and search visibility.
+- Contractors stop leaking both leads *and* proof.
+- One additional booked job can justify the monthly cost for the targeted trades.
+- The contractor keeps doing the work they already do; JobPulse extracts more marketing and sales value from it.
+
+### Target Market
+**Visual home-service contractors**, initially focused on the Atlanta metro area.
+
+**Phase 1 verticals**: Painting, tree service & stump removal, hardscaping & landscape installation.  
+**Later**: Flooring, fencing & decks, roofing.
+
+Ideal customer profile:
+- Produces visually impressive work with before/after photos
+- Average job value roughly $500–$1,000+
+- Depends on local reputation and reviews
+- Misses calls or responds slowly
+- Does not consistently publish completed work
+- Does not want to become a full-time marketer
+
+### Strategic Positioning
+JobPulse should feel like **one obvious product**, not a bundle of separate tools. Strong directional positioning:
+
+> JobPulse helps visual contractors stop losing leads and turn every completed job into proof that wins the next one.
+
+Or:
+
+> JobPulse is a lead-converting contractor website that automatically turns completed jobs into fresh proof and marketing content.
+
+### Technology Foundation (Confirmed)
+- Nuxt frontend
+- FastAPI backend
+- GoHighLevel for Conversion Site / Lead Desk
+- Social publishing via Blotato (or comparable)
+- AI content generation connected through the backend
+- Human approval before publishing
+- PostgreSQL intended for structured data; object storage for media
+
+Several infrastructure choices (exact database hosting, auth provider, media storage, transcription, job queue, etc.) remain open.
+
+### Key Risks to Guard Against
+- Positioning confusion (too many categories)
+- Contractor adoption friction on job documentation
+- Feature creep that turns the Contractor App into a full operating system
+- Over-promising directory lead volume before it has proven consumer traffic
+- Weak intermediate proof metrics
+
+**One-sentence definition**:  
+JobPulse turns the work contractors have already completed into an ongoing system for building proof, generating marketing, and converting more of the leads that come in.

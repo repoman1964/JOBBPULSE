@@ -1,4 +1,4 @@
-# JobPulse live demo — click by click
+# JobbPulse live demo — click by click
 
 **Audience:** investor, pilot contractor, or yourself  
 **Time:** ~12–15 minutes  
@@ -200,7 +200,7 @@ You should also see **Notifications** (generation ready, approved, etc.). Point 
 
 When approved:
 
-- Check **JobPulse directory** (on)
+- Check **JobbPulse directory** (on)
 - Check the **Facebook** (and/or Instagram) connection if shown
 - Click the single primary button: **Publish**
 

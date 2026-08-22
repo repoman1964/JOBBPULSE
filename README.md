@@ -15,15 +15,16 @@ Core loop:
 | `api/` | FastAPI modular monolith (PostgreSQL, Redis, S3) |
 | `infra/` | Docker Compose for local dependencies |
 | `contractor_app/` | Newest contractor app (Nuxt frontend + its own FastAPI engine) |
-| `portfolio_website/` | Public local project portfolio (Nuxt SSR) |
-| `red_clay_website/` | Red Clay Cabinet Installers demo marketing site |
-| `marketing_website/` | One-page JobbPulse sales landing page |
+| `website/portfolio_website/` | Public local project portfolio (Nuxt SSR) |
+| `website/red_clay_website/` | Red Clay Cabinet Installers demo marketing site |
+| `website/marketing_website/` | One-page JobbPulse sales landing page |
+| `website/abc_painters_website/` | ABC Painters demo marketing site |
 | `legacy/` | **Frozen prototype** — reference only, not production |
 | `docs/` | Product docs (PRD + build spec) |
-| `jobpulse_prd.md` | Product requirements |
-| `jobpulse_agent_build_spec.md` | Implementation specification |
+| `jobbpulse_prd.md` | Product requirements |
+| `jobbpulse_agent_build_spec.md` | Implementation specification |
 
-`contractor_app/`, `portfolio_website/`, and `red_clay_website/` all live in this repo.
+`contractor_app/` and the sites under `website/` all live in this repo.
 
 ## Prerequisites
 
@@ -52,11 +53,11 @@ The **contractor phone app** is `contractor_app/` (August rewrite: frontend + it
 
 Its Docker API also binds **:8000**, same as `make api-dev`. Do not run both APIs at once.
 
-The **public project portfolio** is `portfolio_website/`. From there: `make install && make dev` → http://localhost:3001
+The **public project portfolio** is `website/portfolio_website/`. From there: `make install && make dev` → http://localhost:3001
 
-The **Red Clay Cabinet Installers** demo marketing site is `red_clay_website/`. It consumes JobbPulse’s public API when both are running.
+The **Red Clay Cabinet Installers** demo marketing site is `website/red_clay_website/`. It consumes JobbPulse’s public API when both are running.
 
-The **JobbPulse sales landing page** is `marketing_website/`. From there: `make install && make dev` → http://localhost:3003. Production deploys as Cloudflare Worker **`jobbpulse-website`** (`make -C marketing_website deploy`).
+The **JobbPulse sales landing page** is `website/marketing_website/`. From there: `make install && make dev` → http://localhost:3003. Production deploys as Cloudflare Worker **`jobbpulse-website`** (`make -C website/marketing_website deploy`).
 
 
 ### Local infra ports

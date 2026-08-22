@@ -1,12 +1,12 @@
-# JobPulse Offer Viability Analysis
+# JobbPulse Offer Viability Analysis
 
 ## Executive Summary
 
-JobPulse appears structurally promising, particularly at the **Offer Viability** layer.
+JobbPulse appears structurally promising, particularly at the **Offer Viability** layer.
 
-The core market already understands and pays for contractor websites, lead follow-up systems, reputation management, local marketing, CRM automation and social media support. JobPulse is therefore capturing existing demand rather than attempting to create an entirely new buying category.
+The core market already understands and pays for contractor websites, lead follow-up systems, reputation management, local marketing, CRM automation and social media support. JobbPulse is therefore capturing existing demand rather than attempting to create an entirely new buying category.
 
-The primary risk is not whether contractors buy marketing help. It is whether JobPulse is presented as one clear, credible buying decision rather than several products bundled together.
+The primary risk is not whether contractors buy marketing help. It is whether JobbPulse is presented as one clear, credible buying decision rather than several products bundled together.
 
 The full diagnostic model is:
 
@@ -27,7 +27,7 @@ This analysis is directional rather than definitive. Real-world viability still 
 
 # 1. Relevant Engines and Layers
 
-The most relevant layers for JobPulse are:
+The most relevant layers for JobbPulse are:
 
 ## Offer Viability
 
@@ -63,7 +63,7 @@ Trust Utility = P(outcome) × Value − Risk
 
 ### What Appears Strong
 
-JobPulse sits inside several established categories that contractors already understand and pay for:
+JobbPulse sits inside several established categories that contractors already understand and pay for:
 
 * Contractor websites
 * Lead follow-up software
@@ -83,9 +83,9 @@ Contractors already understand that:
 * Inconsistent marketing limits future demand
 * Completed work can be used as proof
 
-JobPulse is therefore capturing existing desire rather than trying to persuade contractors to care about an unfamiliar or abstract problem.
+JobbPulse is therefore capturing existing desire rather than trying to persuade contractors to care about an unfamiliar or abstract problem.
 
-The outcome is also economically legible. Buyers can connect JobPulse to:
+The outcome is also economically legible. Buyers can connect JobbPulse to:
 
 * Faster lead response
 * More estimates booked
@@ -121,13 +121,13 @@ A contractor may wonder:
 
 If the buyer cannot quickly categorise the offer, they may struggle to price it, compare it or understand why they should buy it.
 
-This does not mean JobPulse has too many capabilities.
+This does not mean JobbPulse has too many capabilities.
 
 It means the offer needs one **dominant category and entry point**.
 
 A more legible framing could be:
 
-> JobPulse is a lead-converting contractor website that automatically turns completed jobs into fresh proof and marketing content.
+> JobbPulse is a lead-converting contractor website that automatically turns completed jobs into fresh proof and marketing content.
 
 In this framing:
 
@@ -138,7 +138,7 @@ In this framing:
 
 Another possible framing is:
 
-> JobPulse is a completed-job marketing system for visual contractors.
+> JobbPulse is a completed-job marketing system for visual contractors.
 
 This better captures the proprietary concept, but it creates more category-education work because “completed-job marketing system” is not yet a normal buying category.
 
@@ -152,7 +152,7 @@ For early sales, the website-led framing is likely easier for buyers to place.
 
 The customer definition is more specific than “small businesses” or “home-service companies.”
 
-JobPulse describes an occupational world in which:
+JobbPulse describes an occupational world in which:
 
 * Work produces visible before-and-after results
 * Contractors have access to project photos
@@ -228,7 +228,7 @@ A hardscaper may have:
 
 The product can remain broad internally, but the front-end messaging should likely become vertical-specific.
 
-“JobPulse for painters” should not sound exactly like “JobPulse for tree-service companies.”
+“JobbPulse for painters” should not sound exactly like “JobbPulse for tree-service companies.”
 
 ---
 
@@ -238,12 +238,12 @@ Carrier trust is currently underdeveloped in the description.
 
 The product explanation establishes functional credibility, but it does not yet answer:
 
-* Why was JobPulse created?
+* Why was JobbPulse created?
 * What experience does the team have with contractors?
 * Has the team observed missed calls, weak follow-up and unused project photos firsthand?
-* Has JobPulse been tested inside real contractor workflows?
-* Why should contractors trust JobPulse over an agency reselling standard automation software?
-* What operational knowledge does JobPulse possess that general marketing platforms do not?
+* Has JobbPulse been tested inside real contractor workflows?
+* Why should contractors trust JobbPulse over an agency reselling standard automation software?
+* What operational knowledge does JobbPulse possess that general marketing platforms do not?
 
 This matters because many contractors have already encountered:
 
@@ -281,7 +281,7 @@ TU = P(outcome) × Value − Risk
 
 ### What Appears Strong
 
-JobPulse connects to meaningful outcomes:
+JobbPulse connects to meaningful outcomes:
 
 * Fewer missed leads
 * Faster response times
@@ -329,9 +329,9 @@ The causal chain is sensible:
 
 1. The contractor completes a job.
 2. The contractor uploads photos and a voice summary.
-3. JobPulse turns the material into professional content.
+3. JobbPulse turns the material into professional content.
 4. The content becomes website proof, social media content and local project pages.
-5. JobPulse responds to incoming leads.
+5. JobbPulse responds to incoming leads.
 6. Faster follow-up and stronger proof help more prospects move toward an estimate.
 7. More estimates create more opportunities to book work.
 
@@ -375,7 +375,7 @@ Likely buyer concerns include:
 * Will the generated content sound generic?
 * Will the AI answer calls correctly?
 * Will automated messages make my company look impersonal?
-* Will JobPulse replace my current website?
+* Will JobbPulse replace my current website?
 * Can it work with my current systems?
 * Who owns my website and content?
 * Who owns the phone number?
@@ -392,7 +392,7 @@ They indicate perceived implementation, adoption, platform and reputational risk
 
 ### Directory Risk
 
-The JobPulse Directory may become a significant strategic asset.
+The JobbPulse Directory may become a significant strategic asset.
 
 However, early contractors may discount its value until it produces measurable:
 
@@ -426,7 +426,7 @@ The directory can initially be positioned as additional upside and long-term lev
 
 ## What Appears Strong
 
-JobPulse contains several natural and non-manipulative timing forces.
+JobbPulse contains several natural and non-manipulative timing forces.
 
 ### Present Pain
 
@@ -455,7 +455,7 @@ This gives the offer a legitimate “why now.”
 
 ### Stronger Timing Language
 
-The current explanation focuses heavily on what JobPulse does.
+The current explanation focuses heavily on what JobbPulse does.
 
 The cost of inaction could be made more explicit:
 
@@ -475,7 +475,7 @@ That is a stronger timing frame.
 
 ## Moments of Readiness
 
-JobPulse may be especially relevant when a contractor:
+JobbPulse may be especially relevant when a contractor:
 
 * Experiences a slowdown in referrals
 * Has gaps in the schedule
@@ -551,7 +551,7 @@ These objections point toward unresolved:
 
 ---
 
-## Where JobPulse May Attract Interest Without Purchases
+## Where JobbPulse May Attract Interest Without Purchases
 
 The phrase “complete contractor growth system” may sound impressive while remaining broad.
 
@@ -579,7 +579,7 @@ In Trust Utility terms, broadness may increase apparent Value while simultaneous
 
 The strongest initial wedge appears to be:
 
-> JobPulse helps visual contractors stop losing leads and turn every completed job into proof that wins the next one.
+> JobbPulse helps visual contractors stop losing leads and turn every completed job into proof that wins the next one.
 
 This creates two connected outcomes:
 
@@ -624,7 +624,7 @@ Upload project photos and record a short voice summary.
 
 ### Long-Term Distribution Layer
 
-JobPulse Directory
+JobbPulse Directory
 
 This hierarchy allows the buyer to enter through a familiar category while discovering the differentiated system.
 
@@ -670,10 +670,10 @@ Important pressure-test questions include:
 * Can a contractor complete the upload in less than two minutes?
 * Can a crew member perform the upload?
 * Can office staff perform the upload?
-* Can JobPulse send reminders after jobs are completed?
+* Can JobbPulse send reminders after jobs are completed?
 * Can photos be submitted by text message?
 * Can photos be imported from the phone gallery?
-* Can JobPulse connect to existing job-management software?
+* Can JobbPulse connect to existing job-management software?
 * What happens if the contractor stops uploading?
 * Does the Smart Website still justify the subscription without regular app use?
 * Can the system reward or visibly reinforce consistent use?
@@ -706,7 +706,7 @@ These results increase `P(outcome)` because they show exactly how the system wor
 
 ## Choose One Initial Vertical
 
-JobPulse may eventually serve many visual home-service categories.
+JobbPulse may eventually serve many visual home-service categories.
 
 However, launching with one generic message across all of them could weaken:
 
@@ -746,7 +746,7 @@ Painting may offer a stronger content and portfolio wedge.
 
 Tree service may offer a stronger missed-call and immediate-response wedge.
 
-The best initial vertical is likely the one where JobPulse has the strongest combination of:
+The best initial vertical is likely the one where JobbPulse has the strongest combination of:
 
 * Customer access
 * Founder credibility
@@ -765,7 +765,7 @@ Carrier trust and distribution access may matter more than choosing the theoreti
 
 **Offer Viability**
 
-Contractors already understand and pay for the categories surrounding JobPulse.
+Contractors already understand and pay for the categories surrounding JobbPulse.
 
 ## Most Valuable Mechanism
 
@@ -811,7 +811,7 @@ Choose:
 
 # Final Assessment
 
-JobPulse does not appear structurally weak.
+JobbPulse does not appear structurally weak.
 
 It appears structurally **over-complete**.
 
@@ -819,14 +819,14 @@ The underlying value is credible, the category demand exists and the economic ca
 
 The central challenge is simplifying the buying decision.
 
-JobPulse should be presented as one obvious solution with several reinforcing capabilities, rather than three major products the contractor must understand simultaneously.
+JobbPulse should be presented as one obvious solution with several reinforcing capabilities, rather than three major products the contractor must understand simultaneously.
 
 A strong directional positioning statement is:
 
-> JobPulse is a lead-converting website for visual contractors that turns every completed job into fresh proof, local content and new opportunities to win work.
+> JobbPulse is a lead-converting website for visual contractors that turns every completed job into fresh proof, local content and new opportunities to win work.
 
 A stronger pain-led version is:
 
-> JobPulse helps visual contractors stop losing leads and turn every completed job into proof that wins the next one.
+> JobbPulse helps visual contractors stop losing leads and turn every completed job into proof that wins the next one.
 
 These should be pressure-tested through real sales conversations rather than treated as final positioning conclusions.

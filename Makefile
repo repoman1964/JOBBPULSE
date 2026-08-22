@@ -1,7 +1,7 @@
 .PHONY: help dev infra-up infra-down api-install api-dev api-test api-migrate portfolio-seed red-clay-seed lint
 
 help:
-	@echo "JobPulse development commands"
+	@echo "JobbPulse development commands"
 	@echo "  make infra-up            Start postgres, redis, minio, mailpit"
 	@echo "  make infra-down          Stop infrastructure"
 	@echo "  make api-install         Install API Python deps into api/.venv"
@@ -16,8 +16,9 @@ help:
 	@echo "  contractor_app           Newest contractor app (frontend + its own engine)"
 	@echo "                            → see contractor_app/LOCAL_SETUP.md"
 	@echo "                            → make -C contractor_app up   then frontend npm run dev"
-	@echo "  portfolio_website        Public portfolio site → make -C portfolio_website dev"
-	@echo "  red_clay_website         Red Clay marketing site → make -C red_clay_website dev"
+	@echo "  website/portfolio_website   Public portfolio site → make -C website/portfolio_website dev"
+	@echo "  website/red_clay_website    Red Clay marketing site → make -C website/red_clay_website dev"
+	@echo "  website/marketing_website   JobbPulse landing page → make -C website/marketing_website dev"
 
 infra-up:
 	docker compose -f infra/docker-compose.yml up -d
@@ -52,6 +53,7 @@ dev: infra-up
 	@echo "  Mailpit:        http://localhost:8025"
 	@echo "  MinIO:          http://localhost:9001 (minioadmin / minioadmin)"
 	@echo "  Contractor app: contractor_app/LOCAL_SETUP.md  → :3000 + its own API :8000"
-	@echo "  Portfolio site: make -C portfolio_website dev  → http://localhost:3001"
-	@echo "  Red Clay site:  make -C red_clay_website dev   → http://localhost:3002"
+	@echo "  Portfolio site: make -C website/portfolio_website dev  → http://localhost:3001"
+	@echo "  Red Clay site:  make -C website/red_clay_website dev   → http://localhost:3002"
+	@echo "  Landing page:   make -C website/marketing_website dev  → http://localhost:3003"
 	@echo ""

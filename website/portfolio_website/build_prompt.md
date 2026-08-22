@@ -1,12 +1,12 @@
-# JobPulse Local Project Portfolio Build Prompt
+# JobbPulse Local Project Portfolio Build Prompt
 
-You are a senior product architect, UX designer and full-stack engineer responsible for designing and building the public-facing JobPulse local project portfolio.
+You are a senior product architect, UX designer and full-stack engineer responsible for designing and building the public-facing JobbPulse local project portfolio.
 
 The product has previously been referred to as a contractor directory, but it should not be designed like a traditional directory.
 
 A traditional directory begins with a list of companies.
 
-JobPulse begins with real completed projects.
+JobbPulse begins with real completed projects.
 
 The primary content object is the completed project. Contractors, service categories and locations are organized around those projects.
 
@@ -14,9 +14,9 @@ The platform should feel like a living local portfolio of completed home-service
 
 ## Product Purpose
 
-JobPulse helps homeowners discover local contractors by browsing real work completed in their area.
+JobbPulse helps homeowners discover local contractors by browsing real work completed in their area.
 
-Each contractor uses the JobPulse Contractor App to document completed jobs using:
+Each contractor uses the JobbPulse Contractor App to document completed jobs using:
 
 * Before photos
 * After photos
@@ -25,11 +25,11 @@ Each contractor uses the JobPulse Contractor App to document completed jobs usin
 * Project location
 * Additional project details
 
-JobPulse turns that information into a public project page.
+JobbPulse turns that information into a public project page.
 
 As contractors complete more work, their portfolios grow automatically.
 
-The combined projects from all contractors form the larger JobPulse local project network.
+The combined projects from all contractors form the larger JobbPulse local project network.
 
 The platform must communicate:
 
@@ -107,7 +107,7 @@ The homepage should include:
 * Featured contractors
 * Popular services
 * Popular locations
-* Clear explanation of how JobPulse works
+* Clear explanation of how JobbPulse works
 * Homeowner call to action
 * Contractor call to action
 
@@ -627,14 +627,14 @@ These relationships should make it possible to dynamically generate galleries, i
 
 # Publishing Workflow
 
-Projects will eventually originate from the JobPulse Contractor App.
+Projects will eventually originate from the JobbPulse Contractor App.
 
 The public portfolio must support this lifecycle:
 
 1. Contractor creates a job.
 2. Contractor uploads at least three photos.
 3. Contractor records a voice summary.
-4. JobPulse generates the project title and description.
+4. JobbPulse generates the project title and description.
 5. Contractor reviews the content.
 6. Contractor approves the project.
 7. Project is published.
@@ -695,7 +695,7 @@ When a homeowner submits an inquiry from a project page:
 * Preserve the source project.
 * Record the service and location.
 * Notify the contractor.
-* Send the lead into the JobPulse CRM or GoHighLevel workflow.
+* Send the lead into the JobbPulse CRM or GoHighLevel workflow.
 * Trigger immediate follow-up when configured.
 * Record attribution for reporting.
 
@@ -911,7 +911,7 @@ Do not begin by choosing colors, fonts or a visual brand direction.
 
 Begin by defining the content structure, relationships, page hierarchy, navigation, publishing flow and lead-routing system.
 
-The finished product should make JobPulse feel like:
+The finished product should make JobbPulse feel like:
 
 > A living local portfolio of real work completed by local contractors.
 

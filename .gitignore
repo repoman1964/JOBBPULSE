@@ -34,4 +34,7 @@ uploads/
 # Docker volumes (local)
 infra/data/
 
+# VSL / OpenShot production assets (large binaries, local only)
+vsl/
+
 

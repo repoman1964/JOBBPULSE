@@ -41,7 +41,7 @@ All backend commands assume:
 cd contractor_app
 ```
 
-From the JobPulse project root that is:
+From the JobbPulse project root that is:
 
 ```bash
 cd "/home/jose/Documents/DIMENSION SEVEN SYSTEMS/PROJECTS/JOBBPULSE/contractor_app"

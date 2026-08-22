@@ -1,6 +1,6 @@
-# JobPulse Agent Build Specification
+# JobbPulse Agent Build Specification
 
-**Product:** JobPulse  
+**Product:** JobbPulse  
 **Document type:** Agent Build Specification  
 **Status:** Implementation-ready working specification  
 **Version:** 1.0  
@@ -16,13 +16,13 @@
 
 ## 1. Purpose
 
-This document defines how an engineering agent should build the first production-ready version of JobPulse.
+This document defines how an engineering agent should build the first production-ready version of JobbPulse.
 
-JobPulse is a contractor-first job-to-marketing platform for visual home-service businesses.
+JobbPulse is a contractor-first job-to-marketing platform for visual home-service businesses.
 
 The core workflow is:
 
-**Create a Job → capture before photos → complete the work → capture after photos → record a voice summary → generate content → human review and revision → approve → publish to social media and the JobPulse-owned local directory**
+**Create a Job → capture before photos → complete the work → capture after photos → record a voice summary → generate content → human review and revision → approve → publish to social media and the JobbPulse-owned local directory**
 
 The system must make this workflow extremely easy for a field contractor using a phone.
 
@@ -36,7 +36,7 @@ The MVP must support:
 - AI-generated social and directory content
 - Human approval, rejection, editing and regeneration
 - Social publishing through a third-party provider
-- Publishing to a JobPulse-owned local directory
+- Publishing to a JobbPulse-owned local directory
 - Job and content status tracking
 - Basic roles and permissions
 - Durable data storage
@@ -102,7 +102,7 @@ The user must be able to:
 Approved content must support publication to:
 
 1. Connected social platforms through a third-party publisher
-2. The JobPulse-owned and controlled local directory
+2. The JobbPulse-owned and controlled local directory
 
 ### 2.6 No Facebook Group Automation
 
@@ -1290,7 +1290,7 @@ class PublishingProvider(Protocol):
 
 ### 16.2 Internal Responsibilities
 
-JobPulse must:
+JobbPulse must:
 
 - Encrypt credentials
 - Track connection health
@@ -1312,7 +1312,7 @@ Never create duplicate social posts when a worker retries.
 
 Directory publication should not depend on the third-party social publishing provider.
 
-It is an internal JobPulse operation.
+It is an internal JobbPulse operation.
 
 ### 17.1 Directory Publication Flow
 
@@ -2195,7 +2195,7 @@ The MVP is done when a real contractor can:
 13. Regenerate content
 14. Approve the final version
 15. Publish through a third-party provider
-16. Publish to the JobPulse-owned local directory
+16. Publish to the JobbPulse-owned local directory
 17. View publication status
 18. Open the public directory project page
 
@@ -2244,15 +2244,15 @@ The first complete vertical slice should include:
 
 Social publishing may remain mocked in the first slice, but the provider interface must already exist.
 
-This slice validates the core JobPulse loop before deeper integrations are added.
+This slice validates the core JobbPulse loop before deeper integrations are added.
 
 ---
 
 ## 36. Final Technical Definition
 
-JobPulse should be built as a mobile-first Nuxt 3 application backed by a FastAPI modular monolith.
+JobbPulse should be built as a mobile-first Nuxt 3 application backed by a FastAPI modular monolith.
 
-The system should center every workflow around a persistent Job containing before-and-after photos and a voice description. AI generates social and directory content from that Job. The contractor remains in control through an explicit review loop. Approved content is then distributed through a replaceable third-party publishing provider and published to the JobPulse-owned local directory.
+The system should center every workflow around a persistent Job containing before-and-after photos and a voice description. AI generates social and directory content from that Job. The contractor remains in control through an explicit review loop. Approved content is then distributed through a replaceable third-party publishing provider and published to the JobbPulse-owned local directory.
 
 The technical design must preserve three strategic advantages:
 

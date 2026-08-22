@@ -2,7 +2,7 @@
 
 Standalone demo **marketing site** for Red Clay Cabinet Installers (metro Atlanta).
 
-This site lives under the JobPulse project folder and can optionally load live “recent jobs” and submit estimate leads via the JobPulse public API when that stack is running. It keeps its own git remote.
+This site lives under the JobbPulse project folder and can optionally load live “recent jobs” and submit estimate leads via the JobbPulse public API when that stack is running. It keeps its own git remote.
 
 ## Stack
 
@@ -21,7 +21,7 @@ This site lives under the JobPulse project folder and can optionally load live �
 | Portfolio (from API when available) | `/portfolio`, `/portfolio/{slug}` |
 | About, reviews, FAQ, contact | `/about`, `/reviews`, `/faq`, `/contact` |
 
-### JobPulse integration (optional)
+### JobbPulse integration (optional)
 
 | Capability | API |
 |---|---|
@@ -31,7 +31,7 @@ This site lives under the JobPulse project folder and can optionally load live �
 
 If the API is offline, the site still works with fallback demo job cards and local before/after photos under `public/portfolio/`.
 
-Seed data for the Red Clay contractor lives in the JobPulse repo:
+Seed data for the Red Clay contractor lives in the JobbPulse repo:
 
 ```bash
 cd ..
@@ -86,7 +86,7 @@ This app uses the Nitro **`cloudflare-pages`** preset (output: `dist/`).
 | Name | Example |
 |---|---|
 | `NODE_VERSION` | `22` |
-| `NUXT_PUBLIC_API_BASE_URL` | Optional public JobPulse API URL (omit for offline demo portfolio) |
+| `NUXT_PUBLIC_API_BASE_URL` | Optional public JobbPulse API URL (omit for offline demo portfolio) |
 | `NUXT_PUBLIC_CONTRACTOR_SLUG` | `red-clay-cabinet-installers` |
 | `NUXT_PUBLIC_DIRECTORY_URL` | Optional directory URL |
 
@@ -100,7 +100,7 @@ npm run deploy   # build + wrangler pages deploy dist
 
 ## Related
 
-JobPulse platform (API, contractor app, directory) is the parent folder:
+JobbPulse platform (API, contractor app, directory) is the parent folder:
 
 ```
 ../
@@ -110,9 +110,9 @@ Typical local ports when both run:
 
 | App | Port |
 |---|---|
-| JobPulse API | 8000 |
+| JobbPulse API | 8000 |
 | Contractor app | 3000 |
-| JobPulse directory | 3001 |
+| JobbPulse directory | 3001 |
 | **This site** | **3002** |
 
 ## SEO siloing
@@ -130,4 +130,4 @@ Typical local ports when both run:
 
 ## License
 
-Demo / internal use for JobPulse product demos.
+Demo / internal use for JobbPulse product demos.

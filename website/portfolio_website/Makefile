@@ -1,7 +1,7 @@
 .PHONY: help install dev build preview
 
 help:
-	@echo "JobPulse Portfolio Website"
+	@echo "JobbPulse Portfolio Website"
 	@echo "  make install   npm install"
 	@echo "  make dev       Dev server on :3001"
 	@echo "  make build     Production build"
