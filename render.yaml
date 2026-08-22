@@ -1,0 +1,129 @@
+# JobbPulse contractor app + engine on Render.
+# Apply from the Render dashboard: New → Blueprint → this repo (render.yaml at root).
+# After the first deploy, fill the prompted secrets (R2 keys, app/API URLs). See contractor_app/RENDER.md.
+
+databases:
+  - name: jobbpulse-db
+    databaseName: jobbpulse
+    user: jobbpulse
+    plan: basic-256mb
+    postgresMajorVersion: "16"
+
+services:
+  - type: keyvalue
+    name: jobbpulse-redis
+    plan: starter
+    ipAllowList: []
+    maxmemoryPolicy: noeviction
+
+  - type: web
+    name: jobbpulse-api
+    runtime: docker
+    plan: starter
+    region: oregon
+    dockerfilePath: ./contractor_app/backend/Dockerfile.prod
+    dockerContext: ./contractor_app/backend
+    dockerCommand: /app/scripts/start_api.sh
+    preDeployCommand: alembic upgrade head
+    healthCheckPath: /health/live
+    envVars:
+      - fromGroup: jobbpulse-engine
+      - key: DATABASE_URL
+        fromDatabase:
+          name: jobbpulse-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: jobbpulse-redis
+          type: keyvalue
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          name: jobbpulse-redis
+          type: keyvalue
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          name: jobbpulse-redis
+          type: keyvalue
+          property: connectionString
+
+  - type: worker
+    name: jobbpulse-worker
+    runtime: docker
+    plan: starter
+    region: oregon
+    dockerfilePath: ./contractor_app/backend/Dockerfile.prod
+    dockerContext: ./contractor_app/backend
+    dockerCommand: /app/scripts/start_worker.sh
+    envVars:
+      - fromGroup: jobbpulse-engine
+      - key: DATABASE_URL
+        fromDatabase:
+          name: jobbpulse-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: jobbpulse-redis
+          type: keyvalue
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          name: jobbpulse-redis
+          type: keyvalue
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          name: jobbpulse-redis
+          type: keyvalue
+          property: connectionString
+
+  - type: web
+    name: jobbpulse-app
+    runtime: static
+    rootDir: contractor_app/frontend
+    buildCommand: npm ci && npm run generate
+    staticPublishPath: .output/public
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NUXT_PUBLIC_API_MODE
+        value: http
+      - key: NUXT_PUBLIC_API_BASE_URL
+        sync: false
+
+envVarGroups:
+  - name: jobbpulse-engine
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: AUTH_DEV_CODES
+        value: "false"
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: COOKIE_SAMESITE
+        value: none
+      - key: PROVIDER_MODE
+        value: fake
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_BASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: S3_ENDPOINT_URL
+        sync: false
+      - key: S3_PUBLIC_ENDPOINT_URL
+        sync: false
+      - key: S3_ACCESS_KEY
+        sync: false
+      - key: S3_SECRET_KEY
+        sync: false
+      - key: S3_BUCKET
+        value: jobbpulse
+      - key: S3_REGION
+        value: auto

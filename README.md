@@ -51,6 +51,8 @@ make portfolio-seed   # Georgia demo inventory (includes Red Clay contractor)
 
 The **contractor phone app** is `contractor_app/` (August rewrite: frontend + its own engine). See `contractor_app/LOCAL_SETUP.md`. Frontend-only mock: `cd contractor_app/frontend && npm install && npm run dev` → http://localhost:3000
 
+Production hosting is **Render** (static UI + FastAPI + worker + Postgres + Redis, photos on Cloudflare R2). Blueprint: [`render.yaml`](./render.yaml). Steps: [`contractor_app/RENDER.md`](./contractor_app/RENDER.md).
+
 Its Docker API also binds **:8000**, same as `make api-dev`. Do not run both APIs at once.
 
 The **public project portfolio** is `website/portfolio_website/`. From there: `make install && make dev` → http://localhost:3001

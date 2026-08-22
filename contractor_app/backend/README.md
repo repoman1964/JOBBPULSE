@@ -46,6 +46,8 @@ celery -A app.tasks.celery_app.celery_app worker -l info
 
 See [`.env.example`](./.env.example). Production must set a strong `JWT_SECRET` and `APP_ENV=production` (which disables `AUTH_DEV_CODES`).
 
+Render production image: [`Dockerfile.prod`](./Dockerfile.prod). Full deploy steps: [`../RENDER.md`](../RENDER.md).
+
 ## Tests
 
 ```bash

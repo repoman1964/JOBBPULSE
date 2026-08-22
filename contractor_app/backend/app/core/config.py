@@ -8,6 +8,8 @@ from typing import Literal
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.core.database_url import normalize_database_url
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -88,6 +90,11 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return v.lower() in {"1", "true", "yes", "on"}
         return bool(v)
+
+    @field_validator("database_url")
+    @classmethod
+    def _asyncpg_database_url(cls, v: str) -> str:
+        return normalize_database_url(v)
 
     @model_validator(mode="after")
     def _guard_dev_auth(self) -> Settings:

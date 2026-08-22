@@ -52,6 +52,7 @@ Any email + code `123456` (mock client).
 - Master build document: [`contractor_app_build_instructions.md`](./contractor_app_build_instructions.md)
 - Approved mockups: [`mockups/`](./mockups/)
 - Backend details: [`backend/README.md`](./backend/README.md)
+- Production (Render): [`RENDER.md`](./RENDER.md)
 
 ## Make targets
 
