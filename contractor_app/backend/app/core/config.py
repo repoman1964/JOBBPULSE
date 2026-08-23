@@ -59,7 +59,9 @@ class Settings(BaseSettings):
     download_url_ttl_seconds: int = 3600
 
     # CORS
-    cors_origins: str = "http://localhost:3000"
+    cors_origins: str = (
+        "http://localhost:3000,http://localhost:3002,http://127.0.0.1:3002"
+    )
 
     # Frontend (deep links, Upload-Post redirect)
     frontend_base_url: str = "http://localhost:3000"

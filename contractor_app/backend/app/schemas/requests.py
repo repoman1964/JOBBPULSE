@@ -4,13 +4,20 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from pydantic import Field
+from pydantic import EmailStr, Field
 
 from app.schemas.common import APIModel, NotificationSettings
 
 
 class ChallengeRequest(APIModel):
     identifier: str = Field(min_length=3, max_length=255)
+
+
+class RegisterRequest(APIModel):
+    name: str = Field(min_length=1, max_length=255)
+    email: EmailStr
+    company_name: str = Field(alias="companyName", min_length=1, max_length=255)
+    phone: str | None = None
 
 
 class VerifyChallengeRequest(APIModel):
@@ -107,6 +114,7 @@ class ApprovePublishRequest(APIModel):
 # Re-export for convenience
 __all__ = [
     "ChallengeRequest",
+    "RegisterRequest",
     "VerifyChallengeRequest",
     "UpdateCompanyRequest",
     "UpdateNotificationSettingsRequest",

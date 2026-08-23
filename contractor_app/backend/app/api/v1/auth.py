@@ -23,8 +23,9 @@ from app.core.security import (
 )
 from app.models.auth import AuthChallenge, AuthIdentity, RefreshToken
 from app.models.company import Contractor
-from app.schemas.common import ChallengeOut, SessionOut
-from app.schemas.requests import ChallengeRequest, VerifyChallengeRequest
+from app.schemas.common import ChallengeOut, RegisterOut, SessionOut
+from app.schemas.requests import ChallengeRequest, RegisterRequest, VerifyChallengeRequest
+from app.services.auth_register import register_owner
 from app.services.mappers import company_to_out, contractor_to_out
 
 logger = logging.getLogger(__name__)
@@ -74,6 +75,22 @@ def _clear_refresh_cookie(response: Response, settings) -> None:
         key=settings.refresh_cookie_name,
         path="/api/v1/auth",
         domain=settings.cookie_domain,
+    )
+
+
+@router.post("/register", response_model=RegisterOut, status_code=201)
+async def register_account(body: RegisterRequest, db: DbSession) -> RegisterOut:
+    _company, contractor = await register_owner(
+        db,
+        name=body.name,
+        email=str(body.email),
+        company_name=body.company_name,
+        phone=(body.phone or "").strip(),
+    )
+    return RegisterOut(
+        email=contractor.email,
+        companyId=contractor.company_id,
+        contractorId=contractor.id,
     )
 
 
@@ -151,9 +168,13 @@ async def verify_challenge(
         raise AppError("invalid_challenge", "That code is no longer valid.", status_code=400)
 
     now = datetime.now(UTC)
+
+    def _aware(dt: datetime) -> datetime:
+        return dt if dt.tzinfo is not None else dt.replace(tzinfo=UTC)
+
     if challenge.consumed_at is not None:
         raise AppError("challenge_used", "That code was already used.", status_code=400)
-    if challenge.expires_at < now:
+    if _aware(challenge.expires_at) < now:
         raise AppError("challenge_expired", "That code expired. Request a new one.", status_code=400)
     if challenge.attempt_count >= challenge.max_attempts:
         raise AppError(

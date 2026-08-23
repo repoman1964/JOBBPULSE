@@ -60,6 +60,12 @@ class SessionOut(APIModel):
     company: CompanyOut
 
 
+class RegisterOut(APIModel):
+    email: str
+    company_id: UUID = Field(alias="companyId")
+    contractor_id: UUID = Field(alias="contractorId")
+
+
 class JobCounts(APIModel):
     before: int = 0
     progress: int = 0

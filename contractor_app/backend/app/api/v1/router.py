@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.api.v1 import auth, company, jobs, media, packages, social
+from app.api.v1 import auth, company, jobs, media, packages, public_demo, social
 from app.core.deps import AppSettings, CurrentAuth
 from app.core.security import create_access_token
 from app.schemas.common import SessionOut
@@ -12,6 +12,7 @@ from app.services.mappers import company_to_out, contractor_to_out
 
 api_router = APIRouter()
 api_router.include_router(auth.router)
+api_router.include_router(public_demo.router)
 api_router.include_router(company.router)
 api_router.include_router(jobs.router)
 api_router.include_router(media.router)
