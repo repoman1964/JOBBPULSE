@@ -187,6 +187,10 @@ export function createHttpApiClient(baseUrl: string): ApiClient {
       return request<Job>('PATCH', `/jobs/${jobId}`, { body: input })
     },
 
+    async deleteJob(jobId: string) {
+      await request<void>('DELETE', `/jobs/${jobId}`)
+    },
+
     async submitJob(jobId: string, input: SubmitJobInput) {
       return request<Job>('POST', `/jobs/${jobId}/submit`, { body: input })
     },

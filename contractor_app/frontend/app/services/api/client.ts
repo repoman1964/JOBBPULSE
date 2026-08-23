@@ -55,6 +55,7 @@ export interface ApiClient {
   getJob(jobId: string): Promise<Job>
   createJob(input: CreateJobInput): Promise<Job>
   updateJob(jobId: string, input: Partial<CreateJobInput>): Promise<Job>
+  deleteJob(jobId: string): Promise<void>
   submitJob(jobId: string, input: SubmitJobInput): Promise<Job>
 
   // Media

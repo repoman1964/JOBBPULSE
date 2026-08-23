@@ -2,10 +2,7 @@
 
 Working list for follow-up work after the current contractor-app launch. Not MVP-blocking.
 
-## Nice to have
-
-- [ ] **Delete a job/project in the contractor app.** Let a contractor remove a job they created by mistake (API + UI). Soft-delete is preferred so photos and published content are not silently destroyed. Not critical for launch.
-
 ## Done recently
 
+- [x] **Delete a job/project in the contractor app.** Soft-delete hides the job from the contractor list without destroying photos or published content.
 - [x] Phone photo/voice upload PUT to Cloudflare R2 before complete

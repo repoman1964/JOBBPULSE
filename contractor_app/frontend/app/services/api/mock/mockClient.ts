@@ -24,7 +24,7 @@ import {
 } from './seed'
 import { computePublicStatus, countsFromMedia, meetsMinimums } from '~/utils/jobStatus'
 
-const STORAGE_KEY = 'jobbpulse.mock.v2'
+const STORAGE_KEY = 'jobbpulse.mock.v3'
 const DEV_OTP = '123456'
 const PROCESS_DELAY_MS = 2500
 
@@ -213,7 +213,7 @@ export function createMockApiClient(): ApiClient {
   }
 
   const getJobOrThrow = (jobId: string) => {
-    const job = state.jobs.find((j) => j.id === jobId)
+    const job = state.jobs.find((j) => j.id === jobId && !j.deletedAt)
     if (!job) {
       const err = new Error('Job not found.') as Error & { code: string }
       err.code = 'not_found'
@@ -225,7 +225,7 @@ export function createMockApiClient(): ApiClient {
   const scheduleProcessing = (jobId: string) => {
     setTimeout(() => {
       const job = state.jobs.find((j) => j.id === jobId)
-      if (!job || job.publicStatus !== 'processing') return
+      if (!job || job.deletedAt || job.publicStatus !== 'processing') return
       // Replace any existing package for this job
       state.packages = state.packages.filter((p) => p.jobId !== jobId)
       const pkg = buildGeneratedPackage(state, job)
@@ -313,6 +313,7 @@ export function createMockApiClient(): ApiClient {
       requireSession()
       await delay()
       const items = state.jobs
+        .filter((j) => !j.deletedAt)
         .map((j) => {
           recomputeJob(state, j.id)
           return structuredClone(j)
@@ -358,6 +359,20 @@ export function createMockApiClient(): ApiClient {
       state.jobs.unshift(job)
       save()
       return structuredClone(job)
+    },
+
+    async deleteJob(jobId: string) {
+      requireSession()
+      await delay()
+      const job = getJobOrThrow(jobId)
+      if (job.publicStatus === 'publishing') {
+        throw Object.assign(new Error('Wait until publishing finishes before deleting this job.'), {
+          code: 'job_locked',
+        })
+      }
+      job.deletedAt = new Date().toISOString()
+      job.updatedAt = job.deletedAt
+      save()
     },
 
     async updateJob(jobId: string, input: Partial<CreateJobInput>) {
@@ -518,6 +533,7 @@ export function createMockApiClient(): ApiClient {
     async listMedia(jobId, category) {
       requireSession()
       await delay(60)
+      getJobOrThrow(jobId)
       return structuredClone(
         state.media.filter(
           (m) =>

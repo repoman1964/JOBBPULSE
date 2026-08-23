@@ -35,6 +35,7 @@ from app.schemas.requests import (
     FeaturedMediaRequest,
     SelectVersionRequest,
 )
+from app.services.job_delete import get_visible_job
 from app.services.job_status import assert_public_transition
 from app.services.mappers import asset_to_out, package_to_out
 from app.tasks.pipeline import process_approve_and_publish, process_revision
@@ -43,13 +44,7 @@ router = APIRouter(tags=["packages"])
 
 
 async def _get_job(db: DbSession, job_id: UUID, company_id: UUID) -> Job:
-    result = await db.execute(
-        select(Job).where(Job.id == job_id, Job.company_id == company_id)
-    )
-    job = result.scalar_one_or_none()
-    if job is None:
-        raise AppError("not_found", "Job not found.", status_code=404)
-    return job
+    return await get_visible_job(db, job_id, company_id)
 
 
 async def _latest_package(

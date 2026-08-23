@@ -15,6 +15,8 @@ const error = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 const pendingCategory = ref<PhotoCategory>('before')
 const uploading = ref(false)
+const confirmDelete = ref(false)
+const deleting = ref(false)
 
 const minimums = computed(() => session.value?.company.photoMinimums || { before: 2, progress: 0, after: 2 })
 
@@ -82,6 +84,25 @@ async function onFilesSelected(ev: Event) {
     input.value = ''
   }
 }
+
+async function removeJob() {
+  if (!job.value) return
+  deleting.value = true
+  error.value = ''
+  try {
+    await api.deleteJob(job.value.id)
+    await navigateTo('/jobs')
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Could not delete this job.'
+    confirmDelete.value = false
+  } finally {
+    deleting.value = false
+  }
+}
+
+const canDelete = computed(
+  () => job.value && job.value.publicStatus !== 'publishing',
+)
 
 onMounted(load)
 </script>
@@ -170,6 +191,35 @@ onMounted(load)
             <NuxtLink class="link-lime" :to="`/jobs/${job.id}/approval`">Review content →</NuxtLink>
           </p>
         </div>
+
+        <section class="delete-job" style="margin-top: 28px">
+          <button
+            v-if="!confirmDelete"
+            type="button"
+            class="btn btn-danger"
+            :disabled="!canDelete || deleting"
+            @click="confirmDelete = true"
+          >
+            Delete job
+          </button>
+          <div v-else class="card stack">
+            <p class="helper-text" style="margin: 0">
+              Hide <strong>{{ job.name }}</strong> from your job list? Photos and published
+              content stay on file.
+            </p>
+            <button
+              type="button"
+              class="btn btn-danger"
+              :disabled="deleting"
+              @click="removeJob"
+            >
+              {{ deleting ? 'Deleting…' : 'Yes, delete this job' }}
+            </button>
+            <button type="button" class="btn btn-secondary" :disabled="deleting" @click="confirmDelete = false">
+              Cancel
+            </button>
+          </div>
+        </section>
       </template>
 
       <input

@@ -24,7 +24,9 @@ const label = computed(() => statusLabel(props.job.publicStatus, props.job))
     </div>
 
     <div class="job-card__body">
-      <h2 class="job-card__title">{{ job.name }}</h2>
+      <h2 class="job-card__title">
+        <NuxtLink :to="`/jobs/${job.id}`">{{ job.name }}</NuxtLink>
+      </h2>
       <p class="job-card__loc muted">
         <span aria-hidden="true">📍</span>
         {{ job.locationText || `${job.city}, ${job.region}` }}
@@ -94,6 +96,10 @@ const label = computed(() => statusLabel(props.job.publicStatus, props.job))
   margin: 0 0 4px;
   font-size: 1.15rem;
   font-weight: 800;
+}
+
+.job-card__title a {
+  color: inherit;
 }
 
 .job-card__loc {

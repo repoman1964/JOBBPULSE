@@ -9,7 +9,6 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 
 from app.core.deps import CurrentAuth, DbSession
 from app.core.errors import AppError
@@ -19,7 +18,8 @@ from app.models.job import Job, JobEvent, JobSubmission
 from app.models.media import MediaAsset
 from app.schemas.common import JobOut, ListJobsResult
 from app.schemas.requests import CreateJobRequest, SubmitJobRequest, UpdateJobRequest
-from app.services.job_status import assert_public_transition, compute_active_public_status
+from app.services.job_delete import assert_can_delete_job, get_visible_job, mark_job_deleted
+from app.services.job_status import assert_public_transition
 from app.services.mappers import counts_from_media, has_complete_voice, job_to_out, meets_minimums
 from app.tasks.pipeline import process_job_submission
 
@@ -76,13 +76,7 @@ async def _to_job_out(db: DbSession, job: Job, storage: ObjectStorage | None = N
 
 
 async def _get_job(db: DbSession, job_id: UUID, company_id: UUID) -> Job:
-    result = await db.execute(
-        select(Job).where(Job.id == job_id, Job.company_id == company_id)
-    )
-    job = result.scalar_one_or_none()
-    if job is None:
-        raise AppError("not_found", "Job not found.", status_code=404)
-    return job
+    return await get_visible_job(db, job_id, company_id)
 
 
 @router.get("", response_model=ListJobsResult)
@@ -93,7 +87,7 @@ async def list_jobs(
     cursor: str | None = Query(default=None),
     limit: int = Query(default=20, ge=1, le=100),
 ) -> ListJobsResult:
-    stmt = select(Job).where(Job.company_id == auth.company_id)
+    stmt = select(Job).where(Job.company_id == auth.company_id, Job.deleted_at.is_(None))
     if status:
         stmt = stmt.where(Job.public_status == status)
     if cursor:
@@ -158,6 +152,24 @@ async def create_job(
 async def get_job(job_id: UUID, auth: CurrentAuth, db: DbSession) -> JobOut:
     job = await _get_job(db, job_id, auth.company_id)
     return await _to_job_out(db, job)
+
+
+@router.delete("/{job_id}", status_code=204)
+async def delete_job(job_id: UUID, auth: CurrentAuth, db: DbSession) -> None:
+    job = await _get_job(db, job_id, auth.company_id)
+    assert_can_delete_job(job.public_status)
+    mark_job_deleted(job, now=datetime.now(UTC))
+    db.add(
+        JobEvent(
+            company_id=auth.company_id,
+            job_id=job.id,
+            event_type="job.deleted",
+            actor_type="contractor",
+            actor_id=auth.contractor_id,
+            payload_json={"name": job.name},
+        )
+    )
+    await db.flush()
 
 
 @router.patch("/{job_id}", response_model=JobOut)

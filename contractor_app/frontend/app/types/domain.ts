@@ -105,6 +105,7 @@ export interface Job {
   submittedAt: string | null
   approvedAt: string | null
   publishedAt: string | null
+  deletedAt?: string | null
 }
 
 export interface MediaAsset {
