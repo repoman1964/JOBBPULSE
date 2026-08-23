@@ -1026,6 +1026,10 @@ Track calls, form submissions and booked work.
 
 Repurpose older Jobs into new content.
 
+### Delete a Job
+
+Let a contractor delete a Job they created by mistake. Nice to have, not MVP. Prefer soft-delete so photos and published content are not silently destroyed.
+
 ---
 
 ## 22. Out of Scope for MVP
