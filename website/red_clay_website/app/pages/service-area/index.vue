@@ -8,9 +8,9 @@ import {
 } from '~/utils/siteContent'
 
 useSeoMeta({
-  title: 'Service Area | Red Clay Cabinet Installers',
+  title: 'Service area | Red Clay',
   description:
-    'Cabinet installation in Atlanta, Decatur, Marietta, Roswell, Sandy Springs, and Brookhaven. Browse city pages and local services.',
+    'Painting in Atlanta, Decatur, Marietta, Roswell, Sandy Springs, and Brookhaven. Browse city pages and local services.',
 })
 
 const areaLinks = SERVICE_AREAS.map((a) => ({

@@ -20,8 +20,8 @@ if (!service.value) {
 const s = service.value
 
 useSeoMeta({
-  title: `${s.name} | Red Clay Cabinet Installers`,
-  description: `${s.description.slice(0, 150)} Serving metro Atlanta. Free estimates.`,
+  title: `${s.name} | Red Clay`,
+  description: `${s.description.slice(0, 150)} Serving metro Atlanta. Written estimates.`,
 })
 
 useHead({
@@ -35,7 +35,7 @@ useHead({
         description: s.longDescription,
         provider: {
           '@type': 'HomeAndConstructionBusiness',
-          name: 'Red Clay Cabinet Installers',
+          name: 'Red Clay',
           areaServed: SERVICE_AREAS.map((a) => `${a.city}, ${a.state}`),
         },
         areaServed: SERVICE_AREAS.map((a) => ({
@@ -98,6 +98,11 @@ const areaHubLinks = SERVICE_AREAS.map((a) => ({
               <NuxtLink :to="areaServicePath('atlanta', s.slug)">{{ s.name }} in Atlanta</NuxtLink>
               or pick any metro city below.
             </p>
+            <h3>Questions</h3>
+            <details v-for="(item, i) in s.faqs" :key="item.q" class="faq" :open="i === 0">
+              <summary>{{ item.q }}</summary>
+              <p>{{ item.a }}</p>
+            </details>
           </article>
 
           <SiloLinkGrid
@@ -114,10 +119,8 @@ const areaHubLinks = SERVICE_AREAS.map((a) => ({
           <div class="silo-aside__card">
             <h2>Get an estimate</h2>
             <p class="muted">Tell us about your {{ s.name.toLowerCase() }} project.</p>
-            <NuxtLink class="btn btn--primary" :to="`/contact?service=${s.service_key}`">
-              Free estimate
-            </NuxtLink>
-            <NuxtLink class="btn btn--secondary" to="/portfolio">See portfolio</NuxtLink>
+            <NuxtLink class="btn btn--primary" to="/book">Book an estimate</NuxtLink>
+            <NuxtLink class="btn btn--secondary" to="/work">See work</NuxtLink>
             <NuxtLink class="btn btn--secondary" to="/services">All services</NuxtLink>
           </div>
         </aside>

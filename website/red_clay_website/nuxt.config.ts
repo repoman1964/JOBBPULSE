@@ -10,27 +10,33 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: 'Red Clay Cabinet Installers | Metro Atlanta',
+      title: 'Red Clay | Painting · Metro Atlanta',
       meta: [
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         {
           name: 'description',
           content:
-            'Kitchen cabinets, bath vanities, and built-ins installed clean across metro Atlanta. Free estimates. Licensed & insured.',
+            'Exterior painting first, interiors as a second line. Written estimates. Licensed and insured across metro Atlanta.',
         },
       ],
-      link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap',
+        },
+      ],
     },
   },
   runtimeConfig: {
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:8000',
-      contractorSlug: process.env.NUXT_PUBLIC_CONTRACTOR_SLUG || 'red-clay-cabinet-installers',
-      directoryUrl: process.env.NUXT_PUBLIC_DIRECTORY_URL || 'http://localhost:3001',
-      companyName: 'Red Clay Cabinet Installers',
+      companyName: 'Red Clay',
       phone: '404-555-0148',
       phoneTel: '+14045550148',
-      email: 'hello@redclaycabinets.demo',
+      email: 'hello@redclaypainting.com',
     },
   },
   css: ['~/assets/css/main.css', '~/assets/css/silo-pages.css'],

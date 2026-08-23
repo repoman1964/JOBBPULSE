@@ -2,8 +2,8 @@
 import { REVIEWS } from '~/utils/siteContent'
 
 useSeoMeta({
-  title: 'Reviews | Red Clay Cabinet Installers',
-  description: 'Homeowner reviews for Red Clay Cabinet Installers across metro Atlanta.',
+  title: 'Reviews | Red Clay',
+  description: 'On-site homeowner reviews for Red Clay painting across metro Atlanta.',
 })
 </script>
 
@@ -14,8 +14,7 @@ useSeoMeta({
         <p class="section__eyebrow">Reviews</p>
         <h1 class="page-hero__title">What homeowners say</h1>
         <p class="section__lead">
-          <span class="badge">4.9 average · demo reviews</span>
-          &nbsp;Real jobs deserve real words. Ask us for references in your neighborhood.
+          Words from houses we painted. Ask for a reference in your neighborhood.
         </p>
       </div>
     </section>

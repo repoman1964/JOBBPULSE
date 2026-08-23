@@ -21,7 +21,7 @@ if (!area.value) {
 const a = area.value
 
 useSeoMeta({
-  title: `Cabinet Installation in ${a.city}, ${a.state} | Red Clay`,
+  title: `Painting in ${a.city}, ${a.state} | Red Clay`,
   description: `${a.longDescription.slice(0, 145)}… Free estimates. Kitchen cabinets, vanities & built-ins.`,
 })
 
@@ -32,7 +32,7 @@ useHead({
       children: JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'HomeAndConstructionBusiness',
-        name: 'Red Clay Cabinet Installers',
+        name: 'Red Clay',
         areaServed: {
           '@type': 'City',
           name: a.city,
@@ -77,7 +77,7 @@ const localReviews = reviewsForArea(a.city)
       <div class="container">
         <AppBreadcrumbs :items="crumbs" />
         <p class="section__eyebrow">Service area</p>
-        <h1 class="page-hero__title">Cabinet installation in {{ a.city }}, {{ a.state }}</h1>
+        <h1 class="page-hero__title">Painting in {{ a.city }}, {{ a.state }}</h1>
         <p class="section__lead">{{ a.note }}</p>
       </div>
     </section>
@@ -118,7 +118,7 @@ const localReviews = reviewsForArea(a.city)
             <NuxtLink class="btn btn--primary" :to="`/contact?location=${a.city}`">
               Free estimate
             </NuxtLink>
-            <NuxtLink class="btn btn--secondary" to="/portfolio">Portfolio</NuxtLink>
+            <NuxtLink class="btn btn--secondary" to="/work">Work</NuxtLink>
             <NuxtLink class="btn btn--secondary" to="/service-area">All locations</NuxtLink>
           </div>
         </aside>

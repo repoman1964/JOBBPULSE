@@ -38,6 +38,12 @@ export interface RevisionInput {
  */
 export interface ApiClient {
   // Auth
+  register(input: {
+    name: string
+    email: string
+    companyName: string
+    phone?: string
+  }): Promise<{ email: string; companyId: string; contractorId: string }>
   requestChallenge(identifier: string): Promise<{ challengeId: string; devCode?: string }>
   verifyChallenge(challengeId: string, code: string): Promise<Session>
   logout(): Promise<void>

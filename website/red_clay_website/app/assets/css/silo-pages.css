@@ -2,7 +2,7 @@
 
 .page-hero {
   padding: 2.5rem 0 1.25rem;
-  background: var(--clay-mist);
+  background: var(--page);
   border-bottom: 1px solid var(--border);
 }
 

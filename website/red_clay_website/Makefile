@@ -1,7 +1,7 @@
 .PHONY: help install dev build preview
 
 help:
-	@echo "Red Clay Cabinet Installers — demo website"
+	@echo "Red Clay — painting website"
 	@echo "  make install   npm install"
 	@echo "  make dev       Dev server on :3002"
 	@echo "  make build     Production build"

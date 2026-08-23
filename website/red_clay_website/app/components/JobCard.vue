@@ -22,7 +22,7 @@ const style = computed(() => {
 </script>
 
 <template>
-  <NuxtLink class="job-card" :class="{ 'job-card--compact': compact }" :to="`/portfolio/${project.slug}`">
+  <NuxtLink class="job-card" :class="{ 'job-card--compact': compact }" :to="`/work/${project.slug}`">
     <div class="job-card__media" :style="style">
       <span v-if="project.featured" class="job-card__featured">Featured</span>
     </div>

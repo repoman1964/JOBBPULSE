@@ -28,7 +28,7 @@ const s = service.value
 const pageTitle = serviceInAreaTitle(s, a)
 
 useSeoMeta({
-  title: `${pageTitle} | Red Clay Cabinet Installers`,
+  title: `${pageTitle} | Red Clay`,
   description: serviceInAreaDescription(s, a),
 })
 
@@ -43,7 +43,7 @@ useHead({
         description: serviceInAreaDescription(s, a),
         provider: {
           '@type': 'HomeAndConstructionBusiness',
-          name: 'Red Clay Cabinet Installers',
+          name: 'Red Clay',
           areaServed: `${a.city}, ${a.state}`,
         },
         areaServed: {
@@ -91,7 +91,7 @@ const parentLinks = [
         <p class="section__eyebrow">{{ a.city }} · {{ s.name }}</p>
         <h1 class="page-hero__title">{{ pageTitle }}</h1>
         <p class="section__lead">
-          Licensed cabinet installers serving {{ a.note.toLowerCase() }}. Free estimates from Red Clay.
+          Licensed painters serving {{ a.note.toLowerCase() }}. Written estimates from Red Clay.
         </p>
       </div>
     </section>

@@ -16,7 +16,7 @@ const prefillLabel = computed(() => {
 
 useSeoMeta({
   title: 'Contact & Free Estimate | Red Clay',
-  description: 'Request a free cabinet installation estimate in metro Atlanta. Call or use the form.',
+  description: 'Request a painting estimate in metro Atlanta. Call or use the form.',
 })
 </script>
 
@@ -61,9 +61,7 @@ useSeoMeta({
               <span class="muted">Metro Atlanta, GA</span>
             </li>
           </ul>
-          <p class="muted contact-aside__note">
-            Form leads post to JobPulse when the API is running—same lead pipeline as the public directory.
-          </p>
+          <p class="muted contact-aside__note">We use this only to respond about your project.</p>
         </aside>
       </div>
     </section>

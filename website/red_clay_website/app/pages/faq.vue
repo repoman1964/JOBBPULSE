@@ -2,8 +2,8 @@
 import { FAQS } from '~/utils/siteContent'
 
 useSeoMeta({
-  title: 'FAQ | Red Clay Cabinet Installers',
-  description: 'Common questions about cabinet installation timelines, service area, and estimates.',
+  title: 'FAQ | Red Clay',
+  description: 'Common questions about painting timelines, service area, and estimates.',
 })
 </script>
 

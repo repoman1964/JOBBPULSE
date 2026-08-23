@@ -8,9 +8,9 @@ import {
 } from '~/utils/siteContent'
 
 useSeoMeta({
-  title: 'Cabinet Installation Services | Red Clay Cabinet Installers',
+  title: 'Painting services | Red Clay',
   description:
-    'Kitchen cabinets, bath vanities, pantries, and cabinet installation across metro Atlanta. Browse services and local pages.',
+    'Exterior painting, trim and siding, decks and fences, and interior painting across metro Atlanta.',
 })
 
 const serviceLinks = SERVICES.map((s) => ({
@@ -32,9 +32,9 @@ const areaLinks = SERVICE_AREAS.map((a) => ({
       <div class="container">
         <AppBreadcrumbs :items="[{ label: 'Home', to: '/' }, { label: 'Services' }]" />
         <p class="section__eyebrow">Services</p>
-        <h1 class="page-hero__title">What we install</h1>
+        <h1 class="page-hero__title">Four materials of work. One standard of prep.</h1>
         <p class="section__lead">
-          Focused cabinet installation—not a dozen trades. Each service has its own page, with links to every city we serve.
+          Exterior-led painting — not a dozen unrelated trades. Each service has its own page, with links to every city we cover.
         </p>
       </div>
     </section>

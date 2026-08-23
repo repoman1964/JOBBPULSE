@@ -9,10 +9,11 @@ const phoneTel = config.public.phoneTel as string
     <main class="site-main">
       <slot />
     </main>
+    <CtaBand />
     <SiteFooter />
     <div class="mobile-cta" aria-label="Quick actions">
-      <a class="btn btn--secondary" :href="`tel:${phoneTel}`">Call</a>
-      <NuxtLink class="btn btn--primary" to="/contact">Free estimate</NuxtLink>
+      <a class="btn btn--primary" :href="`tel:${phoneTel}`">Call</a>
+      <NuxtLink class="btn btn--secondary" to="/book">Book an estimate</NuxtLink>
     </div>
   </div>
 </template>

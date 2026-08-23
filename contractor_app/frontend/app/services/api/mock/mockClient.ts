@@ -237,6 +237,26 @@ export function createMockApiClient(): ApiClient {
   }
 
   const client: ApiClient = {
+    async register(input: { name: string; email: string; companyName: string; phone?: string }) {
+      await delay()
+      const email = input.email.trim().toLowerCase()
+      if (email === SEED_CONTRACTOR.email.toLowerCase()) {
+        throw Object.assign(new Error('An account with that email already exists. Sign in instead.'), {
+          code: 'email_taken',
+          status: 409,
+        })
+      }
+      state.company = {
+        ...state.company,
+        name: input.companyName.trim(),
+        contactName: input.name.trim(),
+        email,
+        phone: input.phone || state.company.phone,
+      }
+      save()
+      return { email, companyId: state.company.id, contractorId: SEED_CONTRACTOR.id }
+    },
+
     async requestChallenge(identifier: string) {
       await delay()
       const challengeId = uid('challenge')

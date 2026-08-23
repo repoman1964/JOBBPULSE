@@ -121,6 +121,18 @@ export function createHttpApiClient(baseUrl: string): ApiClient {
   }
 
   return {
+    async register(input: {
+      name: string
+      email: string
+      companyName: string
+      phone?: string
+    }) {
+      return request<{ email: string; companyId: string; contractorId: string }>('POST', '/auth/register', {
+        body: input,
+        auth: false,
+      })
+    },
+
     async requestChallenge(identifier: string) {
       return request<{ challengeId: string; devCode?: string }>('POST', '/auth/challenge', {
         body: { identifier },
