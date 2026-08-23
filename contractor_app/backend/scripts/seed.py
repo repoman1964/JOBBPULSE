@@ -231,6 +231,13 @@ async def seed() -> None:
         for dest, title, body in [
             ("facebook", "Facebook", "Thompson Exterior Painting: another transformation ready to share."),
             ("instagram", "Instagram", "Thompson Exterior Painting complete in Decatur. #JobbPulse"),
+            (
+                "google_business",
+                "Google Business Profile",
+                "Just finished Thompson Exterior Painting in Decatur. "
+                "Solid prep, a clean finish, and a crew that shows up ready to work. "
+                "Call us if you have a similar project.",
+            ),
             ("conversion_site", "Project Page", package.project_description),
             ("portfolio_site", "JobbPulse Portfolio", package.project_description),
         ]:

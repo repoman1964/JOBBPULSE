@@ -49,6 +49,12 @@ class FakeContentGenerator:
             body = f"{job_name} complete in {city}. #JobbPulse"
         elif destination == "facebook":
             body = f"{job_name}: another transformation ready to share."
+        elif destination == "google_business":
+            body = (
+                f"Just finished {job_name} in {city}. "
+                "Solid prep, a clean finish, and a crew that shows up ready to work. "
+                "Call us if you have a similar project."
+            )
         elif destination in {"conversion_site", "portfolio_site"}:
             body = description
         else:

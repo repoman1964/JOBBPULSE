@@ -111,3 +111,12 @@ export function destinationLabel(type: string): string {
   }
   return map[type] || type
 }
+
+export type PreviewKind = 'facebook' | 'instagram' | 'google_business' | 'website'
+
+export function previewKind(type: string): PreviewKind {
+  if (type === 'facebook' || type === 'instagram' || type === 'google_business') {
+    return type
+  }
+  return 'website'
+}

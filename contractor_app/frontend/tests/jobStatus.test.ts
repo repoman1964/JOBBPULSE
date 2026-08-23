@@ -5,6 +5,7 @@ import {
   countsFromMedia,
   meetsMinimums,
   missingMinimums,
+  previewKind,
   statusLabel,
 } from '../app/utils/jobStatus'
 import type { Job, MediaAsset } from '../app/types/domain'
@@ -64,6 +65,22 @@ describe('contextualAction', () => {
       label: 'Review Content',
       to: '/jobs/job-1/approval',
     })
+  })
+})
+
+describe('previewKind', () => {
+  it('uses a Google Business Profile preview for gbp posts', () => {
+    expect(previewKind('google_business')).toBe('google_business')
+  })
+
+  it('keeps facebook and instagram dedicated previews', () => {
+    expect(previewKind('facebook')).toBe('facebook')
+    expect(previewKind('instagram')).toBe('instagram')
+  })
+
+  it('falls back to website for first-party destinations', () => {
+    expect(previewKind('conversion_site')).toBe('website')
+    expect(previewKind('portfolio_site')).toBe('website')
   })
 })
 

@@ -260,6 +260,12 @@ export function buildPackageForPaintJob(media: MediaAsset[]): ContentPackage {
         'Exterior transformation complete in Decatur, GA. Fresh color, solid prep, clean finish. #ExteriorPainting #DecaturGA #CurbAppeal',
       ),
       makeAsset(
+        'asset-paint-gbp',
+        'google_business',
+        'Google Business Profile',
+        'Just finished a full exterior paint refresh in Decatur. Solid prep, a clean finish, and curb appeal that holds up. Call us if you have a similar project.',
+      ),
+      makeAsset(
         'asset-paint-site',
         'conversion_site',
         'Project Page',

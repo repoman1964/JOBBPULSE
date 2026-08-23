@@ -47,6 +47,28 @@ FIRST_SHIP_SOCIAL = (
 
 SOCIAL_DESTINATIONS = set(FIRST_SHIP_SOCIAL)
 
+# Always generate these reviewable social pieces, even if not connected.
+# Posting still goes through the third-party publisher when a connection exists.
+CORE_REVIEW_SOCIAL = (
+    DestinationType.facebook.value,
+    DestinationType.instagram.value,
+    DestinationType.google_business.value,
+)
+
+FIRST_PARTY_DESTINATIONS = (
+    DestinationType.conversion_site.value,
+    DestinationType.portfolio_site.value,
+)
+
+
+def content_destinations(*, connected: set[str]) -> list[str]:
+    dests = list(CORE_REVIEW_SOCIAL)
+    for platform in FIRST_SHIP_SOCIAL:
+        if platform in connected and platform not in dests:
+            dests.append(platform)
+    dests.extend(FIRST_PARTY_DESTINATIONS)
+    return dests
+
 
 async def run_content_pipeline(
     session: AsyncSession, job_id: UUID, submission_id: UUID
@@ -113,22 +135,7 @@ async def run_content_pipeline(
     )
     connected = {c.platform for c in result.scalars().all()}
 
-    destinations: list[str] = []
-    for p in FIRST_SHIP_SOCIAL:
-        if p in connected:
-            destinations.append(p)
-    # Always generate first-party destinations
-    destinations.extend(
-        [DestinationType.conversion_site.value, DestinationType.portfolio_site.value]
-    )
-    # If nothing social connected, still generate FB/IG for demo value (seed-like)
-    if not connected:
-        destinations = [
-            DestinationType.facebook.value,
-            DestinationType.instagram.value,
-            DestinationType.conversion_site.value,
-            DestinationType.portfolio_site.value,
-        ]
+    destinations = content_destinations(connected=connected)
 
     package = ContentPackage(
         company_id=job.company_id,

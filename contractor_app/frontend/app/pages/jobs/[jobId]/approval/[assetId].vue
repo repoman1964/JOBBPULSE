@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { GeneratedAsset, Job } from '~/types/domain'
-import { destinationLabel, statusLabel } from '~/utils/jobStatus'
+import GoogleBusinessPostPreview from '~/components/GoogleBusinessPostPreview.vue'
+import { destinationLabel, previewKind, statusLabel } from '~/utils/jobStatus'
 
 const route = useRoute()
 const api = useApi()
@@ -67,12 +68,7 @@ const pendingVersion = computed(() =>
   asset.value?.versions.find((v) => v.id === pendingVersionId.value),
 )
 
-const previewComponent = computed(() => {
-  const t = asset.value?.destinationType
-  if (t === 'instagram') return 'instagram'
-  if (t === 'facebook') return 'facebook'
-  return 'website'
-})
+const previewComponent = computed(() => previewKind(asset.value?.destinationType || ''))
 
 onMounted(load)
 </script>
@@ -86,9 +82,9 @@ onMounted(load)
       <template v-else-if="asset && job">
         <h1 class="page-title" style="font-size: 1.4rem">
           {{
-            previewComponent === 'facebook' || previewComponent === 'instagram'
-              ? `${destinationLabel(asset.destinationType)} Post`
-              : destinationLabel(asset.destinationType)
+            previewComponent === 'website'
+              ? destinationLabel(asset.destinationType)
+              : `${destinationLabel(asset.destinationType)} Post`
           }}
         </h1>
         <p class="muted" style="margin: 0 0 8px">{{ job.name }}</p>
@@ -107,6 +103,13 @@ onMounted(load)
           />
           <InstagramPostPreview
             v-else-if="previewComponent === 'instagram'"
+            :company-name="companyName"
+            :location="job.locationText"
+            :body="activeVersion?.body || asset.body"
+            :image-url="(asset.preview.coverUrl as string) || (asset.preview.afterUrl as string) || null"
+          />
+          <GoogleBusinessPostPreview
+            v-else-if="previewComponent === 'google_business'"
             :company-name="companyName"
             :location="job.locationText"
             :body="activeVersion?.body || asset.body"

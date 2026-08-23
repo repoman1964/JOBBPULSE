@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ContentPackage, Job, MediaAsset } from '~/types/domain'
-import { destinationLabel, statusLabel } from '~/utils/jobStatus'
+import GoogleBusinessPostPreview from '~/components/GoogleBusinessPostPreview.vue'
+import { destinationLabel, previewKind, statusLabel } from '~/utils/jobStatus'
 
 const route = useRoute()
 const api = useApi()
@@ -155,7 +156,7 @@ onMounted(load)
               :to="`/jobs/${jobId}/approval/${asset.id}`"
             >
               <FacebookPostPreview
-                v-if="asset.destinationType === 'facebook'"
+                v-if="previewKind(asset.destinationType) === 'facebook'"
                 compact
                 :company-name="companyName"
                 :location="job?.locationText"
@@ -165,7 +166,15 @@ onMounted(load)
                 :after-url="(asset.preview.afterUrl as string) || null"
               />
               <InstagramPostPreview
-                v-else-if="asset.destinationType === 'instagram'"
+                v-else-if="previewKind(asset.destinationType) === 'instagram'"
+                compact
+                :company-name="companyName"
+                :location="job?.locationText"
+                :body="asset.body"
+                :image-url="(asset.preview.coverUrl as string) || (asset.preview.afterUrl as string) || null"
+              />
+              <GoogleBusinessPostPreview
+                v-else-if="previewKind(asset.destinationType) === 'google_business'"
                 compact
                 :company-name="companyName"
                 :location="job?.locationText"
