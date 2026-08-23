@@ -9,7 +9,7 @@ export type LiveProject = CarouselJob & {
 
 function apiBase() {
   const config = useRuntimeConfig()
-  return String(config.public.apiBase || 'http://localhost:8000').replace(/\/$/, '')
+  return String(config.public.apiBase || '').replace(/\/$/, '')
 }
 
 export function useDemoEmailCookie() {
@@ -26,13 +26,14 @@ export function useDemoProjects() {
 
   async function fetchLiveList(): Promise<CarouselJob[]> {
     const email = emailCookie.value ? normalizeEmail(emailCookie.value) : ''
-    if (!email || !isValidEmail(email)) {
+    const base = apiBase()
+    if (!base || !email || !isValidEmail(email)) {
       live.value = []
       return []
     }
     try {
       const data = await $fetch<{ items: Record<string, unknown>[] }>(
-        `${apiBase()}/api/v1/public/demo/projects`,
+        `${base}/api/v1/public/demo/projects`,
         { query: { email } },
       )
       const items = (data.items || []).map((raw) => ({
@@ -71,10 +72,11 @@ export function useDemoProjects() {
 
   async function fetchLiveDetail(slug: string): Promise<LiveProject | null> {
     const email = emailCookie.value ? normalizeEmail(emailCookie.value) : ''
-    if (!email || !isValidEmail(email)) return null
+    const base = apiBase()
+    if (!base || !email || !isValidEmail(email)) return null
     try {
       return await $fetch<LiveProject>(
-        `${apiBase()}/api/v1/public/demo/projects/${encodeURIComponent(slug)}`,
+        `${base}/api/v1/public/demo/projects/${encodeURIComponent(slug)}`,
         { query: { email } },
       )
     } catch {
@@ -92,6 +94,13 @@ export function useDemoProjects() {
       return { ok: false, message: 'Enter a valid email.', count: 0 }
     }
     emailCookie.value = normalized
+    if (!apiBase()) {
+      return {
+        ok: false,
+        message: 'Could not reach the project service. Try again.',
+        count: 0,
+      }
+    }
     try {
       const items = await fetchLiveList()
       const count = items.length
