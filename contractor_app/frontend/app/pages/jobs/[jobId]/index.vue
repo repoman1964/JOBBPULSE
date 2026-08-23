@@ -151,7 +151,7 @@ onMounted(load)
             </div>
             <div v-else class="empty-thumbs">
               <span aria-hidden="true">📷</span>
-              <p>No {{ cat }} photos yet</p>
+              <p>No {{ categoryLabel(cat) }} photos yet</p>
             </div>
 
             <button
@@ -182,7 +182,7 @@ onMounted(load)
             </template>
             <template v-else-if="missing.includes('before')">Add before photos to finish</template>
             <template v-else-if="missing.includes('after')">Add after photos to finish</template>
-            <template v-else-if="missing.includes('progress')">Add progress photos to finish</template>
+            <template v-else-if="missing.includes('progress')">Add In-Progress photos to finish</template>
           </p>
           <p v-else-if="job.publicStatus === 'processing'" class="helper-text">
             JobbPulse is creating your content. We’ll let you know when it’s ready for approval.

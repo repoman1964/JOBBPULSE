@@ -94,7 +94,12 @@ export function contextualAction(job: Job): { label: string; to: string; icon: '
 }
 
 export function categoryLabel(category: PhotoCategory): string {
-  return category.charAt(0).toUpperCase() + category.slice(1)
+  const map: Record<PhotoCategory, string> = {
+    before: 'Before',
+    progress: 'In-Progress',
+    after: 'After',
+  }
+  return map[category]
 }
 
 export function destinationLabel(type: string): string {

@@ -178,7 +178,7 @@ watch(category, load)
               @change="movePhoto(viewer, ($event.target as HTMLSelectElement).value as PhotoCategory)"
             >
               <option value="before">Before</option>
-              <option value="progress">Progress</option>
+              <option value="progress">In-Progress</option>
               <option value="after">After</option>
             </select>
           </label>

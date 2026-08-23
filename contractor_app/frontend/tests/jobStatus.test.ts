@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   computePublicStatus,
+  categoryLabel,
   contextualAction,
   countsFromMedia,
   meetsMinimums,
@@ -81,6 +82,17 @@ describe('previewKind', () => {
   it('falls back to website for first-party destinations', () => {
     expect(previewKind('conversion_site')).toBe('website')
     expect(previewKind('portfolio_site')).toBe('website')
+  })
+})
+
+describe('categoryLabel', () => {
+  it('labels progress photos as In-Progress', () => {
+    expect(categoryLabel('progress')).toBe('In-Progress')
+  })
+
+  it('keeps before and after labels', () => {
+    expect(categoryLabel('before')).toBe('Before')
+    expect(categoryLabel('after')).toBe('After')
   })
 })
 

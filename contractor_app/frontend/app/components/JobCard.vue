@@ -39,7 +39,7 @@ const label = computed(() => statusLabel(props.job.publicStatus, props.job))
         </div>
         <div class="divider" aria-hidden="true" />
         <div>
-          <span class="dim">PROGRESS</span>
+          <span class="dim">IN-PROGRESS</span>
           <strong>{{ job.counts.progress }}</strong>
         </div>
         <div class="divider" aria-hidden="true" />
