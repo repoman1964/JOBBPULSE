@@ -257,7 +257,7 @@ export function buildPackageForPaintJob(media: MediaAsset[]): ContentPackage {
         'asset-paint-ig',
         'instagram',
         'Instagram',
-        'Exterior transformation complete in Decatur, GA. Fresh color, solid prep, clean finish. #JobbPulse',
+        'Exterior transformation complete in Decatur, GA. Fresh color, solid prep, clean finish. #ExteriorPainting #DecaturGA #CurbAppeal',
       ),
       makeAsset(
         'asset-paint-site',

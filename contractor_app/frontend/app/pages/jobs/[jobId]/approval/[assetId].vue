@@ -4,8 +4,10 @@ import { destinationLabel, statusLabel } from '~/utils/jobStatus'
 
 const route = useRoute()
 const api = useApi()
+const { session } = useAuthSession()
 const jobId = computed(() => String(route.params.jobId))
 const assetId = computed(() => String(route.params.assetId))
+const companyName = computed(() => session.value?.company.name || 'Your company')
 
 const job = ref<Job | null>(null)
 const asset = ref<GeneratedAsset | null>(null)
@@ -83,46 +85,46 @@ onMounted(load)
       <div v-else-if="error" class="banner banner-error" role="alert">{{ error }}</div>
       <template v-else-if="asset && job">
         <h1 class="page-title" style="font-size: 1.4rem">
-          {{ destinationLabel(asset.destinationType) }}
+          {{
+            previewComponent === 'facebook' || previewComponent === 'instagram'
+              ? `${destinationLabel(asset.destinationType)} Post`
+              : destinationLabel(asset.destinationType)
+          }}
         </h1>
         <p class="muted" style="margin: 0 0 8px">{{ job.name }}</p>
         <StatusPill :label="statusLabel(job.publicStatus, job)" />
 
-        <div class="preview-shell card" style="margin-top: 16px">
-          <div v-if="previewComponent === 'instagram'" class="ig">
-            <div class="ig-top">
-              <strong>jobbpulse_construction</strong>
-              <span class="muted">{{ job.city }}, {{ job.region }}</span>
+        <section class="generated" style="margin-top: 16px">
+          <h2 v-if="previewComponent !== 'website'" class="section-label">Generated post</h2>
+          <FacebookPostPreview
+            v-if="previewComponent === 'facebook'"
+            :company-name="companyName"
+            :location="job.locationText"
+            :body="activeVersion?.body || asset.body"
+            :cover-url="(asset.preview.coverUrl as string) || null"
+            :after-url="(asset.preview.afterUrl as string) || null"
+            :before-url="(asset.preview.beforeUrl as string) || null"
+          />
+          <InstagramPostPreview
+            v-else-if="previewComponent === 'instagram'"
+            :company-name="companyName"
+            :location="job.locationText"
+            :body="activeVersion?.body || asset.body"
+            :image-url="(asset.preview.coverUrl as string) || (asset.preview.afterUrl as string) || null"
+          />
+          <div v-else class="preview-shell card">
+            <div class="web">
+              <p class="section-label">Recent project</p>
+              <h2>{{ job.name }}</h2>
+              <p class="muted">📍 {{ job.locationText }}</p>
+              <div class="web-imgs">
+                <img v-if="(asset.preview.beforeUrl as string)" :src="(asset.preview.beforeUrl as string)" alt="Before" />
+                <img v-if="(asset.preview.afterUrl as string)" :src="(asset.preview.afterUrl as string)" alt="After" />
+              </div>
+              <p class="body">{{ activeVersion?.body || asset.body }}</p>
             </div>
-            <img
-              v-if="(asset.preview.coverUrl as string)"
-              :src="(asset.preview.coverUrl as string)"
-              alt="Instagram preview"
-            />
-            <p class="body">{{ activeVersion?.body || asset.body }}</p>
           </div>
-          <div v-else-if="previewComponent === 'facebook'" class="fb">
-            <div class="fb-top">
-              <strong>JobbPulse Construction</strong>
-              <span class="muted">Just now · 🌎</span>
-            </div>
-            <p class="body">{{ activeVersion?.body || asset.body }}</p>
-            <div class="fb-images">
-              <img v-if="(asset.preview.beforeUrl as string)" :src="(asset.preview.beforeUrl as string)" alt="Before" />
-              <img v-if="(asset.preview.afterUrl as string)" :src="(asset.preview.afterUrl as string)" alt="After" />
-            </div>
-          </div>
-          <div v-else class="web">
-            <p class="section-label">Recent project</p>
-            <h2>{{ job.name }}</h2>
-            <p class="muted">📍 {{ job.locationText }}</p>
-            <div class="web-imgs">
-              <img v-if="(asset.preview.beforeUrl as string)" :src="(asset.preview.beforeUrl as string)" alt="Before" />
-              <img v-if="(asset.preview.afterUrl as string)" :src="(asset.preview.afterUrl as string)" alt="After" />
-            </div>
-            <p class="body">{{ activeVersion?.body || asset.body }}</p>
-          </div>
-        </div>
+        </section>
 
         <div v-if="mode === 'view'" class="stack" style="margin-top: 14px">
           <button type="button" class="btn btn-secondary" @click="mode = 'wording'">Change Wording</button>
@@ -157,23 +159,15 @@ onMounted(load)
 </template>
 
 <style scoped>
+.generated {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .preview-shell {
   padding: 0;
   overflow: hidden;
-}
-
-.ig-top,
-.fb-top {
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.ig img {
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
 }
 
 .body {
@@ -183,7 +177,6 @@ onMounted(load)
   font-size: 0.95rem;
 }
 
-.fb-images,
 .web-imgs {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -191,7 +184,6 @@ onMounted(load)
   padding: 0 12px 12px;
 }
 
-.fb-images img,
 .web-imgs img {
   width: 100%;
   aspect-ratio: 1;

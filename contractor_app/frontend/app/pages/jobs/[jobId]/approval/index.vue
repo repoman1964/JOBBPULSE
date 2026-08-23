@@ -4,7 +4,9 @@ import { destinationLabel, statusLabel } from '~/utils/jobStatus'
 
 const route = useRoute()
 const api = useApi()
+const { session } = useAuthSession()
 const jobId = computed(() => String(route.params.jobId))
+const companyName = computed(() => session.value?.company.name || 'Your company')
 
 const job = ref<Job | null>(null)
 const pkg = ref<ContentPackage | null>(null)
@@ -149,10 +151,28 @@ onMounted(load)
             <NuxtLink
               v-for="asset in pkg.assets"
               :key="asset.id"
-              class="carousel-card card"
+              class="carousel-card"
               :to="`/jobs/${jobId}/approval/${asset.id}`"
             >
-              <div class="preview-frame">
+              <FacebookPostPreview
+                v-if="asset.destinationType === 'facebook'"
+                compact
+                :company-name="companyName"
+                :location="job?.locationText"
+                :body="asset.body"
+                :cover-url="(asset.preview.coverUrl as string) || null"
+                :before-url="(asset.preview.beforeUrl as string) || null"
+                :after-url="(asset.preview.afterUrl as string) || null"
+              />
+              <InstagramPostPreview
+                v-else-if="asset.destinationType === 'instagram'"
+                compact
+                :company-name="companyName"
+                :location="job?.locationText"
+                :body="asset.body"
+                :image-url="(asset.preview.coverUrl as string) || (asset.preview.afterUrl as string) || null"
+              />
+              <div v-else class="preview-frame card">
                 <img
                   v-if="(asset.preview.coverUrl as string)"
                   :src="(asset.preview.coverUrl as string)"
@@ -240,18 +260,19 @@ onMounted(load)
 }
 
 .carousel-card {
-  min-width: 78%;
-  max-width: 78%;
+  min-width: 82%;
+  max-width: 82%;
   scroll-snap-align: start;
-  padding: 12px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .preview-frame {
   background: #0f0f0f;
   border-radius: 12px;
   overflow: hidden;
-  margin-bottom: 10px;
   min-height: 180px;
 }
 
