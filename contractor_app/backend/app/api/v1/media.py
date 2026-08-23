@@ -223,6 +223,7 @@ async def list_media(
         MediaAsset.company_id == auth.company_id,
         MediaAsset.kind == MediaKind.photo.value,
         MediaAsset.is_deleted.is_(False),
+        MediaAsset.upload_status == UploadStatus.complete.value,
     )
     if category:
         stmt = stmt.where(MediaAsset.photo_category == category)

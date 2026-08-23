@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Job, MediaAsset } from '~/types/domain'
 import { categoryLabel, meetsMinimums } from '~/utils/jobStatus'
+import { putToPresignedUrl } from '~/utils/presignedUpload'
 
 const route = useRoute()
 const api = useApi()
@@ -210,6 +211,7 @@ async function uploadVoice(blob: Blob, mimeType: string, durableUrl?: string) {
     byteSize: blob.size,
     durationMs: elapsed.value * 1000 || 1000,
   })
+  await putToPresignedUrl(sessionUpload.uploadUrl, blob, mimeType)
   const url = durableUrl || (await blobToDataUrl(blob))
   audioUrl.value = url
   voice.value = await api.completeVoiceUpload(jobId.value, sessionUpload.mediaId, url)

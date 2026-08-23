@@ -11,19 +11,37 @@ from botocore.client import Config
 from app.core.config import Settings, get_settings
 
 
+def _s3_client_config() -> Config:
+    """Path-style SigV4 without mandatory CRC32 checksums.
+
+    boto3 1.36+ signs `x-amz-checksum-*` onto PUT URLs. Browsers cannot send
+    those headers, so R2/S3 returns 403 on phone uploads.
+    """
+    kwargs: dict[str, Any] = {
+        "signature_version": "s3v4",
+        "s3": {"addressing_style": "path"},
+    }
+    try:
+        return Config(
+            **kwargs,
+            request_checksum_calculation="when_required",
+            response_checksum_validation="when_required",
+        )
+    except TypeError:
+        return Config(**kwargs)
+
+
 class ObjectStorage:
     def __init__(self, settings: Settings | None = None) -> None:
         self.settings = settings or get_settings()
+        client_config = _s3_client_config()
         self._client = boto3.client(
             "s3",
             endpoint_url=self.settings.s3_endpoint_url,
             aws_access_key_id=self.settings.s3_access_key,
             aws_secret_access_key=self.settings.s3_secret_key,
             region_name=self.settings.s3_region,
-            config=Config(
-                signature_version="s3v4",
-                s3={"addressing_style": "path"},
-            ),
+            config=client_config,
         )
         # Client for presigned URLs returned to the browser (public host)
         public_endpoint = (
@@ -35,10 +53,7 @@ class ObjectStorage:
             aws_access_key_id=self.settings.s3_access_key,
             aws_secret_access_key=self.settings.s3_secret_key,
             region_name=self.settings.s3_region,
-            config=Config(
-                signature_version="s3v4",
-                s3={"addressing_style": "path"},
-            ),
+            config=client_config,
         )
         self.bucket = self.settings.s3_bucket
 

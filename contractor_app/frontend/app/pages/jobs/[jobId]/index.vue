@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Job, MediaAsset, PhotoCategory } from '~/types/domain'
 import { categoryLabel, missingMinimums, statusLabel } from '~/utils/jobStatus'
+import { putToPresignedUrl } from '~/utils/presignedUpload'
 
 const route = useRoute()
 const api = useApi()
@@ -63,11 +64,13 @@ async function onFilesSelected(ev: Event) {
   try {
     for (const file of Array.from(files)) {
       if (!file.type.startsWith('image/')) continue
+      const mimeType = file.type || 'image/jpeg'
       const sessionUpload = await api.createPhotoUploadSession(jobId.value, pendingCategory.value, {
-        mimeType: file.type || 'image/jpeg',
+        mimeType,
         byteSize: file.size,
         filename: file.name,
       })
+      await putToPresignedUrl(sessionUpload.uploadUrl, file, mimeType)
       const objectUrl = URL.createObjectURL(file)
       await api.completeMediaUpload(jobId.value, sessionUpload.mediaId, objectUrl)
     }
