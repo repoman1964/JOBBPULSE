@@ -2,29 +2,60 @@
 
 from __future__ import annotations
 
-_LOCAL_HOSTS = {"localhost", "127.0.0.1", "postgres"}
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+
+_LOCAL_HOSTS = {"localhost", "127.0.0.1", "postgres", "::1"}
+_SSL_QUERY_KEYS = {"ssl", "sslmode"}
 
 
 def normalize_database_url(url: str) -> str:
-    """Turn a libpq/Render URL into postgresql+asyncpg:// with ssl for remote hosts."""
+    """Turn a libpq/Render URL into postgresql+asyncpg:// without driver SSL query params.
+
+    SSL is applied via connect_args (see database_ssl_connect_args). asyncpg does not
+    accept libpq values like ssl=require. Render's internal hostname (dpg-…-a, no
+    dot) also does not speak TLS — forcing SSL there makes /health/ready 503.
+    """
     if not url:
         return url
 
     if url.startswith("postgres://"):
-        url = "postgresql+asyncpg://" + url.removeprefix("postgres://")
-    elif url.startswith("postgresql://"):
-        url = "postgresql+asyncpg://" + url.removeprefix("postgresql://")
+        url = "postgresql://" + url.removeprefix("postgres://")
 
-    url = url.replace("sslmode=require", "ssl=require")
-    url = url.replace("sslmode=prefer", "ssl=require")
-    url = url.replace("sslmode=verify-full", "ssl=require")
+    parts = urlsplit(url)
+    scheme = parts.scheme
+    if scheme in {"postgres", "postgresql"}:
+        scheme = "postgresql+asyncpg"
 
-    if "+asyncpg://" not in url:
-        return url
+    query = [
+        (key, value)
+        for key, value in parse_qsl(parts.query, keep_blank_values=True)
+        if key.lower() not in _SSL_QUERY_KEYS
+    ]
+    return urlunsplit((scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
 
-    authority = url.split("@")[-1] if "@" in url else url
-    hostname = authority.split("/")[0].split(":")[0].split("?")[0]
-    if hostname not in _LOCAL_HOSTS and "ssl=" not in url:
-        url = f"{url}{'&' if '?' in url else '?'}ssl=require"
 
-    return url
+def database_hostname(url: str) -> str:
+    if not url:
+        return ""
+    return (urlsplit(normalize_database_url(url)).hostname or "").lower()
+
+
+def database_host_kind(url: str) -> str:
+    """Classify the DB host without leaking the hostname (safe for health responses)."""
+    host = database_hostname(url)
+    if not host or host in _LOCAL_HOSTS:
+        return "local"
+    if "." not in host:
+        return "private"
+    return "public"
+
+
+def database_requires_ssl(url: str) -> bool:
+    """Use TLS only for public hostnames. Render private DNS and Compose hosts do not."""
+    return database_host_kind(url) == "public"
+
+
+def database_ssl_connect_args(url: str) -> dict[str, object]:
+    if database_requires_ssl(url):
+        return {"ssl": True}
+    return {}

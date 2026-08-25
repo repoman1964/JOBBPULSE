@@ -8,6 +8,8 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
+from app.core.config import get_settings
+from app.core.database_url import database_host_kind
 from app.core.deps import DbSession
 from app.schemas.common import HealthOut
 
@@ -24,7 +26,15 @@ async def live() -> HealthOut:
 async def ready(db: DbSession):
     try:
         await db.execute(text("SELECT 1"))
-    except Exception:
+    except Exception as exc:
         logger.exception("ready check failed")
-        return JSONResponse({"status": "error"}, status_code=503)
+        return JSONResponse(
+            {
+                "status": "error",
+                "check": "database",
+                "host_kind": database_host_kind(get_settings().database_url),
+                "error": type(exc).__name__,
+            },
+            status_code=503,
+        )
     return HealthOut(status="ok")
