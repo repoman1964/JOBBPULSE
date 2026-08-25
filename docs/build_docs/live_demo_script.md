@@ -2,7 +2,9 @@
 
 **Audience:** investor, pilot contractor, or yourself  
 **Time:** ~12–15 minutes  
-**Story:** *Finish a paint job → talk into the phone → approve AI drafts → one Publish → live on your directory + social.*
+**Story:** *Finish a paint job → talk into the phone → approve AI drafts → one Publish → live on Facebook Page, Instagram, Google Business, 3–5 homeowners groups, website carousel + job page, and JobbPulse directory.*
+
+Offer lock: `docs/biz_docs/usp.md`.
 
 Use a **phone-width browser** (or Chrome DevTools → device toolbar) for the contractor app.
 

@@ -14,9 +14,9 @@ class APIModel(BaseModel):
 
 
 class PhotoMinimums(APIModel):
-    before: int = 2
+    before: int = 1
     progress: int = 0
-    after: int = 2
+    after: int = 1
 
 
 class PhotoMaximums(APIModel):

@@ -28,14 +28,16 @@ Everything else is handled by the system. The product is deliberately *not* a fu
    A JobPulse-owned distribution layer built around real completed projects (not traditional business listings). Homeowners discover work first; contractors, services, and locations are organized around those projects. Each project gets its own permanent public page. This is a long-term compounding asset, not the initial sales wedge.
 
 6. **Social Publishing**  
-   Approved content is distributed to the contractor’s social accounts (via Upload-Post / Blotato or comparable platform).
+   Approved job content is distributed (via Upload-Post or comparable) to the contractor’s Facebook business page, Instagram, and Google Business Profile, plus **3–5 local Facebook homeowners / neighborhood groups**. Between jobs, JobPulse also schedules irregular evergreen posts (weather, holidays, seasonal reminders) to those same social destinations.
+
+Canonical destination list: `docs/biz_docs/usp.md`.
 
 ### The Flywheel
-Complete job → document it (photos + voice) → JobPulse generates assets → assets appear on Conversion Site, Portfolio/Directory, and social → proof accumulates → leads arrive → Lead Desk responds and converts → contractor books more work → cycle repeats.
+Complete job → document it (photos + voice) → JobPulse generates assets → assets appear on the contractor website (home carousel + job page), JobPulse Directory, Facebook Page, Instagram, Google Business Profile, and 3–5 local homeowners groups → evergreen cadence keeps those social surfaces active between jobs → proof accumulates → leads arrive → Lead Desk responds and converts → contractor books more work → cycle repeats.
 
 ### Benefits
 - **Immediate value**: Faster lead response, missed-call recovery, AI conversations, booking, and review requests.
-- **Compounding value**: Growing project portfolio, living website proof, social content, local project pages, directory presence, and search visibility.
+- **Compounding value**: Growing project portfolio, living website proof, Facebook / Instagram / Google Business posts, local homeowners-group reach, local project pages, directory presence, and search visibility.
 - Contractors stop leaking both leads *and* proof.
 - One additional booked job can justify the monthly cost for the targeted trades.
 - The contractor keeps doing the work they already do; JobPulse extracts more marketing and sales value from it.

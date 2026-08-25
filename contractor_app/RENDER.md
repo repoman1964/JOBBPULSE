@@ -55,13 +55,13 @@ npx wrangler r2 bucket cors set jobbpulse --file contractor_app/backend/r2-cors.
 | --- | --- | --- |
 | `NUXT_PUBLIC_API_BASE_URL` | `jobbpulse-app` | `https://jobbpulse-api.onrender.com` (or `https://api.jobbpulse.com`) |
 | `FRONTEND_BASE_URL` | engine group | `https://jobbpulse-app.onrender.com` (or `https://app.jobbpulse.com`) |
-| `CORS_ORIGINS` | engine group | Same as the app origin (comma-separated if both onrender + custom domain) |
+| `CORS_ORIGINS` | engine group | `https://jobbpulse-app.onrender.com,https://red-clay-website.pages.dev` |
 | `S3_ENDPOINT_URL` | engine group | `https://b6120b2d531b6d97dfe538cc57780ea9.r2.cloudflarestorage.com` |
 | `S3_PUBLIC_ENDPOINT_URL` | engine group | Same as `S3_ENDPOINT_URL` |
 | `S3_ACCESS_KEY` | engine group | R2 API token access key id |
 | `S3_SECRET_KEY` | engine group | R2 API token secret |
 
-`JWT_SECRET` is generated. `APP_ENV=production` turns off the `123456` dev sign-in code.
+`JWT_SECRET` is generated. `APP_ENV=production` turns off the `123456` dev sign-in code. `AUTH_SHOW_OTP=true` returns the one-time code in the API so the contractor app can display it — no email is sent. Signup still stores the prospect email on the company and contractor records for later outreach.
 
 The static site bakes `NUXT_PUBLIC_API_BASE_URL` in at **build** time. If the API URL is wrong on the first pass, set it and **Manual Deploy** the static site.
 

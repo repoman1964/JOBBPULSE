@@ -103,6 +103,8 @@ envVarGroups:
         value: production
       - key: AUTH_DEV_CODES
         value: "false"
+      - key: AUTH_SHOW_OTP
+        value: "true"
       - key: COOKIE_SECURE
         value: "true"
       - key: COOKIE_SAMESITE

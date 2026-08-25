@@ -26,7 +26,7 @@ const fileFallback = ref<HTMLInputElement | null>(null)
 const audioEl = ref<HTMLAudioElement | null>(null)
 const isPlaying = ref(false)
 
-const minimums = computed(() => session.value?.company.photoMinimums || { before: 2, progress: 0, after: 2 })
+const minimums = computed(() => session.value?.company.photoMinimums || { before: 1, progress: 0, after: 1 })
 const photosOk = computed(() =>
   job.value ? meetsMinimums(job.value.counts, minimums.value) : false,
 )

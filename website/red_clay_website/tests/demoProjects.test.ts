@@ -2,12 +2,25 @@ import { describe, expect, it } from 'vitest'
 import { DUMMY_JOBS, NAV_LABELS, PUBLIC_CHROME_COPY } from '../app/utils/siteContent'
 import { isDummySlug, mergeLiveAndDummy, publicChromeHasForbiddenWords } from '../app/utils/demoProjects'
 import { isValidEmail } from '../app/utils/demoEmail'
+import { captionParts, companyInitials, instagramHandle } from '../app/utils/socialPreview'
 
 describe('dummy jobs', () => {
   it('reserves demo- slug prefixes', () => {
-    expect(DUMMY_JOBS.length).toBeGreaterThanOrEqual(4)
+    expect(DUMMY_JOBS.length).toBeGreaterThanOrEqual(8)
     for (const job of DUMMY_JOBS) {
       expect(isDummySlug(job.slug)).toBe(true)
+    }
+  })
+
+  it('includes a representative Facebook group post', () => {
+    for (const job of DUMMY_JOBS) {
+      const dests = job.socialPosts.map((p) => p.destination)
+      expect(dests).toContain('facebook')
+      expect(dests).toContain('facebook_group')
+      expect(dests).toContain('instagram')
+      expect(dests).toContain('google_business')
+      const group = job.socialPosts.find((p) => p.destination === 'facebook_group')
+      expect(group?.groupName).toBeTruthy()
     }
   })
 })
@@ -46,6 +59,18 @@ describe('public chrome', () => {
     for (const text of [...NAV_LABELS, ...PUBLIC_CHROME_COPY]) {
       expect(publicChromeHasForbiddenWords(text)).toBe(false)
     }
+  })
+})
+
+describe('social preview helpers', () => {
+  it('builds an instagram handle and hashtag parts', () => {
+    expect(instagramHandle('Red Clay')).toBe('redclay')
+    expect(companyInitials('Red Clay')).toBe('RC')
+    const parts = captionParts('Prep first. #Atlanta')
+    expect(parts).toEqual([
+      { type: 'text', value: 'Prep first. ' },
+      { type: 'tag', value: '#Atlanta' },
+    ])
   })
 })
 

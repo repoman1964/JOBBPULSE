@@ -30,6 +30,7 @@ export type SocialConnectionStatus =
 
 export type DestinationType =
   | 'facebook'
+  | 'facebook_group'
   | 'instagram'
   | 'google_business'
   | 'tiktok'

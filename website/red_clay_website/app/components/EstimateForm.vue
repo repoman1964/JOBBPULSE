@@ -84,10 +84,19 @@ async function onSubmit() {
 
 <style scoped>
 .estimate-form {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1.35rem;
+}
+
+.estimate-form > .btn {
+  display: flex;
+  width: fit-content;
+  margin-inline: auto;
 }
 
 .btn:disabled {

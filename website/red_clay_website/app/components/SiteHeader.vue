@@ -50,7 +50,6 @@ watch(open, (v) => {
 
       <div class="site-header__actions">
         <a class="site-header__phone" :href="`tel:${phoneTel}`">{{ phone }}</a>
-        <NuxtLink class="btn btn--primary site-header__cta" to="/book">Book an estimate</NuxtLink>
         <button
           type="button"
           class="nav-toggle"
@@ -71,7 +70,6 @@ watch(open, (v) => {
         {{ item.label }}
       </NuxtLink>
       <a class="btn btn--primary" :href="`tel:${phoneTel}`" @click="close">Call {{ phone }}</a>
-      <NuxtLink class="btn btn--ghost" to="/book" @click="close">Book an estimate</NuxtLink>
     </div>
   </header>
 </template>
@@ -155,10 +153,6 @@ watch(open, (v) => {
   align-items: center;
 }
 
-.site-header__cta {
-  display: none;
-}
-
 .nav-toggle {
   width: 44px;
   height: 44px;
@@ -200,8 +194,7 @@ watch(open, (v) => {
   .nav-desktop {
     display: flex;
   }
-  .site-header__phone,
-  .site-header__cta {
+  .site-header__phone {
     display: inline-flex;
   }
   .nav-toggle,

@@ -1,6 +1,7 @@
 :root {
   --charcoal: #2b2825;
   --clay: #b54a2a;
+  --clay-dark: #8b3a20;
   --clay-hover: #8b3a20;
   --page: #f7f4ee;
   --card: #ffffff;
@@ -183,6 +184,7 @@ p {
   font-size: 1.125rem;
   max-width: 36rem;
   margin-bottom: 1.5rem;
+  color: #1C1A18;
 }
 
 .muted {
@@ -221,6 +223,7 @@ p {
   flex-direction: column;
   gap: 0.35rem;
   margin-bottom: 0.9rem;
+  min-width: 0;
 }
 
 .form-field label {
@@ -232,6 +235,9 @@ p {
 .form-field input,
 .form-field select,
 .form-field textarea {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 0.7rem 0.85rem;
@@ -254,6 +260,8 @@ p {
 .form-row {
   display: grid;
   gap: 0.75rem;
+  width: 100%;
+  min-width: 0;
 }
 
 @media (min-width: 640px) {
@@ -289,7 +297,7 @@ p {
 
 .page-hero h1,
 .page-hero .page-hero__title {
-  color: #fff;
+  color: #1C1A18;
   font-size: clamp(2.5rem, 5vw, 3.5rem);
 }
 
@@ -297,7 +305,10 @@ p {
   color: var(--clay);
 }
 
-.page-hero .section__lead,
+.page-hero .section__lead {
+  color: #1C1A18;
+}
+
 .page-hero p {
   color: rgba(247, 244, 238, 0.85);
 }
@@ -416,7 +427,7 @@ p {
 }
 
 .cta-band__phone {
-  display: block;
+  display: none;
   font-size: clamp(2rem, 5vw, 2.75rem);
   font-weight: 600;
   color: var(--clay) !important;
@@ -548,18 +559,69 @@ p {
   font-size: 0.95rem;
 }
 
-.carousel {
-  display: grid;
-  gap: 1.25rem;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(260px, 1fr);
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  padding-bottom: 0.5rem;
+.carousel-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.carousel > * {
+.carousel {
+  display: flex;
+  gap: 1.25rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.15rem 0.15rem 0.85rem;
+  flex: 1;
+  min-width: 0;
+  scrollbar-color: var(--clay) transparent;
+}
+
+.carousel:focus-visible {
+  outline: 2px solid var(--clay);
+  outline-offset: 2px;
+}
+
+.carousel .project-card {
+  flex: 0 0 min(22rem, 78vw);
   scroll-snap-align: start;
+  min-width: 0;
+}
+
+.carousel__nav {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: #1c1a18;
+  font-size: 1.75rem;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.carousel__nav:hover:not(:disabled) {
+  border-color: var(--charcoal);
+  background: var(--page);
+}
+
+.carousel__nav:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+@media (max-width: 639px) {
+  .carousel__nav {
+    display: none;
+  }
 }
 
 .before-after {
@@ -593,30 +655,13 @@ p {
   font-weight: 600;
 }
 
-.social-grid {
-  display: grid;
-  gap: 1.25rem;
-}
-
-@media (min-width: 900px) {
-  .social-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.social-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.25rem;
-}
-
-.social-card img {
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
-  border-radius: var(--radius);
-  margin-bottom: 0.85rem;
+.carousel .social-slot {
+  flex: 0 0 min(22rem, 78vw);
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-width: 0;
 }
 
 .how__steps {

@@ -34,7 +34,7 @@ useHead({
         '@type': 'Product',
         name: offer.productName,
         description:
-          'JobbPulse turns finished jobs into social posts, website projects, and follow-up with new leads.',
+          'JobbPulse turns finished jobs into Facebook, Instagram, and Google Business posts, local homeowners-group posts, website job pages, a JobbPulse directory listing, and follow-up with new leads.',
         brand: { '@type': 'Brand', name: 'JobbPulse' },
         offers: {
           '@type': 'Offer',

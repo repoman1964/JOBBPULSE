@@ -41,7 +41,7 @@ const steps = [
   },
   {
     title: 'Approve the first content package',
-    body: 'Once you approve it, we publish within 48 hours to your connected social accounts, your website, and the JobbPulse directory.',
+    body: 'Once you approve it, we publish within 48 hours to your Facebook Page, Instagram, Google Business Profile, 3–5 local homeowners groups, your website (carousel and job page), and the JobbPulse directory.',
   },
 ] as const
 

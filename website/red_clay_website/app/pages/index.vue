@@ -9,9 +9,6 @@ import {
   areaPath,
 } from '~/utils/siteContent'
 
-const config = useRuntimeConfig()
-const phone = config.public.phone as string
-const phoneTel = config.public.phoneTel as string
 const demo = useDemoProjects()
 
 useSeoMeta({
@@ -36,10 +33,6 @@ const jobs = computed(() => demo.carouselJobs())
           Prep first. Then two coats. Written estimate before we open a can. We lead with exteriors — interiors when
           they fit the week.
         </p>
-        <div class="hero__actions">
-          <a class="hero__phone" :href="`tel:${phoneTel}`">{{ phone }}</a>
-          <NuxtLink class="btn btn--ghost btn--lg" to="/book">Book an estimate</NuxtLink>
-        </div>
         <div class="hero__form">
           <EstimateForm compact source-page-type="home" />
         </div>
@@ -51,8 +44,8 @@ const jobs = computed(() => demo.carouselJobs())
     <section class="section">
       <div class="container">
         <p class="section__eyebrow">Recent work</p>
-        <h2>Jobs from the last few streets.</h2>
-        <p class="section__lead">Click a project for before, after, and what we posted about it.</p>
+        <h2>Jobs from the last few weeks.</h2>
+        <p class="section__lead">Click a project for before and after pictures plus a description of the work.</p>
         <ProjectCarousel :jobs="jobs" />
         <p class="section__more">
           <NuxtLink to="/work">See all work →</NuxtLink>
@@ -163,8 +156,6 @@ const jobs = computed(() => demo.carouselJobs())
 .hero__copy {
   position: relative;
   padding: 4rem 0 3rem;
-  max-width: 40rem;
-  margin-right: auto;
 }
 
 .hero h1 {
@@ -177,23 +168,12 @@ const jobs = computed(() => demo.carouselJobs())
   max-width: 32rem;
 }
 
-.hero__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem 1.25rem;
-  margin: 1.5rem 0 1.75rem;
-}
-
-.hero__phone {
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
-  font-weight: 600;
-  color: var(--clay) !important;
-  text-decoration: none !important;
-}
-
 .hero__form {
+  width: 100%;
   max-width: 28rem;
+  min-width: 0;
+  margin-top: 1.5rem;
+  margin-inline: auto;
 }
 
 .hero__form :deep(.estimate-form) {

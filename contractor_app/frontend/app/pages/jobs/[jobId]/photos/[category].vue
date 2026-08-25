@@ -18,7 +18,7 @@ const viewer = ref<MediaAsset | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const uploading = ref(false)
 
-const minimums = computed(() => session.value?.company.photoMinimums || { before: 2, progress: 0, after: 2 })
+const minimums = computed(() => session.value?.company.photoMinimums || { before: 1, progress: 0, after: 1 })
 const minMet = computed(() => {
   const min = minimums.value[category.value] ?? 0
   return media.value.length >= min

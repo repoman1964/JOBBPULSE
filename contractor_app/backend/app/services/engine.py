@@ -51,6 +51,7 @@ SOCIAL_DESTINATIONS = set(FIRST_SHIP_SOCIAL)
 # Posting still goes through the third-party publisher when a connection exists.
 CORE_REVIEW_SOCIAL = (
     DestinationType.facebook.value,
+    DestinationType.facebook_group.value,
     DestinationType.instagram.value,
     DestinationType.google_business.value,
 )
@@ -153,9 +154,10 @@ async def run_content_pipeline(
     source_ids = [str(m.id) for m in [featured_before, featured_after] if m]
 
     for dest in destinations:
+        public_name = job.service_type or "Project"
         content = await generator.destination_content(
             destination=dest,
-            job_name=job.name,
+            job_name=public_name,
             city=job.city,
             description=description,
         )

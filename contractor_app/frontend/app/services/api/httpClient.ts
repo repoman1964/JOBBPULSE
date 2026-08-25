@@ -35,8 +35,25 @@ function joinUrl(base: string, path: string): string {
   return `${b}${p}`
 }
 
+function isLoopbackHostname(hostname: string): boolean {
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname === '[::1]'
+}
+
+/** Browser calls to a loopback engine go same-origin so Vite can proxy (LAN/phone-safe). */
+export function resolveEngineApiBase(configured: string, pageOrigin: string): string {
+  const fallback = configured.trim() || pageOrigin
+  try {
+    const u = new URL(fallback, pageOrigin)
+    const origin = isLoopbackHostname(u.hostname) ? new URL(pageOrigin).origin : u.origin
+    return joinUrl(origin, '/api/v1')
+  } catch {
+    return joinUrl(pageOrigin, '/api/v1')
+  }
+}
+
 export function createHttpApiClient(baseUrl: string): ApiClient {
-  const apiBase = joinUrl(baseUrl, '/api/v1')
+  const pageOrigin = import.meta.client ? window.location.origin : 'http://localhost'
+  const apiBase = resolveEngineApiBase(baseUrl, pageOrigin)
   let accessToken: string | null = null
 
   if (import.meta.client) {
@@ -67,10 +84,7 @@ export function createHttpApiClient(baseUrl: string): ApiClient {
       auth?: boolean
     } = {},
   ): Promise<T> {
-    const url = new URL(joinUrl(apiBase, path), import.meta.client ? window.location.origin : 'http://localhost')
-    // When baseUrl is absolute, URL constructor still works with path absolute to apiBase
-    const absolute = joinUrl(apiBase, path)
-    const u = new URL(absolute)
+    const u = new URL(joinUrl(apiBase, path), pageOrigin)
     if (options.query) {
       for (const [k, v] of Object.entries(options.query)) {
         if (v !== undefined && v !== '') u.searchParams.set(k, v)
@@ -87,12 +101,21 @@ export function createHttpApiClient(baseUrl: string): ApiClient {
       headers.Authorization = `Bearer ${accessToken}`
     }
 
-    const res = await fetch(u.toString(), {
-      method,
-      headers,
-      credentials: 'include',
-      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-    })
+    let res: Response
+    try {
+      res = await fetch(u.toString(), {
+        method,
+        headers,
+        credentials: 'include',
+        body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      })
+    } catch {
+      throw new HttpError(0, {
+        code: 'network_error',
+        message:
+          'Could not reach the JobbPulse API. Confirm the backend is running (`make up`) and you are not blocked by CORS.',
+      })
+    }
 
     if (res.status === 204) {
       return undefined as T

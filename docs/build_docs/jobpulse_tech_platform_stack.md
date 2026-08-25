@@ -109,15 +109,18 @@ The publishing process includes human approval before content is distributed.
 
 JobbPulse talks to Upload-Post through the replaceable `PublishingProvider` adapter. The contractor never has to use the Upload-Post dashboard.
 
-First-ship social destinations (locked):
+Current offer destinations (locked in `docs/biz_docs/usp.md`):
 
-- Google Business Profile
-- Facebook
+- Facebook business page
 - Instagram
-- TikTok
-- YouTube Shorts
+- Google Business Profile
+- 3–5 local Facebook homeowners / neighborhood groups
+- Contractor website home carousel and dedicated job page
+- JobbPulse directory project page
 
-Later platforms (Pinterest, LinkedIn, Threads, Nextdoor, and others) stay off the first ship.
+Plus engine-scheduled evergreen posts (weather, holidays, seasonal reminders) to the social destinations above.
+
+TikTok, YouTube Shorts, Pinterest, LinkedIn, Threads, Nextdoor, and others stay off the current offer.
 
 ## Artificial Intelligence Layer
 
@@ -298,7 +301,7 @@ Third-party platforms will provide supporting capabilities, but the core contrac
 - Upload-Post for social publishing
 - Human approval before publishing
 - AI connected through the FastAPI back end
-- Automatic publishing to social media, Smart Websites and the JobbPulse Directory
+- Automatic publishing to Facebook Page, Instagram, Google Business Profile, 3–5 local homeowners groups, Smart Website (carousel + job page), and the JobbPulse Directory
 
 ### Not Yet Locked In
 

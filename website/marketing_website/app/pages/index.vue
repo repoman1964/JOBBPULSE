@@ -190,36 +190,49 @@ const galleryTrades = [...trades, ...trades]
             After you submit the job, JobbPulse turns the photos and information into marketing
             built around the work you actually performed.
           </p>
-          <p>That can include:</p>
+          <p>That includes:</p>
         </div>
         <figure class="output-visual">
           <img
             src="/images/marketing-everywhere.png?v=2"
             width="1672"
             height="941"
-            alt="One completed job becomes marketing everywhere: social posts, website, project page, and local listing"
+            alt="One completed job becomes a Facebook, Instagram, and Google Business post, local homeowners-group posts, a website carousel item and job page, and a JobbPulse directory listing"
           >
         </figure>
         <div class="output-cards">
           <article class="card">
-            <h3>Social media content</h3>
+            <h3>Facebook, Instagram, and Google Business</h3>
             <p class="muted">
-              Professional posts built from your real projects and published across your
-              connected social accounts.
+              A completed-job post on your Facebook Page, Instagram, and Google Business Profile.
             </p>
           </article>
           <article class="card">
-            <h3>Fresh website projects</h3>
+            <h3>Local homeowners groups</h3>
             <p class="muted">
-              Recent jobs added to your website so potential customers can see current examples
-              of your work.
+              The same job posted to 3–5 Facebook homeowners and neighborhood groups in your
+              service area — where neighbors actually ask for a painter.
             </p>
           </article>
           <article class="card">
-            <h3>A JobbPulse project page</h3>
+            <h3>Your website, updated</h3>
             <p class="muted">
-              Each completed job can also become part of your JobbPulse portfolio, giving you
-              another place to show the work.
+              The job lands on the recent-jobs carousel on your homepage and gets its own
+              project page on your site.
+            </p>
+          </article>
+          <article class="card">
+            <h3>A JobbPulse directory page</h3>
+            <p class="muted">
+              Each completed job also becomes a permanent project page on the JobbPulse local
+              directory.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Posts between jobs</h3>
+            <p class="muted">
+              Weather, holidays, and seasonal reminders keep those same social accounts and
+              groups active so you are not silent for weeks.
             </p>
           </article>
           <article class="card">
@@ -327,9 +340,10 @@ const galleryTrades = [...trades, ...trades]
           driveway.
         </p>
         <p>
-          JobbPulse turns the work you already did into ongoing marketing: social posts, a fresher
-          website, and a project page a homeowner can actually look at. It also helps you stay on top
-          of the opportunities that marketing creates.
+          JobbPulse turns the work you already did into ongoing marketing: Facebook, Instagram, and
+          Google Business posts, 3–5 local homeowners groups, a fresher website with a page per job,
+          and a JobbPulse directory listing. Between jobs it keeps those social accounts from going
+          quiet. It also helps you stay on top of the opportunities that marketing creates.
         </p>
         <ul class="no-list close-list">
           <li>No content calendar.</li>

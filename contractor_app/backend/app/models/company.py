@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from app.models.job import Job
 
 
-DEFAULT_PHOTO_MINIMUMS = {"before": 2, "progress": 0, "after": 2}
+DEFAULT_PHOTO_MINIMUMS = {"before": 1, "progress": 0, "after": 1}
 DEFAULT_PHOTO_MAXIMUMS = {"before": 15, "progress": 30, "after": 15}
 DEFAULT_NOTIFICATION_SETTINGS = {
     "contentReadyForApproval": True,

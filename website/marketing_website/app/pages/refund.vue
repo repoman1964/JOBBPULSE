@@ -38,8 +38,9 @@ useSeoMeta({
 
     <h2>48 Hour Publishing Promise</h2>
     <p>
-      Once you approve a completed-job package, we’ll publish it to all your connected social media
-      accounts and to your website and our local JobbPulse directory listing within 48 hours.
+      Once you approve a completed-job package, we’ll publish it within 48 hours to your Facebook
+      Page, Instagram, Google Business Profile, 3–5 local homeowners groups, your website (home
+      carousel and a page for that job), and the JobbPulse directory.
     </p>
     <p>
       <strong>If we don’t, your next month of JobbPulse is free.</strong>

@@ -19,7 +19,7 @@ export const SEED_COMPANY: Company = {
   email: 'mike@johnsonoutdoor.example',
   website: 'https://johnsonoutdoor.example',
   serviceArea: 'Metro Atlanta',
-  photoMinimums: { before: 2, progress: 0, after: 2 },
+  photoMinimums: { before: 1, progress: 0, after: 1 },
   photoMaximums: { before: 15, progress: 30, after: 15 },
   notificationSettings: {
     contentReadyForApproval: true,

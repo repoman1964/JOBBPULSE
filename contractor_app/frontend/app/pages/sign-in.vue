@@ -93,7 +93,8 @@ async function verify() {
       <div>
         <h1 class="page-title">Sign in</h1>
         <p class="muted">
-          Enter your email or phone. JobbPulse sends a one-time code — no password needed.
+          Enter your email. We will show a one-time code on this screen — no password, and we
+          will not email you a code.
         </p>
       </div>
 
@@ -157,7 +158,7 @@ async function verify() {
           />
         </div>
         <p v-if="devCode" class="helper-text">
-          Mock mode code: <strong>{{ devCode }}</strong> (also logged in the browser console)
+          Your code: <strong>{{ devCode }}</strong>
         </p>
         <button class="btn btn-primary" type="submit" :disabled="loading">
           {{ loading ? 'Checking…' : 'Sign in' }}

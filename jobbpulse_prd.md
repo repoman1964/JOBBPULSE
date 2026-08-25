@@ -3,10 +3,11 @@
 **Product:** JobbPulse  
 **Document type:** Product Requirements Document  
 **Status:** Working PRD  
-**Version:** 1.0  
+**Version:** 1.1  
 **Primary audience:** Founder, product, design and engineering  
 **Initial market:** Visual home-service contractors  
 **Target subscription range:** $197–$297 per month  
+**Offer / USP lock:** [`docs/biz_docs/usp.md`](docs/biz_docs/usp.md)  
 
 ---
 
@@ -16,11 +17,13 @@ JobbPulse is a contractor-first marketing automation platform for visual home-se
 
 The contractor creates a **Job**, captures before-and-after photos, records a short voice description of the work completed and submits those materials to JobbPulse. The system uses the photos and voice description to generate authentic marketing content based on the actual job.
 
-The contractor reviews the generated content, approves or rejects it and continues revising or regenerating it until satisfied. Once approved, JobbPulse publishes the content through a third-party distribution platform to the contractor’s connected social media accounts and also publishes the completed-job content to a locally focused web directory owned and controlled by JobbPulse.
+The contractor reviews the generated content, approves or rejects it and continues revising or regenerating it until satisfied. Once approved, JobbPulse publishes that job to the contractor’s Facebook Page, Instagram, Google Business Profile, 3–5 local homeowners groups, the contractor’s website (home carousel plus a job page), and the JobbPulse-owned local directory. Between jobs, JobbPulse also keeps those social surfaces active with a seasonal cadence.
 
 The core promise is:
 
 > Finish the job. Show JobbPulse what you did. JobbPulse turns it into marketing.
+
+Canonical destination list: [`docs/biz_docs/usp.md`](docs/biz_docs/usp.md).
 
 ---
 
@@ -49,13 +52,13 @@ JobbPulse is not primarily a social media scheduler. Its wedge is converting rea
 
 ## 3. Strategic Principle: Ownership and Control
 
-JobbPulse will not depend on automated posting to local Facebook groups.
+JobbPulse reaches homeowners both on platforms they already use and on pages JobbPulse owns.
 
-Automating activity inside Facebook groups can put a contractor’s personal or business account at risk. It also forces JobbPulse to build a core distribution strategy on a third-party platform that JobbPulse does not control.
+**Reach (rented):** the contractor’s Facebook Page, Instagram, Google Business Profile, and 3–5 local Facebook homeowners / neighborhood groups. Group posting is part of the paid offer. It uses the contractor’s connected account, capped group list, and neighbor-native copy. Account and group-policy risk is an operating constraint, not a reason to omit groups.
 
-Instead, JobbPulse will create and operate its own locally focused web directory.
+**Own:** the contractor’s Conversion Site (recent-jobs carousel plus a page per job) and the JobbPulse-owned local directory. Owned pages are the compounding asset so the business does not depend entirely on Facebook.
 
-The directory is a core strategic asset because JobbPulse controls:
+The directory remains a core strategic asset because JobbPulse controls:
 
 - The content format
 - The publishing rules
@@ -68,12 +71,19 @@ The directory is a core strategic asset because JobbPulse controls:
 - The platform roadmap
 - The business model
 
-The owned directory is not a side feature. It is one of the two primary destinations for approved content.
+The owned directory is not a side feature. It is one of the primary destinations for approved content, alongside the contractor website and the locked social / group set.
 
-The two content destinations are:
+Locked destinations for an approved job (do not invent a shorter list):
 
-1. The contractor’s connected social media platforms
-2. The JobbPulse-owned local web directory
+1. Facebook business page
+2. Instagram
+3. Contractor website home carousel
+4. Contractor website job page
+5. JobbPulse-owned local directory project page
+6. Google Business Profile
+7. 3–5 local Facebook homeowners / neighborhood groups
+
+Between jobs, JobbPulse also schedules irregular evergreen posts (weather, holidays, seasonal trade reminders) to the social destinations in that set. Evergreen posts do not create website or directory pages.
 
 ---
 
@@ -308,21 +318,28 @@ No content is distributed until the contractor approves it.
 
 ### Step 9: Publish Approved Content
 
-Once approved, the content is sent to two destinations.
+Once approved, the job package publishes to the locked destination set in [`docs/biz_docs/usp.md`](docs/biz_docs/usp.md). One approve action fans out to all of them. The contractor does not pick platforms in the finish-job flow.
 
-#### Destination A: Social Media
+#### Destination A: Social profiles
 
-JobbPulse sends the approved content through Upload-Post.
+JobbPulse sends the approved content through Upload-Post (or the current publishing adapter) to:
 
-First-ship destinations (locked):
-
-- Google Business Profile
-- Facebook business pages
+- The contractor’s Facebook business page
 - Instagram
-- TikTok
-- YouTube Shorts
+- Google Business Profile
 
-#### Destination B: JobbPulse Local Directory
+TikTok, YouTube Shorts, X, and LinkedIn are not in the current offer.
+
+#### Destination B: Local Facebook homeowners / neighborhood groups
+
+The same job is posted to **3–5** groups in the contractor’s service area, selected at onboarding. Group copy is written for neighbors, not as a Page ad. If a group rejects the post, the rest of the package still publishes.
+
+#### Destination C: Contractor website (Conversion Site)
+
+- The job is added to the recent-jobs carousel on the front page
+- A dedicated project page is created on the contractor’s site for that job
+
+#### Destination D: JobbPulse Local Directory
 
 The approved Job is also published as a structured project listing in the JobbPulse-owned local directory.
 
@@ -337,6 +354,10 @@ The directory listing may include:
 - Call to action
 - Link to contractor profile
 - Contact or lead form
+
+### Step 10: Evergreen social cadence
+
+Independent of new jobs, JobbPulse schedules regular, irregularly timed posts to the Facebook Page, Instagram, Google Business Profile, and the same 3–5 homeowners groups. Themes include weather, holidays, and seasonal reminders for the contractor’s trade. These posts do not create website or directory pages. The contractor app does not expose a posting calendar.
 
 ---
 
@@ -1036,7 +1057,7 @@ Let a contractor delete a Job they created by mistake. Nice to have, not MVP. Pr
 
 The MVP does not need:
 
-- Automated posting to Facebook groups
+- A contractor-facing social calendar or group-management console (engine-scheduled group posts and evergreen cadence **are** in scope; see [`docs/biz_docs/usp.md`](docs/biz_docs/usp.md))
 - A full CRM
 - Estimating
 - Invoicing

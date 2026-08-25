@@ -53,6 +53,7 @@ class UploadStatus(str, enum.Enum):
 
 class DestinationType(str, enum.Enum):
     facebook = "facebook"
+    facebook_group = "facebook_group"
     instagram = "instagram"
     google_business = "google_business"
     tiktok = "tiktok"

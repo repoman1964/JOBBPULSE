@@ -27,7 +27,7 @@ ELIGIBLE_PUBLIC_STATUSES = {
     "publish_issue",
 }
 
-SOCIAL_DESTINATIONS = ("facebook", "instagram", "google_business")
+SOCIAL_DESTINATIONS = ("facebook", "facebook_group", "instagram", "google_business")
 
 
 class DemoProjectListItem(APIModel):
@@ -52,6 +52,7 @@ class DemoSocialPost(APIModel):
     title: str
     body: str
     image_url: str | None = Field(default=None, alias="imageUrl")
+    group_name: str | None = Field(default=None, alias="groupName")
 
 
 class DemoProjectDetail(DemoProjectListItem):
@@ -261,12 +262,16 @@ async def get_demo_project(
             if asset is None:
                 continue
             title_txt, body_txt = _asset_copy(asset)
+            group_name = None
+            if dest == "facebook_group":
+                group_name = f"{job.city} Neighbors" if job.city else "Metro Atlanta Homeowners"
             social_posts.append(
                 DemoSocialPost(
                     destination=dest,
                     title=title_txt,
                     body=body_txt,
                     imageUrl=after_url,
+                    groupName=group_name,
                 )
             )
         return DemoProjectDetail(

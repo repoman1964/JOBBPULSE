@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     access_token_ttl_minutes: int = 30
     refresh_token_ttl_days: int = 30
     auth_dev_codes: bool = True
+    auth_show_otp: bool = False
     auth_challenge_ttl_minutes: int = 10
     auth_fixed_dev_code: str = "123456"
 
@@ -58,9 +59,10 @@ class Settings(BaseSettings):
     upload_url_ttl_seconds: int = 900
     download_url_ttl_seconds: int = 3600
 
-    # CORS
+    # CORS — demo site on Cloudflare Pages, contractor UI on Render
     cors_origins: str = (
-        "http://localhost:3000,http://localhost:3002,http://127.0.0.1:3002"
+        "http://localhost:3000,http://localhost:3002,http://127.0.0.1:3002,"
+        "https://jobbpulse-app.onrender.com,https://red-clay-website.pages.dev"
     )
 
     # Frontend (deep links, Upload-Post redirect)
@@ -80,13 +82,43 @@ class Settings(BaseSettings):
 
     @property
     def cors_origin_list(self) -> list[str]:
-        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+        extras = (
+            "https://jobbpulse-app.onrender.com",
+            "https://red-clay-website.pages.dev",
+        )
+        seen: list[str] = []
+        for origin in [*self.cors_origins.split(","), *extras]:
+            value = origin.strip()
+            if value and value not in seen:
+                seen.append(value)
+        return seen
+
+    @property
+    def return_otp_to_client(self) -> bool:
+        """Show the one-time code in the API response. No email/SMS is sent."""
+        if self.auth_show_otp:
+            return True
+        return self.auth_dev_codes and not self.is_production
+
+    @property
+    def cors_origin_regex(self) -> str | None:
+        """Allow any localhost / private-LAN origin in non-production (Nuxt QR, extra ports)."""
+        if self.is_production:
+            return None
+        return (
+            r"^https?://("
+            r"localhost|127\.0\.0\.1|\[::1\]|"
+            r"10\.\d{1,3}\.\d{1,3}\.\d{1,3}|"
+            r"192\.168\.\d{1,3}\.\d{1,3}|"
+            r"172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}"
+            r")(:\d+)?$"
+        )
 
     @property
     def is_production(self) -> bool:
         return self.app_env == "production"
 
-    @field_validator("auth_dev_codes")
+    @field_validator("auth_dev_codes", "auth_show_otp", mode="before")
     @classmethod
     def _coerce_bool(cls, v: object) -> bool:
         if isinstance(v, str):

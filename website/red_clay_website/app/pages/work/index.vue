@@ -20,15 +20,8 @@ const jobs = computed(() => demo.carouselJobs())
       </div>
     </section>
     <section class="section">
-      <div class="container card-grid card-grid--2">
-        <NuxtLink v-for="job in jobs" :key="job.slug" class="project-card" :to="`/work/${job.slug}`">
-          <img :src="job.primaryImageUrl || '/images/exterior.jpg'" :alt="job.publicTitle" width="800" height="450" />
-          <div class="project-card__body">
-            <p class="section__eyebrow">{{ job.city }} · {{ job.serviceType }}</p>
-            <h3>{{ job.publicTitle }}</h3>
-            <p>{{ job.publicSummary }}</p>
-          </div>
-        </NuxtLink>
+      <div class="container">
+        <ProjectCarousel :jobs="jobs" />
       </div>
     </section>
   </div>

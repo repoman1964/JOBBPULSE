@@ -7,6 +7,15 @@ useSeoMeta({
   title: 'Book an estimate | Red Clay',
   description: 'Book a painting estimate in metro Atlanta. Call or use the calendar when it is connected.',
 })
+
+useHead({
+  script: [
+    {
+      src: 'https://api.dimensionsevensystems.com/js/form_embed.js',
+      type: 'text/javascript',
+    },
+  ],
+})
 </script>
 
 <template>
@@ -22,12 +31,21 @@ useSeoMeta({
         </p>
       </div>
     </section>
+
     <section class="section">
       <div class="container">
-        <!-- Operator: paste the GoHighLevel calendar embed inside #ghl-calendar. -->
-        <div id="ghl-calendar" data-ghl-embed></div>
+        <!-- GoHighLevel calendar embed -->
+        <div id="ghl-calendar" data-ghl-embed>
+          <iframe
+            src="https://api.dimensionsevensystems.com/widget/booking/H2V5IClJ0QCuyNZZWDUV"
+            allow="payment"
+            style="width: 100%; border: none; overflow: hidden;"
+            scrolling="no"
+            id="H2V5IClJ0QCuyNZZWDUV_1787577682799"
+          ></iframe>
+        </div>
+
         <p class="muted" style="margin-top: 1.5rem">
-          Calendar mounts here when the booking embed is added. Until then, call
           <a :href="`tel:${phoneTel}`">{{ phone }}</a>
           or use the
           <NuxtLink to="/contact">contact form</NuxtLink>.

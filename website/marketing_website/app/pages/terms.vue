@@ -37,9 +37,11 @@ useSeoMeta({
       <li>Upload photos and a short voice description</li>
       <li>Generate marketing content from that material</li>
       <li>Review and approve content before it is published</li>
-      <li>Publish approved content to connected social accounts</li>
-      <li>Update your JobbPulse website with recent work</li>
+      <li>Publish approved content to your Facebook Page, Instagram, and Google Business Profile</li>
+      <li>Post approved jobs to 3–5 local Facebook homeowners / neighborhood groups</li>
+      <li>Add each job to your website home carousel and a dedicated job page</li>
       <li>List approved jobs in the JobbPulse directory</li>
+      <li>Schedule seasonal posts to those social destinations between jobs</li>
       <li>Follow up on missed calls and website inquiries</li>
       <li>Perform other related marketing and follow-up functions</li>
     </ul>
@@ -163,8 +165,9 @@ useSeoMeta({
     <p>JobbPulse is designed so you can review content before it is published.</p>
     <p>
       When you approve a completed-job package, you authorize JobbPulse to publish that approved
-      material to the destinations included in your plan. That can include connected social accounts,
-      your JobbPulse website and the JobbPulse directory.
+      material to the destinations included in your plan. That includes your Facebook Page,
+      Instagram, Google Business Profile, 3–5 local homeowners groups, your website (home carousel
+      and a job page), and the JobbPulse directory.
     </p>
     <p>You are responsible for reviewing content before you approve it.</p>
     <p>

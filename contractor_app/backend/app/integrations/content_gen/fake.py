@@ -36,6 +36,7 @@ class FakeContentGenerator:
     ) -> dict[str, Any]:
         titles = {
             "facebook": "Facebook",
+            "facebook_group": "Neighborhood group",
             "instagram": "Instagram",
             "google_business": "Google Business Profile",
             "tiktok": "TikTok",
@@ -43,12 +44,19 @@ class FakeContentGenerator:
             "x": "X",
             "linkedin": "LinkedIn",
             "conversion_site": "Project Page",
-            "portfolio_site": "JobbPulse Portfolio",
+            "portfolio_site": "Portfolio",
         }
         if destination == "instagram":
-            body = f"{job_name} complete in {city}. #JobbPulse"
+            tag = f"#{city.replace(' ', '')}" if city else ""
+            body = f"{job_name} complete in {city}. {tag}".strip()
         elif destination == "facebook":
             body = f"{job_name}: another transformation ready to share."
+        elif destination == "facebook_group":
+            body = (
+                f"Wrapped a {job_name.lower()} in {city} this week. "
+                "Prep first, then the finish. If a neighbor needs similar work, "
+                "we walk the house and send a written number."
+            )
         elif destination == "google_business":
             body = (
                 f"Just finished {job_name} in {city}. "
@@ -58,7 +66,7 @@ class FakeContentGenerator:
         elif destination in {"conversion_site", "portfolio_site"}:
             body = description
         else:
-            body = f"{job_name} in {city} — documented with JobbPulse."
+            body = f"{job_name} in {city}."
 
         return {
             "title": titles.get(destination, destination),

@@ -38,9 +38,9 @@ def company_to_out(company: Company) -> CompanyOut:
         website=company.website,
         serviceArea=company.service_area,
         photoMinimums=PhotoMinimums(
-            before=int(mins.get("before", 2)),
+            before=int(mins.get("before", 1)),
             progress=int(mins.get("progress", 0)),
-            after=int(mins.get("after", 2)),
+            after=int(mins.get("after", 1)),
         ),
         photoMaximums=PhotoMaximums(
             before=int(maxs.get("before", 15)),
@@ -203,7 +203,7 @@ def has_complete_voice(media_list: list[MediaAsset]) -> bool:
 
 def meets_minimums(counts: dict[str, int], minimums: dict[str, Any]) -> bool:
     return (
-        counts.get("before", 0) >= int(minimums.get("before", 2))
+        counts.get("before", 0) >= int(minimums.get("before", 1))
         and counts.get("progress", 0) >= int(minimums.get("progress", 0))
-        and counts.get("after", 0) >= int(minimums.get("after", 2))
+        and counts.get("after", 0) >= int(minimums.get("after", 1))
     )

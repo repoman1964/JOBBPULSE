@@ -34,7 +34,9 @@ The finished system must let a contractor:
 
 The app's unique selling proposition is **stupid simple**. The contractor documents work already being performed. JobbPulse makes the decisions, creates the content and distributes it.
 
-Do not turn the Contractor App into a CRM, social scheduler, design tool, photo editor, analytics dashboard or marketing control panel.
+Locked destinations for one approved job (canonical: `docs/biz_docs/usp.md`): Facebook business page, Instagram, Google Business Profile, 3–5 local Facebook homeowners / neighborhood groups, contractor website home carousel, contractor website job page, JobbPulse directory project page. The engine also schedules evergreen social posts between jobs. The contractor does not pick destinations in the finish-job flow.
+
+Do not turn the Contractor App into a CRM, social scheduler, design tool, photo editor, analytics dashboard, group-management console, or marketing control panel.
 
 ---
 
@@ -468,18 +470,17 @@ Sections:
 
 Do not show a publishing-destination checklist. Do not put helper subtext below the approval button.
 
-Possible carousel cards:
+Possible carousel cards (locked offer set; see `docs/biz_docs/usp.md`):
 
-- Facebook
+- Facebook business page
 - Instagram
 - Google Business Profile
-- TikTok
-- X
-- LinkedIn
-- Contractor Conversion Site project entry
-- JobbPulse Portfolio Website project page
+- Local Facebook homeowners / neighborhood groups (one card per group, 3–5)
+- Contractor website home carousel
+- Contractor website job page
+- JobbPulse directory project page
 
-Only show assets that were actually generated.
+Only show assets that were actually generated. TikTok, X, LinkedIn, and YouTube Shorts are not in the current offer.
 
 **Change Featured Photos** opens a simple Before and After chooser sourced from the job library. The Engine's recommendation remains selected by default.
 
@@ -526,14 +527,14 @@ Sections:
 - Notification preferences
 - Sign Out
 
-Show these social rows:
+Show these social rows (offer destinations first):
 
 - Facebook
 - Instagram
 - Google Business Profile
-- TikTok
-- X
-- LinkedIn
+- Local homeowners groups (3–5, configured at onboarding)
+
+TikTok, X, LinkedIn, and YouTube Shorts may exist in the provider model but are not current offer destinations. Do not present them as included until `docs/biz_docs/usp.md` says so.
 
 Each row supports:
 
@@ -1024,7 +1025,7 @@ Request values should include:
 - `show_calendar: false`
 - English or detected supported language
 
-The initial Settings UI contains the first-ship destinations: Facebook, Instagram, Google Business Profile, TikTok, and YouTube Shorts.
+The Settings UI highlights the current offer destinations: Facebook, Instagram, Google Business Profile, and the 3–5 local homeowners groups. Canonical list: `docs/biz_docs/usp.md`.
 
 **Provider contract warning:** the supplied Upload-Post schema's `generate-jwt` platform filter explicitly lists Facebook, Instagram, TikTok, X and LinkedIn but does not list Google Business Profile. Other provider enums and webhook examples do list `google_business`. Treat Google Business Profile connection as a production integration gate:
 
@@ -1057,11 +1058,12 @@ Generate a separate payload per platform even when Upload-Post can accept multip
 
 Required first-ship destination adapters:
 
-- Facebook
+- Facebook business page
 - Instagram
 - Google Business Profile, subject to the provider gate above
-- TikTok
-- YouTube Shorts
+- Local Facebook homeowners / neighborhood groups (3–5)
+- Contractor website home carousel and job page (first-party)
+- JobbPulse directory project page (first-party)
 
 Map platform-specific fields inside the backend adapter, including Facebook Page ID and platform-specific titles or descriptions when required. Contractors do not see these controls.
 
@@ -1276,7 +1278,7 @@ Do not add:
 - Invoicing, estimates or scheduling
 - Customer messaging inbox
 - Analytics dashboards
-- Manual social calendar
+- Manual social calendar (engine-scheduled evergreen posts and group posts are in scope; the app does not expose a calendar)
 - Per-platform publishing switches in the main workflow
 - Rich text or design editors
 - Image filters, cropping or enhancement tools

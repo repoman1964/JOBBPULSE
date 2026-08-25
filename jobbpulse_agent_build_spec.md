@@ -97,18 +97,31 @@ The user must be able to:
 - Approve social content
 - Approve directory content
 
-### 2.5 Two Primary Publication Destinations
+### 2.5 Locked Publication Destinations
 
-Approved content must support publication to:
+Canonical list: `docs/biz_docs/usp.md`.
 
-1. Connected social platforms through a third-party publisher
-2. The JobbPulse-owned and controlled local directory
+Approved job content must publish to all of:
 
-### 2.6 No Facebook Group Automation
+1. Facebook business page
+2. Instagram
+3. Contractor website recent-jobs carousel (front page)
+4. Contractor website dedicated job page
+5. JobbPulse-owned local directory project page
+6. Google Business Profile
+7. 3–5 local Facebook homeowners / neighborhood groups
 
-Do not implement automated posting to Facebook groups.
+The engine also schedules irregular evergreen posts (weather, holidays, seasonal reminders) to the social destinations in that set. Evergreen posts do not create website or directory pages.
 
-This is intentionally out of scope because it risks user accounts and creates platform dependency.
+TikTok, YouTube Shorts, X, and LinkedIn are not in the current offer.
+
+### 2.6 Facebook Group Automation Is In Scope
+
+Implement posting to 3–5 local homeowners / neighborhood groups as part of the job package and the evergreen cadence.
+
+Use the contractor’s connected Facebook account, a capped group list from onboarding, and neighbor-native copy. Skip a group that rejects the post; do not fail the rest of the package. Exact residential addresses stay off public posts.
+
+Do not add a contractor-facing group manager or social calendar. Account-risk handling is ops, not a product exclusion.
 
 ### 2.7 Owned Directory Is Core
 
@@ -2214,9 +2227,10 @@ The coding agent must:
 - Use explicit state transitions
 - Keep mobile UX primary
 - Minimize required Job fields
-- Never auto-publish unapproved content
-- Never implement Facebook group automation
-- Treat the owned directory as a first-class product
+- Never auto-publish unapproved job packages
+- Publish approved jobs to the locked destination set in `docs/biz_docs/usp.md`, including 3–5 local Facebook homeowners groups
+- Schedule evergreen social cadence without a contractor-facing calendar
+- Treat the owned directory and contractor website job pages as first-class products
 - Document setup and migration steps
 - Keep API contracts typed
 - Keep frontend types synchronized with backend schemas

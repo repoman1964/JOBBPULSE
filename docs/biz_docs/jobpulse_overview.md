@@ -10,9 +10,11 @@ JobbPulse solves that problem through three connected components: the Contractor
 
 The Contractor App makes it easy for contractors to turn completed jobs into marketing content.
 
-After finishing a project, the contractor uploads before-and-after photos and records a short voice description of the work performed. JobbPulse uses that information to generate professional content such as social media posts, project descriptions and local job pages.
+After finishing a project, the contractor uploads before-and-after photos and records a short voice description of the work performed. JobbPulse uses that information to generate professional content and publish it to the contractor’s Facebook Page, Instagram, Google Business Profile, 3–5 local homeowners groups, the contractor website (front-page carousel plus a page per job), and the JobbPulse Directory. Between jobs, JobbPulse also posts seasonal/evergreen updates to those social destinations.
 
-The contractor does not need to write copy, organize photos or manually create posts. They simply document the work they already completed and JobbPulse handles the rest.
+The contractor does not need to write copy, organize photos, post in neighborhood groups, or keep a social calendar. They simply document the work they already completed and JobbPulse handles the rest.
+
+Canonical offer: `docs/biz_docs/usp.md`.
 
 ## The Smart Website
 
@@ -60,7 +62,7 @@ The full JobbPulse workflow is simple:
 
 A contractor completes a job, uploads photos and records a voice summary through the Contractor App.
 
-JobbPulse then generates the marketing content and distributes it across the contractor’s social media accounts, Smart Website and JobbPulse Directory.
+JobbPulse then generates the marketing content and distributes it across the contractor’s Facebook Page, Instagram, Google Business Profile, 3–5 local homeowners groups, Smart Website (carousel + job page) and JobbPulse Directory. Seasonal posts keep the social destinations active between jobs.
 
 At the same time, the Smart Website handles incoming leads, responds to missed calls, follows up with prospects and requests reviews from completed customers.
 
@@ -104,13 +106,18 @@ JobbPulse helps contractors get more value from work they have already completed
 
 Every finished job can become:
 
-- A social media post
-- A portfolio entry
-- A website update
-- A local search page
+- A Facebook business-page post
+- An Instagram post
+- A Google Business Profile post
+- Posts in 3–5 local homeowners / neighborhood groups
+- A recent-jobs carousel item on the contractor website
+- A dedicated job page on the contractor website
+- A JobbPulse directory project page
 - A review opportunity
 - A lead generation asset
 - A source of data that improves future marketing
+
+Between jobs, those same social destinations also receive irregular evergreen posts (weather, holidays, seasonal reminders).
 
 The contractor does the work once. JobbPulse continues using that work to build visibility, trust and future demand.
 

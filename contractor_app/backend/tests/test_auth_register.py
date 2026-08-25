@@ -4,6 +4,28 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
+from app.core.config import Settings
+
+
+def test_production_can_show_otp_without_email() -> None:
+    settings = Settings(
+        app_env="production",
+        jwt_secret="not-a-dev-secret-use-this-in-tests-32b",
+        auth_dev_codes=False,
+        auth_show_otp=True,
+    )
+    assert settings.return_otp_to_client is True
+
+
+def test_production_hides_otp_by_default() -> None:
+    settings = Settings(
+        app_env="production",
+        jwt_secret="not-a-dev-secret-use-this-in-tests-32b",
+        auth_dev_codes=False,
+        auth_show_otp=False,
+    )
+    assert settings.return_otp_to_client is False
+
 
 def test_register_creates_company_and_contractor(client: TestClient) -> None:
     resp = client.post(
@@ -71,4 +93,7 @@ def test_register_then_challenge_and_verify(client: TestClient) -> None:
     session = verify.json()
     assert session["accessToken"]
     assert session["contractor"]["email"] == "alex@example.com"
+    assert session["company"]["email"] == "alex@example.com"
     assert session["company"]["name"] == "Rivera Painting"
+    assert data["devCode"]
+    assert len(data["devCode"]) == 6

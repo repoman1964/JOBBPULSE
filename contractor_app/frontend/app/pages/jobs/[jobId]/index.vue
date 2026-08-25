@@ -18,7 +18,7 @@ const uploading = ref(false)
 const confirmDelete = ref(false)
 const deleting = ref(false)
 
-const minimums = computed(() => session.value?.company.photoMinimums || { before: 2, progress: 0, after: 2 })
+const minimums = computed(() => session.value?.company.photoMinimums || { before: 1, progress: 0, after: 1 })
 
 const missing = computed(() =>
   job.value ? missingMinimums(job.value.counts, minimums.value) : [],

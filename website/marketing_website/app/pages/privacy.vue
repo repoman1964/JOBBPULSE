@@ -135,9 +135,11 @@ useSeoMeta({
       <li>Replying to questions submitted through the marketing site</li>
       <li>Generating marketing content from the jobs you submit</li>
       <li>Showing you that content for approval</li>
-      <li>Publishing approved content to connected social accounts</li>
-      <li>Updating your JobbPulse website with recent work</li>
+      <li>Publishing approved content to Facebook, Instagram, and Google Business Profile</li>
+      <li>Posting approved jobs to 3–5 local Facebook homeowners / neighborhood groups</li>
+      <li>Updating your website home carousel and creating a page per job</li>
       <li>Publishing approved jobs to the JobbPulse directory</li>
+      <li>Scheduling seasonal posts to those social destinations between jobs</li>
       <li>Helping you follow up on missed calls and website inquiries</li>
       <li>Sending account setup, receipts and service messages</li>
       <li>Providing customer support</li>
@@ -159,8 +161,9 @@ useSeoMeta({
     <p>We do not use the people in your jobs or lead inbox as our own marketing database.</p>
     <p>
       When you approve a content package, you authorize JobbPulse to publish that approved material
-      to the destinations included in your plan. That can include connected social accounts, your
-      JobbPulse website and the public JobbPulse directory.
+      to the destinations included in your plan. That includes your Facebook Page, Instagram, Google
+      Business Profile, 3–5 local homeowners groups, your website (home carousel and a job page),
+      and the public JobbPulse directory.
     </p>
     <p>
       Directory listings are public. Do not approve content you do not want shown publicly.

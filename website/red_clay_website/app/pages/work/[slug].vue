@@ -12,7 +12,9 @@ const serviceType = ref('')
 const city = ref('')
 const beforeUrl = ref<string | null>(null)
 const afterUrl = ref<string | null>(null)
-const socialPosts = ref<{ destination: string; title: string; body: string; imageUrl?: string | null }[]>([])
+const socialPosts = ref<
+  { destination: string; title: string; body: string; imageUrl?: string | null; groupName?: string | null }[]
+>([])
 
 await (async () => {
   const dummy = demo.dummyDetail(slug.value)
@@ -94,8 +96,16 @@ useSeoMeta({
       <section class="section">
         <div class="container">
           <p class="section__eyebrow">Shared from this job</p>
-          <h2>Facebook, Instagram, and Google Business</h2>
-          <SocialCards :posts="socialPosts" />
+          <h2>Facebook, Instagram, Google Business, and Facebook groups</h2>
+          <p class="section__lead">
+            One representative neighborhood-group post. The same job goes out to the other groups we cover.
+          </p>
+          <SocialCards
+            :posts="socialPosts"
+            :location="city"
+            :before-url="beforeUrl"
+            :after-url="afterUrl"
+          />
         </div>
       </section>
     </template>

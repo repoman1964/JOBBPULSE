@@ -21,6 +21,7 @@ Core loop:
 | `website/abc_painters_website/` | ABC Painters demo marketing site |
 | `legacy/` | **Frozen prototype** — reference only, not production |
 | `docs/` | Product docs (PRD + build spec) |
+| `docs/biz_docs/usp.md` | **Canonical offer / USP** (what one job publishes, evergreen cadence) |
 | `jobbpulse_prd.md` | Product requirements |
 | `jobbpulse_agent_build_spec.md` | Implementation specification |
 
@@ -83,11 +84,13 @@ A store-installed app (Capacitor) is optional later packaging of the same code�
 
 ## Product rules (non-negotiable)
 
+Offer destinations: [`docs/biz_docs/usp.md`](docs/biz_docs/usp.md).
+
 1. The **Job** is the core object.
 2. Job creation must be extremely easy (photos first, minimal typing).
-3. **Human approval** before any distribution.
-4. Two destinations: social (via replaceable provider) + **owned directory**.
-5. No Facebook group automation.
+3. **Human approval** before any job-package distribution. Evergreen cadence is engine-scheduled.
+4. Locked destinations for an approved job: Facebook Page, Instagram, Google Business Profile, 3–5 local homeowners groups, contractor website (home carousel + job page), JobbPulse directory page.
+5. Facebook homeowners / neighborhood group posting **is in the offer** (capped at 3–5 groups; contractor’s connected account; neighbor-native copy).
 6. Privacy: city/neighborhood-level location; no exact residential addresses on public pages.
 
 ## Development phases

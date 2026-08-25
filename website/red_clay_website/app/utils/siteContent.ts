@@ -23,10 +23,11 @@ export type AreaDef = {
 }
 
 export type SocialPost = {
-  destination: 'facebook' | 'instagram' | 'google_business'
+  destination: 'facebook' | 'facebook_group' | 'instagram' | 'google_business'
   title: string
   body: string
   imageUrl: string
+  groupName?: string
 }
 
 export type DummyJob = {
@@ -52,7 +53,7 @@ export const COMPANY = {
   email: 'hello@redclaypainting.com',
 } as const
 
-export const NAV_LABELS = ['Home', 'Services', 'Work', 'Areas', 'About', 'Contact', 'Book an estimate'] as const
+export const NAV_LABELS = ['Home', 'Services', 'Work', 'Areas', 'About', 'Contact'] as const
 
 export const PUBLIC_CHROME_COPY = [
   'Red Clay',
@@ -359,8 +360,9 @@ function social(
   title: string,
   body: string,
   imageUrl: string,
+  groupName?: string,
 ): SocialPost {
-  return { destination, title, body, imageUrl }
+  return { destination, title, body, imageUrl, ...(groupName ? { groupName } : {}) }
 }
 
 export const DUMMY_JOBS: DummyJob[] = [
@@ -383,6 +385,13 @@ export const DUMMY_JOBS: DummyJob[] = [
         'Buckhead colonial, body and trim',
         'Failed coatings came off first. Then primer, then two finish coats. The door stayed clay-red.',
         '/work/demo-exterior-atlanta-after.jpg',
+      ),
+      social(
+        'facebook_group',
+        'Wrapped a colonial in Buckhead this week',
+        'Two-story off Peachtree. We scraped the failed coat, primed, then two finish coats. Door stayed clay-red. If a neighbor needs exterior work, we walk the house and send a written number first.',
+        '/work/demo-exterior-atlanta-after.jpg',
+        'Buckhead Neighbors',
       ),
       social(
         'instagram',
@@ -419,6 +428,13 @@ export const DUMMY_JOBS: DummyJob[] = [
         '/work/demo-interior-decatur-after.jpg',
       ),
       social(
+        'facebook_group',
+        'Just finished a living room in Oakhurst',
+        'Occupied bungalow — floors covered, furniture shifted and put back. Eggshell walls, satin trim. Rooms were usable the evening the last coat dried. Happy to walk a house if anyone nearby is lining up interior work.',
+        '/work/demo-interior-decatur-after.jpg',
+        'Oakhurst Community',
+      ),
+      social(
         'instagram',
         'Cut lines, then we leave',
         'Eggshell walls. Satin trim. Furniture back where it started.',
@@ -451,6 +467,13 @@ export const DUMMY_JOBS: DummyJob[] = [
         'Marietta deck, stained properly',
         'Gray boards had two summers of failed film. We washed, waited, and stained it so it looks like cedar again.',
         '/work/demo-deck-marietta-after.jpg',
+      ),
+      social(
+        'facebook_group',
+        'East Cobb deck, stained instead of filmed',
+        'The old coat was peeling after two summers. We washed, let it dry, and put on a semi-transparent stain so it reads as wood again. Rails included. Message if you have a deck that looks like that.',
+        '/work/demo-deck-marietta-after.jpg',
+        'East Cobb Neighbors',
       ),
       social(
         'instagram',
@@ -487,6 +510,13 @@ export const DUMMY_JOBS: DummyJob[] = [
         '/work/demo-trim-roswell-after.jpg',
       ),
       social(
+        'facebook_group',
+        'North Fulton ranch — trim only',
+        'Body color still looked right. Fascia, soffits, and shutters did not. Three-day trim job, brick and siding left alone. If your eaves are the tired part, we can quote just that.',
+        '/work/demo-trim-roswell-after.jpg',
+        'Historic Roswell Community',
+      ),
+      social(
         'instagram',
         'Edges first',
         'White fascia, clean soffits, charcoal shutters. North Fulton ranch.',
@@ -497,6 +527,170 @@ export const DUMMY_JOBS: DummyJob[] = [
         'Trim painting in Roswell',
         'Fascia, soffits, and shutters in North Fulton. Licensed crew, written estimate.',
         '/work/demo-trim-roswell-after.jpg',
+      ),
+    ],
+  },
+  {
+    slug: 'demo-exterior-brookhaven',
+    publicTitle: 'Exterior painting in Brookhaven',
+    publicSummary:
+      'Brookhaven Village ranch. Body, trim, and shutters. Failed film came off first; two finish coats after primer.',
+    serviceType: 'Exterior painting',
+    city: 'Brookhaven',
+    publishedAt: '2026-06-28T15:00:00Z',
+    primaryImageUrl: '/work/demo-exterior-brookhaven-after.jpg',
+    hasBefore: true,
+    hasAfter: true,
+    beforeUrl: '/work/demo-exterior-brookhaven-before.jpg',
+    afterUrl: '/work/demo-exterior-brookhaven-after.jpg',
+    socialPosts: [
+      social(
+        'facebook',
+        'Brookhaven ranch, body and trim',
+        'Chalky siding, then a wash, scrape, prime, and two coats. Shutters went charcoal.',
+        '/work/demo-exterior-brookhaven-after.jpg',
+      ),
+      social(
+        'facebook_group',
+        'Brookhaven Village ranch, done this month',
+        'Chalky siding came off first. Wash, scrape, prime, two coats. Shutters to charcoal. Same crew that quoted it ran the job. Written number before we opened a can.',
+        '/work/demo-exterior-brookhaven-after.jpg',
+        'Brookhaven Neighbors',
+      ),
+      social(
+        'instagram',
+        'Same house, different curb',
+        'Prep you can see in the before. Finish you can see from the sidewalk.',
+        '/work/demo-exterior-brookhaven-after.jpg',
+      ),
+      social(
+        'google_business',
+        'Exterior painting in Brookhaven',
+        'Full-house exterior in Brookhaven Village. Written estimate, licensed crew.',
+        '/work/demo-exterior-brookhaven-after.jpg',
+      ),
+    ],
+  },
+  {
+    slug: 'demo-interior-sandy-springs',
+    publicTitle: 'Interior painting in Sandy Springs',
+    publicSummary:
+      'Perimeter living and dining. Occupied home, floors protected. Eggshell walls, satin trim, furniture back in place.',
+    serviceType: 'Interior painting',
+    city: 'Sandy Springs',
+    publishedAt: '2026-06-14T15:00:00Z',
+    primaryImageUrl: '/work/demo-interior-sandy-springs-after.jpg',
+    hasBefore: true,
+    hasAfter: true,
+    beforeUrl: '/work/demo-interior-sandy-springs-before.jpg',
+    afterUrl: '/work/demo-interior-sandy-springs-after.jpg',
+    socialPosts: [
+      social(
+        'facebook',
+        'Sandy Springs living room',
+        'Tired beige came off. Eggshell walls, satin trim, same furniture, different room.',
+        '/work/demo-interior-sandy-springs-after.jpg',
+      ),
+      social(
+        'facebook_group',
+        'Perimeter living and dining, painted in place',
+        'Family stayed in the house. Floors covered, furniture shifted, eggshell walls and satin trim. Same sofa, different room. If you are near the Perimeter and want an occupied-home interior, we can walk it.',
+        '/work/demo-interior-sandy-springs-after.jpg',
+        'Sandy Springs Community',
+      ),
+      social(
+        'instagram',
+        'Lived-in, then painted',
+        'Floors stayed covered. Rooms usable the evening the last coat dried.',
+        '/work/demo-interior-sandy-springs-after.jpg',
+      ),
+      social(
+        'google_business',
+        'Interior painting in Sandy Springs',
+        'Living and dining near the Perimeter. Occupied-home interior, written quote.',
+        '/work/demo-interior-sandy-springs-after.jpg',
+      ),
+    ],
+  },
+  {
+    slug: 'demo-fence-decatur',
+    publicTitle: 'Fence stain in Decatur',
+    publicSummary:
+      'Oakhurst privacy fence and gate. Washed, dried, then a semi-transparent stain so the boards read as wood again.',
+    serviceType: 'Decks and fences',
+    city: 'Decatur',
+    publishedAt: '2026-05-30T15:00:00Z',
+    primaryImageUrl: '/work/demo-fence-decatur-after.jpg',
+    hasBefore: true,
+    hasAfter: true,
+    beforeUrl: '/work/demo-fence-decatur-before.jpg',
+    afterUrl: '/work/demo-fence-decatur-after.jpg',
+    socialPosts: [
+      social(
+        'facebook',
+        'Decatur fence, stained properly',
+        'Gray boards, patchy old film. We washed, waited, and stained the fence and gate together.',
+        '/work/demo-fence-decatur-after.jpg',
+      ),
+      social(
+        'facebook_group',
+        'Oakhurst privacy fence, stained this week',
+        'Gray, patchy boards on a privacy fence and gate. Washed, dried, semi-transparent stain so it looks like wood again. If your fence looks like lumber left in the weather, we can walk it.',
+        '/work/demo-fence-decatur-after.jpg',
+        'Intown Atlanta Homeowners',
+      ),
+      social(
+        'instagram',
+        'Fence, not gray lumber',
+        'Semi-transparent stain on an Oakhurst privacy fence. Gate included.',
+        '/work/demo-fence-decatur-after.jpg',
+      ),
+      social(
+        'google_business',
+        'Fence staining in Decatur',
+        'Privacy fence and gate in Oakhurst. Wash, dry, finish. Written estimate.',
+        '/work/demo-fence-decatur-after.jpg',
+      ),
+    ],
+  },
+  {
+    slug: 'demo-trim-marietta',
+    publicTitle: 'Trim and siding in Marietta',
+    publicSummary:
+      'East Cobb brick ranch. Fascia, soffits, and window casing. Brick stayed; the edges got the work.',
+    serviceType: 'Trim and siding',
+    city: 'Marietta',
+    publishedAt: '2026-05-12T15:00:00Z',
+    primaryImageUrl: '/work/demo-trim-marietta-after.jpg',
+    hasBefore: true,
+    hasAfter: true,
+    beforeUrl: '/work/demo-trim-marietta-before.jpg',
+    afterUrl: '/work/demo-trim-marietta-after.jpg',
+    socialPosts: [
+      social(
+        'facebook',
+        'Marietta fascia and windows',
+        'The brick was fine. The eaves were not. Trim-only job, finished in three days.',
+        '/work/demo-trim-marietta-after.jpg',
+      ),
+      social(
+        'facebook_group',
+        'East Cobb brick ranch — eaves and windows',
+        'Left the brick. Painted fascia, soffits, and window casing. Three days. If the body is fine and the trim is not, that is a real job, not an upsell.',
+        '/work/demo-trim-marietta-after.jpg',
+        'Marietta Square Community',
+      ),
+      social(
+        'instagram',
+        'White edges, brick body',
+        'Fresh fascia, clean soffits, charcoal shutters. East Cobb ranch.',
+        '/work/demo-trim-marietta-after.jpg',
+      ),
+      social(
+        'google_business',
+        'Trim painting in Marietta',
+        'Fascia, soffits, and window trim in East Cobb. Licensed crew, written estimate.',
+        '/work/demo-trim-marietta-after.jpg',
       ),
     ],
   },

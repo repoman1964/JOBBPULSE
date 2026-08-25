@@ -32,12 +32,16 @@ After completing a project, the contractor:
 
 JobbPulse uses the photos, voice summary and job information to create:
 
-- Social media posts
-- Project descriptions
-- Website portfolio content
-- Local job pages
-- Directory content
-- Future advertising assets
+- Facebook Page, Instagram, and Google Business Profile posts
+- Posts to 3–5 local Facebook homeowners / neighborhood groups
+- A recent-jobs carousel item on the contractor website home page
+- A dedicated job page on the contractor website
+- A JobbPulse directory project page
+- Project descriptions and future advertising assets
+
+Between jobs, JobbPulse also keeps those social destinations active with irregular evergreen posts (weather, holidays, seasonal reminders).
+
+Canonical offer: `docs/biz_docs/usp.md`.
 
 The workflow is designed to be fast, mobile-first and simple enough for a contractor, crew member or office employee to use without writing marketing copy.
 
@@ -103,8 +107,14 @@ Create Job
 → Record a voice summary
 → Generate content with AI
 → Review and approve
-→ Publish to social media, Smart Website and JobbPulse Directory
+→ Publish to Facebook Page, Instagram, Google Business Profile,
+  3–5 local homeowners groups, website carousel + job page,
+  and JobbPulse Directory
 ```
+
+Between jobs, JobbPulse also schedules irregular evergreen posts (weather, holidays, seasonal reminders) to the social destinations above.
+
+Canonical offer: `docs/biz_docs/usp.md`.
 
 At the same time, the Smart Website responds to incoming leads, recovers missed calls, follows up with prospects and requests reviews from completed customers.
 
@@ -149,7 +159,7 @@ JobbPulse combines those familiar services with two proprietary assets:
 - A Contractor App that continuously turns completed jobs into marketing content
 - A JobbPulse-owned directory that publishes and organizes that content into contractor and project pages
 
-The Smart Website receives approved job content automatically. The directory turns completed projects into owned local pages. Social publishing extends the same content to the contractor's existing audience.
+The Smart Website receives approved job content automatically (home carousel plus a page per job). The directory turns completed projects into owned local pages. Social publishing puts the same work on the contractor’s Facebook Page, Instagram, Google Business Profile, and 3–5 local homeowners groups, then keeps those feeds active between jobs.
 
 Together, these components create a system that typical website agencies and general-purpose automation providers do not easily reproduce.
 

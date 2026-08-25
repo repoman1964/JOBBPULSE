@@ -182,7 +182,7 @@ p {
 .section__lead {
   font-size: 1.125rem;
   max-width: 36rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.5rem;  
 }
 
 .muted {
@@ -283,7 +283,8 @@ p {
 
 .page-hero h1,
 .page-hero .page-hero__title {
-  color: #fff;
+  /* color: #fff; */
+  color: var(--clay-dark);
 }
 
 .page-hero .section__eyebrow {

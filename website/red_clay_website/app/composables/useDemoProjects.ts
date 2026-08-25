@@ -4,7 +4,13 @@ import { mergeLiveAndDummy, type CarouselJob } from '~/utils/demoProjects'
 
 export type LiveProject = CarouselJob & {
   media?: { stageLabel: string; url?: string | null }[]
-  socialPosts?: { destination: string; title: string; body: string; imageUrl?: string | null }[]
+  socialPosts?: {
+    destination: string
+    title: string
+    body: string
+    imageUrl?: string | null
+    groupName?: string | null
+  }[]
 }
 
 function apiBase() {

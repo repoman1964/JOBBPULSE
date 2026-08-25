@@ -144,12 +144,13 @@ async def request_challenge(
         normalized,
         contractor.id if contractor else None,
     )
-    if settings.auth_dev_codes and not settings.is_production:
-        logger.warning("DEV OTP for %s: %s", normalized, code)
+    show_code = settings.return_otp_to_client
+    if show_code:
+        logger.warning("OTP shown in API response for %s (no email sent)", normalized)
 
     return ChallengeOut(
         challengeId=challenge.id,
-        devCode=code if (settings.auth_dev_codes and not settings.is_production) else None,
+        devCode=code if show_code else None,
     )
 
 

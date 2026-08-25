@@ -29,7 +29,7 @@ Worker steps (fake providers by default):
 1. Transcribe voice
 2. Curate photos (prefer favorites)
 3. Generate project description
-4. Generate destination assets (connected social + Conversion Site + Portfolio)
+4. Generate destination assets (Facebook / Instagram / GBP / 3–5 homeowners groups + Conversion Site carousel and job page + directory)
 5. Persist package + immutable asset versions
 6. Set public status `ready_for_approval`
 
@@ -45,11 +45,14 @@ If the broker is unavailable during local development, the API falls back to run
 
 `approve-and-publish` is idempotent. Celery creates one `publication_attempts` row per asset with a unique idempotency key.
 
+Offer lock: `docs/biz_docs/usp.md`. One approve must fan out to the locked set (Facebook Page, Instagram, Google Business Profile, 3–5 local homeowners groups, conversion-site carousel + job page, directory project page). Evergreen cadence is a separate scheduled pipeline, not part of the job package.
+
 | Destination | Adapter |
 | --- | --- |
-| Social platforms | `FakeSocialPublisher` / Upload-Post client |
-| Conversion Site | `ConversionSitePublisher` (first-party) |
-| Portfolio Site | `PortfolioSitePublisher` (first-party) |
+| Facebook Page, Instagram, Google Business Profile | `FakeSocialPublisher` / Upload-Post client |
+| Local Facebook homeowners groups (3–5) | Same social adapter, group destinations from company onboarding |
+| Conversion Site (home carousel + job page) | `ConversionSitePublisher` (first-party) |
+| Portfolio / directory Site | `PortfolioSitePublisher` (first-party) |
 
 Partial failures set public status `publish_issue` without re-posting successful destinations.
 

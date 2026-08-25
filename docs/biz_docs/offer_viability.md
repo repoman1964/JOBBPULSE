@@ -330,7 +330,7 @@ The causal chain is sensible:
 1. The contractor completes a job.
 2. The contractor uploads photos and a voice summary.
 3. JobbPulse turns the material into professional content.
-4. The content becomes website proof, social media content and local project pages.
+4. The content becomes website proof (home carousel + job page), Facebook / Instagram / Google Business posts, 3–5 local homeowners-group posts, and a JobbPulse directory project page. Seasonal posts keep those social surfaces active between jobs.
 5. JobbPulse responds to incoming leads.
 6. Faster follow-up and stronger proof help more prospects move toward an estimate.
 7. More estimates create more opportunities to book work.

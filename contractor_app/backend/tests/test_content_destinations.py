@@ -8,7 +8,7 @@ from app.services.engine import content_destinations
 
 def test_always_generates_google_business_when_nothing_is_connected() -> None:
     dests = content_destinations(connected=set())
-    assert dests[0:3] == ["facebook", "instagram", "google_business"]
+    assert dests[0:4] == ["facebook", "facebook_group", "instagram", "google_business"]
     assert dests[-2:] == ["conversion_site", "portfolio_site"]
 
 
@@ -22,8 +22,8 @@ def test_always_generates_google_business_even_if_only_facebook_is_connected() -
 
 def test_adds_other_connected_first_ship_platforms_after_core_social() -> None:
     dests = content_destinations(connected={"tiktok", "youtube"})
-    assert dests[0:3] == ["facebook", "instagram", "google_business"]
-    assert dests[3:5] == ["tiktok", "youtube"]
+    assert dests[0:4] == ["facebook", "facebook_group", "instagram", "google_business"]
+    assert dests[4:6] == ["tiktok", "youtube"]
 
 
 async def test_google_business_copy_is_a_local_update_not_a_caption() -> None:
@@ -39,3 +39,16 @@ async def test_google_business_copy_is_a_local_update_not_a_caption() -> None:
     assert "#" not in body
     assert "documented with JobbPulse" not in body
     assert "Just finished" in body
+
+
+async def test_facebook_group_copy_is_neighborly() -> None:
+    content = await FakeContentGenerator().destination_content(
+        destination="facebook_group",
+        job_name="Exterior painting",
+        city="Decatur",
+        description="Full exterior.",
+    )
+    assert content["title"] == "Neighborhood group"
+    assert "Decatur" in content["body"]
+    assert "JobbPulse" not in content["body"]
+    assert "#" not in content["body"]

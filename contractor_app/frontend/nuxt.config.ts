@@ -15,6 +15,16 @@ export default defineNuxtConfig({
     server: {
       // true = allow phone/LAN Host headers from the Nuxt QR network URL
       allowedHosts: true,
+      proxy: {
+        '/api': { target: 'http://127.0.0.1:8000', changeOrigin: true },
+        '/health': { target: 'http://127.0.0.1:8000', changeOrigin: true },
+      },
+    },
+  },
+  nitro: {
+    devProxy: {
+      '/api': { target: 'http://127.0.0.1:8000', changeOrigin: true },
+      '/health': { target: 'http://127.0.0.1:8000', changeOrigin: true },
     },
   },
   runtimeConfig: {
