@@ -87,7 +87,18 @@ async function createAccount() {
     email.value = registerForm.email.trim()
     step.value = 'check-email'
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Could not create that account.'
+    const code = errorCode(e)
+    if (code === 'email_send_failed' || code === 'email_not_configured') {
+      pendingEmail.value = registerForm.email.trim()
+      email.value = registerForm.email.trim()
+      step.value = 'check-email'
+      error.value =
+        e instanceof Error
+          ? e.message
+          : 'Account created, but the confirmation email did not send. Tap resend.'
+    } else {
+      error.value = e instanceof Error ? e.message : 'Could not create that account.'
+    }
   } finally {
     loading.value = false
   }

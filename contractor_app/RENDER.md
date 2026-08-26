@@ -61,7 +61,22 @@ npx wrangler r2 bucket cors set jobbpulse --file contractor_app/backend/r2-cors.
 | `S3_ACCESS_KEY` | engine group | R2 API token access key id |
 | `S3_SECRET_KEY` | engine group | R2 API token secret |
 
-`JWT_SECRET` is generated. `APP_ENV=production` turns off the `123456` dev sign-in code. `AUTH_SHOW_OTP=true` returns the one-time code in the API so the contractor app can display it — no email is sent. Signup still stores the prospect email on the company and contractor records for later outreach.
+`JWT_SECRET` is generated. `APP_ENV=production` turns off the `123456` dev sign-in code. `AUTH_SHOW_OTP=true` still returns OTP codes in the API for the legacy phone/email code flow (that path does not send mail). **Signup confirmation is different:** register creates a pending contractor and Resend must deliver the verify link or the account stays inactive.
+
+Set these on the `jobbpulse-engine` env group or signup emails will not arrive:
+
+| Variable | Service | Value |
+| --- | --- | --- |
+| `RESEND_API_KEY` | engine group | Resend API key (`re_…`) |
+| `AUTH_FROM_EMAIL` | engine group | `JobbPulse <hello@jobbpulse.com>` **after** `jobbpulse.com` is verified in Resend. Leave `onboarding@resend.dev` only for sending to the Resend account owner's inbox. |
+| `PUBLIC_API_BASE_URL` | engine group | `https://jobbpulse-api.onrender.com` (or `https://api.jobbpulse.com`) — this is the host in the confirmation link |
+
+`onboarding@resend.dev` is Resend's test sender. It **rejects** any recipient other than the email on the Resend account (HTTP 403: “You can only send testing emails to your own email address”). To activate real contractors:
+
+1. Resend dashboard → **Domains** → add and verify `jobbpulse.com` (SPF/DKIM DNS).
+2. Set `AUTH_FROM_EMAIL` to an address on that domain (`JobbPulse <hello@jobbpulse.com>`).
+3. Restart `jobbpulse-api` (and the worker if it ever sends mail).
+4. Confirm API logs show `Verification email sent … resend_id=…` on signup, not `Resend send failed` / `RESEND_API_KEY is not set`.
 
 The static site bakes `NUXT_PUBLIC_API_BASE_URL` in at **build** time. If the API URL is wrong on the first pass, set it and **Manual Deploy** the static site.
 

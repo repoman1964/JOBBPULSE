@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 
+from fastapi import Request
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -31,11 +32,16 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
+async def get_db(request: Request) -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
         try:
             yield session
-            await session.commit()
+            # Exception handlers turn AppError into a JSON response, so the
+            # generator resumes normally. Honor an explicit rollback flag.
+            if getattr(request.state, "db_rollback", False):
+                await session.rollback()
+            else:
+                await session.commit()
         except Exception:
             await session.rollback()
             raise

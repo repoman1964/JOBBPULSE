@@ -7,9 +7,11 @@ from datetime import UTC, datetime, timedelta
 from urllib.parse import parse_qs, urlparse
 from uuid import UUID
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import Settings
+from app.core.errors import AppError
 from app.core.security import hash_password, verify_password
 from app.integrations.email.resend import send_verification_email
 from app.models.auth import AuthChallenge
@@ -105,6 +107,36 @@ def test_register_persists_pending_account(client: TestClient) -> None:
     assert verify_password("secret123", contractor.password_hash)
     assert contractor.phone == "4045550100"
     assert contractor.company_id
+
+
+def test_register_keeps_pending_account_if_email_send_fails(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def fail_send(**_kwargs: object) -> None:
+        raise AppError(
+            "email_send_failed",
+            "We could not send the confirmation email. Try again in a moment.",
+            status_code=503,
+        )
+
+    monkeypatch.setattr("app.services.auth_email.send_verification_email", fail_send)
+    resp = _register(client)
+    assert resp.status_code == 503, resp.text
+    assert resp.json()["code"] == "email_send_failed"
+
+    async def load() -> Contractor | None:
+        from sqlalchemy import select
+
+        async with client.app.state.test_session_factory() as session:
+            result = await session.execute(
+                select(Contractor).where(Contractor.email == "alex@example.com")
+            )
+            return result.scalar_one_or_none()
+
+    contractor = asyncio.run(load())
+    assert contractor is not None
+    assert contractor.status == ContractorStatus.pending.value
+    assert contractor.email_verified_at is None
 
 
 def test_register_same_email_returns_409(client: TestClient) -> None:
@@ -294,7 +326,10 @@ async def test_resend_http_payload() -> None:
     class FakeResp:
         is_success = True
         status_code = 200
-        text = "{}"
+        text = '{"id":"re_test_id"}'
+
+        def json(self) -> dict[str, str]:
+            return {"id": "re_test_id"}
 
     class FakeClient:
         def __init__(self, *args, **kwargs) -> None:
@@ -331,3 +366,53 @@ async def test_resend_http_payload() -> None:
     assert "Confirm your JobbPulse account" == captured["json"]["subject"]
     assert "token=abc" in captured["json"]["text"]
     assert captured["json"]["from"] == "JobbPulse <login@jobbpulse.com>"
+
+
+async def test_resend_test_domain_403_raises_email_send_failed() -> None:
+    settings = Settings(
+        jwt_secret="not-a-dev-secret-use-this-in-tests-32b",
+        resend_api_key="re_test_key",
+        auth_from_email="JobbPulse <onboarding@resend.dev>",
+    )
+
+    class FakeResp:
+        is_success = False
+        status_code = 403
+        text = (
+            "You can only send testing emails to your own email address "
+            "(owner@example.com). To send emails to other recipients, please "
+            "verify a domain at resend.com/domains."
+        )
+
+        def json(self) -> dict[str, str]:
+            return {"message": self.text}
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs) -> None:
+            pass
+
+        async def __aenter__(self) -> FakeClient:
+            return self
+
+        async def __aexit__(self, *args) -> None:
+            return None
+
+        async def post(self, url, headers=None, json=None):
+            return FakeResp()
+
+    import app.integrations.email.resend as resend_mod
+
+    original = resend_mod.httpx.AsyncClient
+    resend_mod.httpx.AsyncClient = FakeClient  # type: ignore[misc]
+    try:
+        with pytest.raises(AppError) as caught:
+            await send_verification_email(
+                settings=settings,
+                to_email="contractor@example.com",
+                verify_url="https://api.example/verify-email?token=abc",
+            )
+    finally:
+        resend_mod.httpx.AsyncClient = original  # type: ignore[misc]
+
+    assert caught.value.code == "email_send_failed"
+    assert caught.value.status_code == 503

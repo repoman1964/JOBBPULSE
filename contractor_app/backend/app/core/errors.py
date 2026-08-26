@@ -37,7 +37,12 @@ def error_body(
     return body
 
 
-async def app_error_handler(_request: Request, exc: AppError) -> JSONResponse:
+def _mark_rollback(request: Request) -> None:
+    request.state.db_rollback = True
+
+
+async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
+    _mark_rollback(request)
     return JSONResponse(
         status_code=exc.status_code,
         content=error_body(exc.code, exc.message, exc.field_errors),
@@ -45,8 +50,9 @@ async def app_error_handler(_request: Request, exc: AppError) -> JSONResponse:
 
 
 async def http_exception_handler(
-    _request: Request, exc: StarletteHTTPException
+    request: Request, exc: StarletteHTTPException
 ) -> JSONResponse:
+    _mark_rollback(request)
     detail = exc.detail
     if isinstance(detail, dict) and "code" in detail and "message" in detail:
         return JSONResponse(status_code=exc.status_code, content=detail)
@@ -67,8 +73,9 @@ async def http_exception_handler(
 
 
 async def validation_exception_handler(
-    _request: Request, exc: RequestValidationError
+    request: Request, exc: RequestValidationError
 ) -> JSONResponse:
+    _mark_rollback(request)
     field_errors: dict[str, str] = {}
     for err in exc.errors():
         loc = err.get("loc") or ()

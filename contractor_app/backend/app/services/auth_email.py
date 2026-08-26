@@ -71,6 +71,9 @@ async def send_signup_verification(
 ) -> str:
     token = await issue_verification(db, contractor=contractor, settings=settings)
     url = verification_url(settings, token)
+    # Persist the pending account + token before talking to Resend. If delivery
+    # fails, the contractor can tap Resend instead of being rolled back.
+    await db.commit()
     await send_verification_email(
         settings=settings, to_email=contractor.email, verify_url=url
     )

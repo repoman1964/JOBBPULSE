@@ -31,6 +31,17 @@ logger = logging.getLogger("jobbpulse")
 async def lifespan(_app: FastAPI):
     settings = get_settings()
     logger.info("Starting %s env=%s", settings.app_name, settings.app_env)
+    if not (settings.resend_api_key or "").strip():
+        if settings.is_production:
+            logger.error("RESEND_API_KEY is not set; signup confirmation emails will fail")
+        else:
+            logger.info("RESEND_API_KEY unset; register will log verification URLs instead of sending")
+    elif "resend.dev" in settings.auth_from_email.lower():
+        logger.warning(
+            "AUTH_FROM_EMAIL=%s uses resend.dev. Resend will only deliver to the "
+            "account owner's email until you verify a domain and change this address.",
+            settings.auth_from_email,
+        )
     yield
     logger.info("Shutting down %s", settings.app_name)
 

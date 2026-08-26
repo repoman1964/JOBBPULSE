@@ -134,6 +134,13 @@ class Settings(BaseSettings):
             return v.lower() in {"1", "true", "yes", "on"}
         return bool(v)
 
+    @field_validator("resend_api_key", mode="before")
+    @classmethod
+    def _empty_secret_to_none(cls, v: object) -> object:
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
+
     @field_validator("database_url")
     @classmethod
     def _asyncpg_database_url(cls, v: str) -> str:

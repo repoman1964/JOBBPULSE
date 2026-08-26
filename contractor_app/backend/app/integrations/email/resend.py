@@ -41,8 +41,10 @@ async def send_verification_email(
         "<p>If you did not create this account, you can ignore this message.</p>"
     )
 
-    if not settings.resend_api_key:
+    api_key = (settings.resend_api_key or "").strip()
+    if not api_key:
         if settings.is_production:
+            logger.error("RESEND_API_KEY is not set; cannot send verification email")
             raise AppError(
                 "email_not_configured",
                 "Email delivery is not configured.",
@@ -51,16 +53,17 @@ async def send_verification_email(
         logger.info("Verification email (dev, no Resend key) to=%s url=%s", to_email, verify_url)
         return
 
+    from_addr = _from_address(settings.auth_from_email)
     try:
         async with httpx.AsyncClient(timeout=20.0) as client:
             response = await client.post(
                 RESEND_URL,
                 headers={
-                    "Authorization": f"Bearer {settings.resend_api_key}",
+                    "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json",
                 },
                 json={
-                    "from": _from_address(settings.auth_from_email),
+                    "from": from_addr,
                     "to": [to_email],
                     "subject": subject,
                     "text": text,
@@ -76,9 +79,38 @@ async def send_verification_email(
         ) from exc
 
     if response.is_success:
+        resend_id = None
+        try:
+            payload = response.json()
+            if isinstance(payload, dict):
+                resend_id = payload.get("id")
+        except Exception:
+            pass
+        logger.info(
+            "Verification email sent to=%s from=%s resend_id=%s",
+            to_email,
+            from_addr,
+            resend_id,
+        )
         return
 
-    logger.error("Resend send failed status=%s body=%s", response.status_code, response.text)
+    body = response.text
+    logger.error(
+        "Resend send failed status=%s from=%s to=%s body=%s",
+        response.status_code,
+        from_addr,
+        to_email,
+        body,
+    )
+    lowered = body.lower()
+    if "own email address" in lowered or "verify a domain" in lowered:
+        logger.error(
+            "Resend is in test mode for AUTH_FROM_EMAIL=%s. "
+            "Verify jobbpulse.com (or another domain) and set AUTH_FROM_EMAIL to an "
+            "address on that domain. onboarding@resend.dev only delivers to the "
+            "Resend account owner's inbox.",
+            from_addr,
+        )
     raise AppError(
         "email_send_failed",
         "We could not send the confirmation email. Try again in a moment.",
