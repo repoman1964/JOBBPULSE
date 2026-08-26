@@ -9,6 +9,7 @@ import type {
   PhotoCategory,
   Session,
   SocialConnection,
+  SocialPlatform,
   UpdateCompanyInput,
   UploadSession,
 } from '~/types/domain'
@@ -345,6 +346,16 @@ export function createHttpApiClient(baseUrl: string): ApiClient {
 
     async listSocialConnections() {
       return request<SocialConnection[]>('GET', '/social/connections')
+    },
+
+    async connectSocialAccount(platform: SocialPlatform, accountName: string) {
+      return request<SocialConnection>('PUT', `/social/connections/${platform}`, {
+        body: { accountName },
+      })
+    },
+
+    async disconnectSocialAccount(platform: SocialPlatform) {
+      return request<SocialConnection>('POST', `/social/connections/${platform}/disconnect`)
     },
 
     async getSocialConnectUrl() {

@@ -17,6 +17,7 @@ from app.core.errors import AppError
 from app.models.enums import SocialConnectionStatus, SocialPlatform, WebhookProcessingStatus
 from app.models.social import SocialConnection, SocialProfile, WebhookEvent
 from app.schemas.common import ConnectUrlOut, SocialConnectionOut
+from app.schemas.requests import ConnectSocialRequest
 from app.services.mappers import social_to_out
 
 logger = logging.getLogger(__name__)
@@ -25,13 +26,86 @@ router = APIRouter(tags=["social"])
 PLATFORMS = [p.value for p in SocialPlatform]
 
 
+def _normalize_account_name(platform: str, raw: str) -> str:
+    name = raw.strip()
+    if platform == "instagram":
+        name = name.lstrip("@").strip()
+        return f"@{name}" if name else ""
+    return name
+
+
+async def _ensure_social_setup(db: DbSession, company_id) -> SocialProfile:
+    result = await db.execute(
+        select(SocialProfile).where(
+            SocialProfile.company_id == company_id,
+            SocialProfile.provider == "upload_post",
+        )
+    )
+    profile = result.scalar_one_or_none()
+    if profile is None:
+        username = f"jp_{str(company_id).replace('-', '')[:24]}"
+        profile = SocialProfile(
+            company_id=company_id,
+            provider="upload_post",
+            provider_username=username,
+            status="active",
+        )
+        db.add(profile)
+        await db.flush()
+
+    result = await db.execute(
+        select(SocialConnection).where(SocialConnection.company_id == company_id)
+    )
+    existing = {c.platform: c for c in result.scalars().all()}
+    for platform in PLATFORMS:
+        if platform not in existing:
+            db.add(
+                SocialConnection(
+                    company_id=company_id,
+                    social_profile_id=profile.id,
+                    platform=platform,
+                    status=SocialConnectionStatus.not_connected.value,
+                )
+            )
+    await db.flush()
+    return profile
+
+
+def _require_platform(platform: str) -> str:
+    if platform not in PLATFORMS:
+        raise AppError(
+            "unknown_platform",
+            "That social account is not supported.",
+            status_code=404,
+        )
+    return platform
+
+
+async def _connection_for(
+    db: DbSession, company_id, platform: str
+) -> SocialConnection:
+    result = await db.execute(
+        select(SocialConnection).where(
+            SocialConnection.company_id == company_id,
+            SocialConnection.platform == platform,
+        )
+    )
+    conn = result.scalar_one_or_none()
+    if conn is None:
+        raise AppError(
+            "unknown_platform",
+            "That social account is not supported.",
+            status_code=404,
+        )
+    return conn
+
+
 @router.get("/social/connections", response_model=list[SocialConnectionOut])
 async def list_connections(auth: CurrentAuth, db: DbSession) -> list[SocialConnectionOut]:
     result = await db.execute(
         select(SocialConnection).where(SocialConnection.company_id == auth.company_id)
     )
     existing = {c.platform: c for c in result.scalars().all()}
-    # Ensure all platforms represented
     out: list[SocialConnectionOut] = []
     for platform in PLATFORMS:
         conn = existing.get(platform)
@@ -49,38 +123,56 @@ async def list_connections(auth: CurrentAuth, db: DbSession) -> list[SocialConne
     return out
 
 
+@router.put("/social/connections/{platform}", response_model=SocialConnectionOut)
+async def connect_platform(
+    platform: str,
+    body: ConnectSocialRequest,
+    auth: CurrentAuth,
+    db: DbSession,
+) -> SocialConnectionOut:
+    platform = _require_platform(platform)
+    name = _normalize_account_name(platform, body.account_name)
+    if not name:
+        raise AppError(
+            "validation_error",
+            "Enter the account JobbPulse should post to.",
+            status_code=422,
+            field_errors={"accountName": "Required."},
+        )
+    await _ensure_social_setup(db, auth.company_id)
+    conn = await _connection_for(db, auth.company_id, platform)
+    conn.status = SocialConnectionStatus.connected.value
+    conn.provider_account_name = name
+    conn.reason = None
+    conn.last_event_at = datetime.now(UTC)
+    await db.flush()
+    return social_to_out(conn)
+
+
+@router.post(
+    "/social/connections/{platform}/disconnect",
+    response_model=SocialConnectionOut,
+)
+async def disconnect_platform(
+    platform: str,
+    auth: CurrentAuth,
+    db: DbSession,
+) -> SocialConnectionOut:
+    platform = _require_platform(platform)
+    await _ensure_social_setup(db, auth.company_id)
+    conn = await _connection_for(db, auth.company_id, platform)
+    conn.status = SocialConnectionStatus.not_connected.value
+    conn.provider_account_name = None
+    conn.reason = "Disconnected"
+    conn.last_event_at = datetime.now(UTC)
+    await db.flush()
+    return social_to_out(conn)
+
+
 @router.post("/social/connect-url", response_model=ConnectUrlOut)
 async def get_connect_url(auth: CurrentAuth, db: DbSession) -> ConnectUrlOut:
     settings = get_settings()
-    # Ensure social profile
-    result = await db.execute(
-        select(SocialProfile).where(
-            SocialProfile.company_id == auth.company_id,
-            SocialProfile.provider == "upload_post",
-        )
-    )
-    profile = result.scalar_one_or_none()
-    if profile is None:
-        username = f"jp_{str(auth.company_id).replace('-', '')[:24]}"
-        profile = SocialProfile(
-            company_id=auth.company_id,
-            provider="upload_post",
-            provider_username=username,
-            status="active",
-        )
-        db.add(profile)
-        await db.flush()
-        # Seed not-connected rows
-        for platform in PLATFORMS:
-            db.add(
-                SocialConnection(
-                    company_id=auth.company_id,
-                    social_profile_id=profile.id,
-                    platform=platform,
-                    status=SocialConnectionStatus.not_connected.value,
-                )
-            )
-        await db.flush()
+    profile = await _ensure_social_setup(db, auth.company_id)
 
     # Live Upload-Post path when configured; otherwise deterministic fake URL
     expires_at = datetime.now(UTC) + timedelta(minutes=15)

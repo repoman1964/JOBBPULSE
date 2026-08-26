@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Company, SocialConnection } from '~/types/domain'
+import { CONNECTABLE_PLATFORMS, PLATFORM_LABEL } from '~/utils/socialAccounts'
 
 const api = useApi()
 const { session, logout } = useAuthSession()
@@ -10,17 +11,9 @@ const loading = ref(true)
 const error = ref('')
 const banner = ref('')
 
-const SETTINGS_PLATFORMS = ['facebook', 'instagram', 'google_business'] as const
-
-const platformLabel: Record<(typeof SETTINGS_PLATFORMS)[number], string> = {
-  facebook: 'Facebook',
-  instagram: 'Instagram',
-  google_business: 'Google Business Profile',
-}
-
 const socialRows = computed(() => {
   const byPlatform = new Map(social.value.map((row) => [row.platform, row]))
-  return SETTINGS_PLATFORMS.map((platform) => {
+  return CONNECTABLE_PLATFORMS.map((platform) => {
     const row = byPlatform.get(platform)
     return (
       row || {
@@ -64,18 +57,7 @@ async function toggleNotif(key: 'contentReadyForApproval' | 'publishingComplete'
 }
 
 async function manageSocial() {
-  error.value = ''
-  try {
-    const { url } = await api.getSocialConnectUrl()
-    // Mock returns an in-app path; real provider would be external
-    if (url.startsWith('http')) {
-      window.location.href = url
-    } else {
-      await navigateTo(url)
-    }
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Could not open connection flow.'
-  }
+  await navigateTo('/settings/social')
 }
 
 async function signOut() {
@@ -117,9 +99,14 @@ onMounted(async () => {
             Connect once. JobbPulse handles the posting.
           </p>
           <div class="card card-tight social-card">
-            <div v-for="row in socialRows" :key="row.platform" class="social-row">
+            <NuxtLink
+              v-for="row in socialRows"
+              :key="row.platform"
+              class="social-row"
+              :to="`/settings/social?platform=${row.platform}`"
+            >
               <div>
-                <strong>{{ platformLabel[row.platform] || row.platform }}</strong>
+                <strong>{{ PLATFORM_LABEL[row.platform] || row.platform }}</strong>
                 <p v-if="row.accountName" class="muted" style="margin: 2px 0 0; font-size: 0.85rem">
                   {{ row.accountName }}
                 </p>
@@ -130,7 +117,7 @@ onMounted(async () => {
               >
                 {{ statusLabel[row.status] || row.status }}
               </span>
-            </div>
+            </NuxtLink>
             <button type="button" class="btn btn-primary" style="margin-top: 8px" @click="manageSocial">
               Manage Social Accounts
             </button>
@@ -182,6 +169,7 @@ onMounted(async () => {
   padding: 12px 4px;
   border-bottom: 1px solid var(--jp-card-border);
   min-height: 56px;
+  color: inherit;
 }
 
 .social-row:last-of-type {

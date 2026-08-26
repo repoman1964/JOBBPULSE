@@ -92,8 +92,9 @@ When a real backend exists:
 | `/jobs/:jobId/approval` | Review & approve package |
 | `/jobs/:jobId/approval/:assetId` | Content review |
 | `/settings` | Settings + social |
+| `/settings/social` | Connect / disconnect social accounts |
 | `/settings/business-profile` | Business profile |
-| `/settings/social-return` | Mock social return |
+| `/settings/social-return` | Upload-Post OAuth return |
 
 ## Product notes
 

@@ -10,6 +10,7 @@ import type {
   PublicJobStatus,
   Session,
   SocialConnection,
+  SocialPlatform,
   UpdateCompanyInput,
   UploadSession,
 } from '~/types/domain'
@@ -23,6 +24,7 @@ import {
   placeholder,
 } from './seed'
 import { computePublicStatus, countsFromMedia, meetsMinimums } from '~/utils/jobStatus'
+import { formatSocialAccountName } from '~/utils/socialAccounts'
 
 const STORAGE_KEY = 'jobbpulse.mock.v4'
 const SEED_PASSWORD = 'devpassword'
@@ -786,6 +788,52 @@ export function createMockApiClient(): ApiClient {
       await delay()
       const connectable = new Set(['facebook', 'instagram', 'google_business'])
       return structuredClone(state.social.filter((row) => connectable.has(row.platform)))
+    },
+
+    async connectSocialAccount(platform: SocialPlatform, accountName: string) {
+      requireSession()
+      await delay()
+      const connectable = new Set(['facebook', 'instagram', 'google_business'])
+      if (!connectable.has(platform)) {
+        throw Object.assign(new Error('That social account is not supported.'), {
+          code: 'unknown_platform',
+          status: 404,
+        })
+      }
+      const name = formatSocialAccountName(platform, accountName)
+      if (!name) {
+        throw Object.assign(new Error('Enter the account JobbPulse should post to.'), {
+          code: 'validation_error',
+          status: 422,
+        })
+      }
+      const next: SocialConnection = {
+        platform,
+        status: 'connected',
+        accountName: name,
+        reason: null,
+      }
+      const idx = state.social.findIndex((row) => row.platform === platform)
+      if (idx >= 0) state.social[idx] = next
+      else state.social.push(next)
+      save()
+      return structuredClone(next)
+    },
+
+    async disconnectSocialAccount(platform: SocialPlatform) {
+      requireSession()
+      await delay()
+      const idx = state.social.findIndex((row) => row.platform === platform)
+      const next: SocialConnection = {
+        platform,
+        status: 'not_connected',
+        accountName: null,
+        reason: 'Disconnected',
+      }
+      if (idx >= 0) state.social[idx] = next
+      else state.social.push(next)
+      save()
+      return structuredClone(next)
     },
 
     async getSocialConnectUrl() {

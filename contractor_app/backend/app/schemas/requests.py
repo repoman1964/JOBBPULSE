@@ -48,6 +48,10 @@ class UpdateCompanyRequest(APIModel):
     service_area: str | None = Field(default=None, alias="serviceArea")
 
 
+class ConnectSocialRequest(APIModel):
+    account_name: str = Field(alias="accountName", min_length=1, max_length=255)
+
+
 class UpdateNotificationSettingsRequest(APIModel):
     content_ready_for_approval: bool | None = Field(
         default=None, alias="contentReadyForApproval"

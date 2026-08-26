@@ -8,6 +8,7 @@ import type {
   PhotoCategory,
   Session,
   SocialConnection,
+  SocialPlatform,
   UpdateCompanyInput,
   UploadSession,
 } from '~/types/domain'
@@ -108,6 +109,8 @@ export interface ApiClient {
 
   // Social
   listSocialConnections(): Promise<SocialConnection[]>
+  connectSocialAccount(platform: SocialPlatform, accountName: string): Promise<SocialConnection>
+  disconnectSocialAccount(platform: SocialPlatform): Promise<SocialConnection>
   getSocialConnectUrl(): Promise<{ url: string; expiresAt: string }>
   /** Mock-only helper: complete fake connect return */
   completeSocialReturn?(status?: string): Promise<void>
