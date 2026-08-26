@@ -177,7 +177,7 @@ onMounted(() => {
             Check your inbox to activate the account, then come back here to sign in.
           </template>
           <template v-else>
-            Sign in with the email and password you used to create your account.
+            
           </template>
         </p>
       </div>
