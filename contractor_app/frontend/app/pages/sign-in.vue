@@ -141,6 +141,12 @@ async function consumeVerifyQuery() {
   }
 }
 
+function backToSignIn() {
+  error.value = ''
+  notice.value = ''
+  step.value = 'sign-in'
+}
+
 onMounted(() => {
   void consumeVerifyQuery()
 })
@@ -257,10 +263,7 @@ onMounted(() => {
           class="btn btn-secondary"
           type="button"
           :disabled="loading"
-          @click="
-            error = ''
-            step = 'sign-in'
-          "
+          @click="backToSignIn"
         >
           Back to sign in
         </button>
