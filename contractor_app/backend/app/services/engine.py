@@ -41,8 +41,6 @@ FIRST_SHIP_SOCIAL = (
     DestinationType.facebook.value,
     DestinationType.instagram.value,
     DestinationType.google_business.value,
-    DestinationType.tiktok.value,
-    DestinationType.youtube.value,
 )
 
 SOCIAL_DESTINATIONS = set(FIRST_SHIP_SOCIAL)

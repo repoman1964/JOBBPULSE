@@ -784,7 +784,8 @@ export function createMockApiClient(): ApiClient {
     async listSocialConnections() {
       requireSession()
       await delay()
-      return structuredClone(state.social)
+      const connectable = new Set(['facebook', 'instagram', 'google_business'])
+      return structuredClone(state.social.filter((row) => connectable.has(row.platform)))
     },
 
     async getSocialConnectUrl() {
@@ -807,8 +808,6 @@ export function createMockApiClient(): ApiClient {
           status === 'connected' &&
           (s.platform === 'facebook' ||
             s.platform === 'instagram' ||
-            s.platform === 'tiktok' ||
-            s.platform === 'youtube' ||
             s.platform === 'google_business')
         ) {
           return {

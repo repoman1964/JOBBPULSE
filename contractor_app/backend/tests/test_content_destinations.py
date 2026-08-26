@@ -20,10 +20,16 @@ def test_always_generates_google_business_even_if_only_facebook_is_connected() -
     assert dests.count("google_business") == 1
 
 
-def test_adds_other_connected_first_ship_platforms_after_core_social() -> None:
-    dests = content_destinations(connected={"tiktok", "youtube"})
-    assert dests[0:4] == ["facebook", "facebook_group", "instagram", "google_business"]
-    assert dests[4:6] == ["tiktok", "youtube"]
+def test_does_not_add_removed_social_platforms() -> None:
+    dests = content_destinations(connected={"tiktok", "youtube", "x", "linkedin"})
+    assert dests == [
+        "facebook",
+        "facebook_group",
+        "instagram",
+        "google_business",
+        "conversion_site",
+        "portfolio_site",
+    ]
 
 
 async def test_google_business_copy_is_a_local_update_not_a_caption() -> None:

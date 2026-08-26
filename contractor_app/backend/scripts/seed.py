@@ -287,8 +287,6 @@ async def seed() -> None:
             ("facebook", SocialConnectionStatus.connected.value, "Johnson Outdoor Living"),
             ("instagram", SocialConnectionStatus.connected.value, "@johnsonoutdoor"),
             ("google_business", SocialConnectionStatus.not_connected.value, None),
-            ("tiktok", SocialConnectionStatus.not_connected.value, None),
-            ("youtube", SocialConnectionStatus.not_connected.value, None),
         ]:
             session.add(
                 SocialConnection(

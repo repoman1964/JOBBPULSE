@@ -12,14 +12,7 @@ export type PublicJobStatus =
   | 'published'
   | 'publish_issue'
 
-export type SocialPlatform =
-  | 'facebook'
-  | 'instagram'
-  | 'google_business'
-  | 'tiktok'
-  | 'youtube'
-  | 'x'
-  | 'linkedin'
+export type SocialPlatform = 'facebook' | 'instagram' | 'google_business'
 
 export type SocialConnectionStatus =
   | 'connected'

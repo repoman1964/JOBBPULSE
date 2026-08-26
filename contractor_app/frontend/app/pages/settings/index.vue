@@ -10,15 +10,28 @@ const loading = ref(true)
 const error = ref('')
 const banner = ref('')
 
-const platformLabel: Record<string, string> = {
+const SETTINGS_PLATFORMS = ['facebook', 'instagram', 'google_business'] as const
+
+const platformLabel: Record<(typeof SETTINGS_PLATFORMS)[number], string> = {
   facebook: 'Facebook',
   instagram: 'Instagram',
   google_business: 'Google Business Profile',
-  tiktok: 'TikTok',
-  youtube: 'YouTube Shorts',
-  x: 'X',
-  linkedin: 'LinkedIn',
 }
+
+const socialRows = computed(() => {
+  const byPlatform = new Map(social.value.map((row) => [row.platform, row]))
+  return SETTINGS_PLATFORMS.map((platform) => {
+    const row = byPlatform.get(platform)
+    return (
+      row || {
+        platform,
+        status: 'not_connected' as const,
+        accountName: null,
+        reason: null,
+      }
+    )
+  })
+})
 
 const statusLabel: Record<string, string> = {
   connected: 'Connected',
@@ -104,7 +117,7 @@ onMounted(async () => {
             Connect once. JobbPulse handles the posting.
           </p>
           <div class="card card-tight social-card">
-            <div v-for="row in social" :key="row.platform" class="social-row">
+            <div v-for="row in socialRows" :key="row.platform" class="social-row">
               <div>
                 <strong>{{ platformLabel[row.platform] || row.platform }}</strong>
                 <p v-if="row.accountName" class="muted" style="margin: 2px 0 0; font-size: 0.85rem">

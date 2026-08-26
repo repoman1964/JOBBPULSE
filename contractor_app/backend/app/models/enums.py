@@ -68,10 +68,6 @@ class SocialPlatform(str, enum.Enum):
     facebook = "facebook"
     instagram = "instagram"
     google_business = "google_business"
-    tiktok = "tiktok"
-    youtube = "youtube"
-    x = "x"
-    linkedin = "linkedin"
 
 
 class SocialConnectionStatus(str, enum.Enum):
