@@ -8,7 +8,6 @@ const form = reactive({
   phone: '',
   email: '',
   website: '',
-  serviceArea: '',
 })
 const original = ref('')
 const loading = ref(true)
@@ -28,7 +27,6 @@ async function load() {
       phone: company.phone,
       email: company.email,
       website: company.website,
-      serviceArea: company.serviceArea,
     })
     original.value = JSON.stringify(form)
   } catch (e) {
@@ -96,10 +94,6 @@ onMounted(load)
         <div class="field">
           <label for="website">Website</label>
           <input id="website" v-model="form.website" type="url" />
-        </div>
-        <div class="field">
-          <label for="area">Service area</label>
-          <input id="area" v-model="form.serviceArea" type="text" />
         </div>
         <button class="btn btn-primary" type="submit" :disabled="saving || !dirty">
           {{ saving ? 'Saving…' : 'Save Changes' }}

@@ -95,9 +95,7 @@ onMounted(async () => {
 
         <section style="margin-top: 18px">
           <h2 class="section-label">Social accounts</h2>
-          <p class="muted" style="margin-top: 0; font-size: 0.9rem">
-            Connect once. JobbPulse handles the posting.
-          </p>
+          
           <div class="card card-tight social-card">
             <NuxtLink
               v-for="row in socialRows"
