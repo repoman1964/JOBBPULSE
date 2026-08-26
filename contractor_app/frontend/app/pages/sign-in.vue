@@ -6,7 +6,7 @@ const route = useRoute()
 const { setSession } = useAuthSession()
 
 const step = ref<'sign-in' | 'register' | 'check-email'>('sign-in')
-const email = ref('mike@johnsonoutdoor.example')
+const email = ref('')
 const password = ref('')
 const loading = ref(false)
 const error = ref('')
