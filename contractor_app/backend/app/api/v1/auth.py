@@ -1,17 +1,17 @@
-"""Authentication challenge / verify / session endpoints."""
+"""Authentication: signup, email verify, password login, legacy OTP."""
 
 from __future__ import annotations
 
 import logging
 import re
 from datetime import UTC, datetime, timedelta
-from uuid import UUID
+from urllib.parse import urlencode
 
-from fastapi import APIRouter, Response
-from sqlalchemy import or_, select
+from fastapi import APIRouter, Query, Response
+from fastapi.responses import RedirectResponse
+from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.core.config import get_settings
 from app.core.deps import AppSettings, CurrentAuth, DbSession
 from app.core.errors import AppError
 from app.core.security import (
@@ -20,11 +20,26 @@ from app.core.security import (
     generate_refresh_token,
     hash_otp,
     hash_token,
+    verify_password,
 )
 from app.models.auth import AuthChallenge, AuthIdentity, RefreshToken
 from app.models.company import Contractor
-from app.schemas.common import ChallengeOut, RegisterOut, SessionOut
-from app.schemas.requests import ChallengeRequest, RegisterRequest, VerifyChallengeRequest
+from app.models.enums import ContractorStatus
+from app.schemas.common import (
+    ChallengeOut,
+    RegisterOut,
+    SessionOut,
+    VerifyEmailOut,
+)
+from app.schemas.requests import (
+    ChallengeRequest,
+    LoginRequest,
+    RegisterRequest,
+    ResendVerificationRequest,
+    VerifyChallengeRequest,
+    VerifyEmailRequest,
+)
+from app.services.auth_email import activate_email, send_signup_verification
 from app.services.auth_register import register_owner
 from app.services.mappers import company_to_out, contractor_to_out
 
@@ -78,19 +93,167 @@ def _clear_refresh_cookie(response: Response, settings) -> None:
     )
 
 
+def _sign_in_redirect(settings, *, verified: bool) -> RedirectResponse:
+    query = urlencode({"verified": "1" if verified else "0"})
+    url = f"{settings.frontend_base_url.rstrip('/')}/sign-in?{query}"
+    return RedirectResponse(url=url, status_code=302)
+
+
+async def _issue_session(
+    *,
+    response: Response,
+    db: DbSession,
+    settings,
+    contractor: Contractor,
+    provider: str,
+    provider_subject: str,
+) -> SessionOut:
+    now = datetime.now(UTC)
+    result = await db.execute(
+        select(AuthIdentity).where(
+            AuthIdentity.provider == provider,
+            AuthIdentity.provider_subject == provider_subject,
+        )
+    )
+    identity = result.scalar_one_or_none()
+    if identity is None:
+        db.add(
+            AuthIdentity(
+                contractor_id=contractor.id,
+                provider=provider,
+                provider_subject=provider_subject,
+                last_authenticated_at=now,
+            )
+        )
+    else:
+        identity.last_authenticated_at = now
+
+    raw_refresh = generate_refresh_token()
+    db.add(
+        RefreshToken(
+            contractor_id=contractor.id,
+            token_hash=hash_token(raw_refresh),
+            expires_at=now + timedelta(days=settings.refresh_token_ttl_days),
+        )
+    )
+    await db.flush()
+
+    access = create_access_token(
+        settings=settings,
+        contractor_id=contractor.id,
+        company_id=contractor.company_id,
+    )
+    _set_refresh_cookie(response, raw_refresh, settings)
+    return SessionOut(
+        accessToken=access,
+        contractor=contractor_to_out(contractor),
+        company=company_to_out(contractor.company),
+    )
+
+
 @router.post("/register", response_model=RegisterOut, status_code=201)
-async def register_account(body: RegisterRequest, db: DbSession) -> RegisterOut:
+async def register_account(
+    body: RegisterRequest,
+    db: DbSession,
+    settings: AppSettings,
+) -> RegisterOut:
     _company, contractor = await register_owner(
         db,
         name=body.name,
         email=str(body.email),
         company_name=body.company_name,
+        password=body.password,
         phone=(body.phone or "").strip(),
+    )
+    verify_url = await send_signup_verification(
+        db, contractor=contractor, settings=settings
     )
     return RegisterOut(
         email=contractor.email,
         companyId=contractor.company_id,
         contractorId=contractor.id,
+        verificationUrl=(
+            verify_url if settings.return_verification_url_to_client else None
+        ),
+    )
+
+
+@router.post("/verify-email", response_model=VerifyEmailOut)
+async def verify_email_post(body: VerifyEmailRequest, db: DbSession) -> VerifyEmailOut:
+    contractor = await activate_email(db, body.token)
+    return VerifyEmailOut(email=contractor.email, verified=True)
+
+
+@router.get("/verify-email")
+async def verify_email_get(
+    db: DbSession,
+    settings: AppSettings,
+    token: str = Query(min_length=8, max_length=255),
+) -> RedirectResponse:
+    try:
+        await activate_email(db, token)
+    except AppError:
+        return _sign_in_redirect(settings, verified=False)
+    return _sign_in_redirect(settings, verified=True)
+
+
+@router.post("/resend-verification", status_code=204)
+async def resend_verification(
+    body: ResendVerificationRequest,
+    db: DbSession,
+    settings: AppSettings,
+) -> None:
+    email = str(body.email).strip().lower()
+    result = await db.execute(select(Contractor).where(Contractor.email == email))
+    contractor = result.scalar_one_or_none()
+    if contractor is None:
+        return
+    if contractor.email_verified_at is not None:
+        return
+    if contractor.status != ContractorStatus.pending.value:
+        return
+    await send_signup_verification(db, contractor=contractor, settings=settings)
+
+
+@router.post("/login", response_model=SessionOut)
+async def login(
+    body: LoginRequest,
+    response: Response,
+    db: DbSession,
+    settings: AppSettings,
+) -> SessionOut:
+    email = str(body.email).strip().lower()
+    result = await db.execute(
+        select(Contractor)
+        .where(Contractor.email == email)
+        .options(selectinload(Contractor.company))
+    )
+    contractor = result.scalar_one_or_none()
+    if contractor is None or not verify_password(body.password, contractor.password_hash):
+        raise AppError(
+            "invalid_credentials",
+            "That email or password is not correct.",
+            status_code=401,
+        )
+    if (
+        contractor.email_verified_at is None
+        or contractor.status == ContractorStatus.pending.value
+    ):
+        raise AppError(
+            "email_not_verified",
+            "Confirm your email before signing in. Check your inbox for the link.",
+            status_code=403,
+        )
+    if contractor.status != ContractorStatus.active.value:
+        raise AppError("unknown_user", "Account not found or inactive.", status_code=401)
+
+    return await _issue_session(
+        response=response,
+        db=db,
+        settings=settings,
+        contractor=contractor,
+        provider="email",
+        provider_subject=email,
     )
 
 
@@ -176,7 +339,11 @@ async def verify_challenge(
     if challenge.consumed_at is not None:
         raise AppError("challenge_used", "That code was already used.", status_code=400)
     if _aware(challenge.expires_at) < now:
-        raise AppError("challenge_expired", "That code expired. Request a new one.", status_code=400)
+        raise AppError(
+            "challenge_expired",
+            "That code expired. Request a new one.",
+            status_code=400,
+        )
     if challenge.attempt_count >= challenge.max_attempts:
         raise AppError(
             "too_many_attempts",
@@ -207,46 +374,13 @@ async def verify_challenge(
     if contractor is None or contractor.status != "active":
         raise AppError("unknown_user", "Account not found or inactive.", status_code=404)
 
-    # Upsert auth identity
-    provider = challenge.identifier_type
-    result = await db.execute(
-        select(AuthIdentity).where(
-            AuthIdentity.provider == provider,
-            AuthIdentity.provider_subject == challenge.identifier,
-        )
-    )
-    identity = result.scalar_one_or_none()
-    if identity is None:
-        identity = AuthIdentity(
-            contractor_id=contractor.id,
-            provider=provider,
-            provider_subject=challenge.identifier,
-            last_authenticated_at=now,
-        )
-        db.add(identity)
-    else:
-        identity.last_authenticated_at = now
-
-    raw_refresh = generate_refresh_token()
-    refresh = RefreshToken(
-        contractor_id=contractor.id,
-        token_hash=hash_token(raw_refresh),
-        expires_at=now + timedelta(days=settings.refresh_token_ttl_days),
-    )
-    db.add(refresh)
-    await db.flush()
-
-    access = create_access_token(
+    return await _issue_session(
+        response=response,
+        db=db,
         settings=settings,
-        contractor_id=contractor.id,
-        company_id=contractor.company_id,
-    )
-    _set_refresh_cookie(response, raw_refresh, settings)
-
-    return SessionOut(
-        accessToken=access,
-        contractor=contractor_to_out(contractor),
-        company=company_to_out(contractor.company),
+        contractor=contractor,
+        provider=challenge.identifier_type,
+        provider_subject=challenge.identifier,
     )
 
 

@@ -41,11 +41,18 @@ export interface ApiClient {
   register(input: {
     name: string
     email: string
+    password: string
     companyName: string
     phone?: string
-  }): Promise<{ email: string; companyId: string; contractorId: string }>
-  requestChallenge(identifier: string): Promise<{ challengeId: string; devCode?: string }>
-  verifyChallenge(challengeId: string, code: string): Promise<Session>
+  }): Promise<{
+    email: string
+    companyId: string
+    contractorId: string
+    verificationUrl?: string
+  }>
+  login(email: string, password: string): Promise<Session>
+  verifyEmail(token: string): Promise<{ email: string; verified: boolean }>
+  resendVerification(email: string): Promise<void>
   logout(): Promise<void>
   getSession(): Promise<Session | null>
 

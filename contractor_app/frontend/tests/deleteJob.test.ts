@@ -3,8 +3,7 @@ import { createMockApiClient } from '../app/services/api/mock/mockClient'
 
 async function signedInClient() {
   const api = createMockApiClient()
-  const { challengeId, devCode } = await api.requestChallenge('mike@johnsonoutdoor.example')
-  await api.verifyChallenge(challengeId, devCode || '123456')
+  await api.login('mike@johnsonoutdoor.example', 'devpassword')
   return api
 }
 

@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
+from app.core.security import hash_password
 from app.core.slug import slugify
 from app.models.company import Company, Contractor
 from app.models.enums import ContractorRole, ContractorStatus
@@ -15,10 +16,8 @@ from app.models.enums import ContractorRole, ContractorStatus
 
 async def unique_company_slug(db: AsyncSession, company_name: str) -> str:
     base = slugify(company_name, max_length=80)
-    existing = {
-        row[0]
-        for row in (await db.execute(select(Company.slug).where(Company.slug.like(f"{base}%")))).all()
-    }
+    slug_rows = await db.execute(select(Company.slug).where(Company.slug.like(f"{base}%")))
+    existing = {row[0] for row in slug_rows.all()}
     if base not in existing:
         return base
     for i in range(2, 100):
@@ -34,6 +33,7 @@ async def register_owner(
     name: str,
     email: str,
     company_name: str,
+    password: str,
     phone: str = "",
 ) -> tuple[Company, Contractor]:
     normalized_email = email.strip().lower()
@@ -61,7 +61,9 @@ async def register_owner(
         email=normalized_email,
         phone=phone,
         role=ContractorRole.owner.value,
-        status=ContractorStatus.active.value,
+        status=ContractorStatus.pending.value,
+        password_hash=hash_password(password),
+        email_verified_at=None,
     )
     db.add(contractor)
     await db.flush()

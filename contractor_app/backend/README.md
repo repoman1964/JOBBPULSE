@@ -25,7 +25,7 @@ API: http://localhost:8000
 Docs: http://localhost:8000/docs  
 Health: http://localhost:8000/health/live
 
-Sign in with seed account `mike@johnsonoutdoor.example` and code **`123456`** (dev OTP).
+Sign in with seed account `mike@johnsonoutdoor.example` / **`devpassword`**. New signups confirm email first (local register responses include `verificationUrl` when `AUTH_DEV_CODES=true`).
 
 ## Local (without full Compose API)
 

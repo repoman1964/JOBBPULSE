@@ -89,6 +89,7 @@ class ContractorRole(str, enum.Enum):
 
 
 class ContractorStatus(str, enum.Enum):
+    pending = "pending"
     active = "active"
     invited = "invited"
     disabled = "disabled"

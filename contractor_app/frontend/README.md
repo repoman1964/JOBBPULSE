@@ -17,8 +17,8 @@ Open the URL Nuxt prints (usually `http://localhost:3000`).
 ### Mock sign-in
 
 1. Go to `/sign-in`
-2. Use any email (seed: `mike@johnsonoutdoor.example`)
-3. One-time code: **`123456`** (shown on screen and in the browser console)
+2. Seed account: `mike@johnsonoutdoor.example` / **`devpassword`**
+3. New accounts: create account, then open the confirmation URL printed in the browser console (`[JobbPulse mock auth]`), then sign in with your password.
 
 ### Demo data
 

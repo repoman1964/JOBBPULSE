@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     auth_show_otp: bool = False
     auth_challenge_ttl_minutes: int = 10
     auth_fixed_dev_code: str = "123456"
+    auth_verification_ttl_hours: int = 24
+    resend_api_key: str | None = None
+    auth_from_email: str = "JobbPulse <onboarding@resend.dev>"
+    public_api_base_url: str = "http://localhost:8000"
 
     # Cookies
     refresh_cookie_name: str = "jp_refresh"
@@ -98,6 +102,11 @@ class Settings(BaseSettings):
         """Show the one-time code in the API response. No email/SMS is sent."""
         if self.auth_show_otp:
             return True
+        return self.auth_dev_codes and not self.is_production
+
+    @property
+    def return_verification_url_to_client(self) -> bool:
+        """Expose the email-verify URL in API responses (local/dev only)."""
         return self.auth_dev_codes and not self.is_production
 
     @property

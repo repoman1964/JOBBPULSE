@@ -147,29 +147,42 @@ export function createHttpApiClient(baseUrl: string): ApiClient {
     async register(input: {
       name: string
       email: string
+      password: string
       companyName: string
       phone?: string
     }) {
-      return request<{ email: string; companyId: string; contractorId: string }>('POST', '/auth/register', {
+      return request<{
+        email: string
+        companyId: string
+        contractorId: string
+        verificationUrl?: string
+      }>('POST', '/auth/register', {
         body: input,
         auth: false,
       })
     },
 
-    async requestChallenge(identifier: string) {
-      return request<{ challengeId: string; devCode?: string }>('POST', '/auth/challenge', {
-        body: { identifier },
-        auth: false,
-      })
-    },
-
-    async verifyChallenge(challengeId: string, code: string) {
-      const session = await request<Session>('POST', '/auth/verify', {
-        body: { challengeId, code },
+    async login(email: string, password: string) {
+      const session = await request<Session>('POST', '/auth/login', {
+        body: { email, password },
         auth: false,
       })
       persistToken(session.accessToken)
       return session
+    },
+
+    async verifyEmail(token: string) {
+      return request<{ email: string; verified: boolean }>('POST', '/auth/verify-email', {
+        body: { token },
+        auth: false,
+      })
+    },
+
+    async resendVerification(email: string) {
+      await request<void>('POST', '/auth/resend-verification', {
+        body: { email },
+        auth: false,
+      })
     },
 
     async logout() {
@@ -183,7 +196,7 @@ export function createHttpApiClient(baseUrl: string): ApiClient {
     async getSession() {
       if (!accessToken) return null
       try {
-        const session = await request<Session>('GET', '/me')
+        const session = await request<Session>('GET', '/auth/me')
         if (session.accessToken) persistToken(session.accessToken)
         return session
       } catch {

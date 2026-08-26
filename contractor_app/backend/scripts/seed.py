@@ -9,6 +9,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import select
 
+from app.core.security import hash_password
 from app.db.session import AsyncSessionLocal, engine
 from app.integrations.storage.s3 import ObjectStorage
 from app.models import (
@@ -93,6 +94,8 @@ async def seed() -> None:
             phone="(404) 555-0142",
             role="owner",
             status="active",
+            password_hash=hash_password("devpassword"),
+            email_verified_at=datetime.now(UTC),
         )
         session.add(company)
         session.add(contractor)

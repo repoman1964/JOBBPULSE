@@ -24,9 +24,19 @@ import {
 } from './seed'
 import { computePublicStatus, countsFromMedia, meetsMinimums } from '~/utils/jobStatus'
 
-const STORAGE_KEY = 'jobbpulse.mock.v3'
-const DEV_OTP = '123456'
+const STORAGE_KEY = 'jobbpulse.mock.v4'
+const SEED_PASSWORD = 'devpassword'
 const PROCESS_DELAY_MS = 2500
+
+interface MockAccount {
+  name: string
+  email: string
+  password: string
+  companyName: string
+  phone: string
+  verified: boolean
+  token: string
+}
 
 interface MockState {
   company: Company
@@ -35,9 +45,21 @@ interface MockState {
   media: MediaAsset[]
   packages: ContentPackage[]
   social: SocialConnection[]
-  challenges: Record<string, { identifier: string; code: string; expiresAt: number }>
+  accounts: Record<string, MockAccount>
   submitKeys: Set<string>
   publishKeys: Set<string>
+}
+
+function seedAccount(): MockAccount {
+  return {
+    name: SEED_CONTRACTOR.name,
+    email: SEED_CONTRACTOR.email,
+    password: SEED_PASSWORD,
+    companyName: SEED_COMPANY.name,
+    phone: SEED_CONTRACTOR.phone,
+    verified: true,
+    token: '',
+  }
 }
 
 function uid(prefix: string): string {
@@ -56,9 +78,13 @@ function loadState(): MockState | null {
     const parsed = JSON.parse(raw) as Omit<MockState, 'submitKeys' | 'publishKeys'> & {
       submitKeys: string[]
       publishKeys: string[]
+      accounts?: Record<string, MockAccount>
     }
     return {
       ...parsed,
+      accounts: parsed.accounts && Object.keys(parsed.accounts).length
+        ? parsed.accounts
+        : { [SEED_CONTRACTOR.email]: seedAccount() },
       submitKeys: new Set(parsed.submitKeys || []),
       publishKeys: new Set(parsed.publishKeys || []),
     }
@@ -88,7 +114,7 @@ function freshState(): MockState {
     media,
     packages,
     social: buildSeedSocial(),
-    challenges: {},
+    accounts: { [SEED_CONTRACTOR.email]: seedAccount() },
     submitKeys: new Set(),
     publishKeys: new Set(),
   }
@@ -237,61 +263,103 @@ export function createMockApiClient(): ApiClient {
   }
 
   const client: ApiClient = {
-    async register(input: { name: string; email: string; companyName: string; phone?: string }) {
+    async register(input: {
+      name: string
+      email: string
+      password: string
+      companyName: string
+      phone?: string
+    }) {
       await delay()
       const email = input.email.trim().toLowerCase()
-      if (email === SEED_CONTRACTOR.email.toLowerCase()) {
+      if (state.accounts[email]) {
         throw Object.assign(new Error('An account with that email already exists. Sign in instead.'), {
           code: 'email_taken',
           status: 409,
         })
       }
+      const token = uid('verify')
+      state.accounts[email] = {
+        name: input.name.trim(),
+        email,
+        password: input.password,
+        companyName: input.companyName.trim(),
+        phone: input.phone?.trim() || '',
+        verified: false,
+        token,
+      }
+      save()
+      const verificationUrl = `http://localhost:3000/sign-in?token=${token}`
+      console.info(`[JobbPulse mock auth] confirm ${email}: ${verificationUrl}`)
+      return {
+        email,
+        companyId: state.company.id,
+        contractorId: SEED_CONTRACTOR.id,
+        verificationUrl,
+      }
+    },
+
+    async login(email: string, password: string) {
+      await delay()
+      const account = state.accounts[email.trim().toLowerCase()]
+      if (!account || account.password !== password) {
+        throw Object.assign(new Error('That email or password is not correct.'), {
+          code: 'invalid_credentials',
+          status: 401,
+        })
+      }
+      if (!account.verified) {
+        throw Object.assign(
+          new Error('Confirm your email before signing in. Check your inbox for the link.'),
+          { code: 'email_not_verified', status: 403 },
+        )
+      }
       state.company = {
         ...state.company,
-        name: input.companyName.trim(),
-        contactName: input.name.trim(),
-        email,
-        phone: input.phone || state.company.phone,
+        name: account.companyName || state.company.name,
+        contactName: account.name,
+        email: account.email,
+        phone: account.phone || state.company.phone,
       }
-      save()
-      return { email, companyId: state.company.id, contractorId: SEED_CONTRACTOR.id }
-    },
-
-    async requestChallenge(identifier: string) {
-      await delay()
-      const challengeId = uid('challenge')
-      state.challenges[challengeId] = {
-        identifier: identifier.trim().toLowerCase(),
-        code: DEV_OTP,
-        expiresAt: Date.now() + 10 * 60 * 1000,
-      }
-      save()
-      // Dev OTP always visible in mock mode
-      console.info(`[JobbPulse mock auth] code for ${identifier}: ${DEV_OTP}`)
-      return { challengeId, devCode: DEV_OTP }
-    },
-
-    async verifyChallenge(challengeId: string, code: string) {
-      await delay()
-      const challenge = state.challenges[challengeId]
-      if (!challenge || challenge.expiresAt < Date.now()) {
-        throw Object.assign(new Error('That code expired. Request a new one.'), {
-          code: 'challenge_expired',
-        })
-      }
-      if (code.trim() !== challenge.code && code.trim() !== DEV_OTP) {
-        throw Object.assign(new Error('That code is incorrect. Try again.'), {
-          code: 'invalid_code',
-        })
-      }
-      delete state.challenges[challengeId]
       state.session = {
         accessToken: uid('tok'),
-        contractor: structuredClone(SEED_CONTRACTOR),
+        contractor: {
+          ...structuredClone(SEED_CONTRACTOR),
+          name: account.name,
+          email: account.email,
+          phone: account.phone || SEED_CONTRACTOR.phone,
+        },
         company: structuredClone(state.company),
       }
       save()
       return structuredClone(state.session)
+    },
+
+    async verifyEmail(token: string) {
+      await delay()
+      const account = Object.values(state.accounts).find((a) => a.token && a.token === token.trim())
+      if (!account) {
+        throw Object.assign(new Error('That confirmation link is not valid.'), {
+          code: 'invalid_token',
+          status: 400,
+        })
+      }
+      account.verified = true
+      account.token = ''
+      save()
+      return { email: account.email, verified: true }
+    },
+
+    async resendVerification(email: string) {
+      await delay()
+      const account = state.accounts[email.trim().toLowerCase()]
+      if (account && !account.verified) {
+        account.token = uid('verify')
+        save()
+        console.info(
+          `[JobbPulse mock auth] confirm ${account.email}: http://localhost:3000/sign-in?token=${account.token}`,
+        )
+      }
     },
 
     async logout() {

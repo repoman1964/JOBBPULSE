@@ -81,7 +81,12 @@ def test_eligible_statuses_match_spec() -> None:
 def _register(client: TestClient, email: str = "alex@example.com") -> dict:
     resp = client.post(
         "/api/v1/auth/register",
-        json={"name": "Alex Rivera", "email": email, "companyName": "Rivera Painting"},
+        json={
+            "name": "Alex Rivera",
+            "email": email,
+            "password": "secret123",
+            "companyName": "Rivera Painting",
+        },
     )
     assert resp.status_code == 201, resp.text
     return resp.json()

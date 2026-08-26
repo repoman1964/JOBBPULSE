@@ -64,6 +64,12 @@ class RegisterOut(APIModel):
     email: str
     company_id: UUID = Field(alias="companyId")
     contractor_id: UUID = Field(alias="contractorId")
+    verification_url: str | None = Field(default=None, alias="verificationUrl")
+
+
+class VerifyEmailOut(APIModel):
+    email: str
+    verified: bool = True
 
 
 class JobCounts(APIModel):

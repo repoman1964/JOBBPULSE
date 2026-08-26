@@ -16,8 +16,22 @@ class ChallengeRequest(APIModel):
 class RegisterRequest(APIModel):
     name: str = Field(min_length=1, max_length=255)
     email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
     company_name: str = Field(alias="companyName", min_length=1, max_length=255)
     phone: str | None = None
+
+
+class LoginRequest(APIModel):
+    email: EmailStr
+    password: str = Field(min_length=1, max_length=128)
+
+
+class VerifyEmailRequest(APIModel):
+    token: str = Field(min_length=8, max_length=255)
+
+
+class ResendVerificationRequest(APIModel):
+    email: EmailStr
 
 
 class VerifyChallengeRequest(APIModel):
@@ -115,6 +129,9 @@ class ApprovePublishRequest(APIModel):
 __all__ = [
     "ChallengeRequest",
     "RegisterRequest",
+    "LoginRequest",
+    "VerifyEmailRequest",
+    "ResendVerificationRequest",
     "VerifyChallengeRequest",
     "UpdateCompanyRequest",
     "UpdateNotificationSettingsRequest",

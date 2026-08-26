@@ -105,6 +105,12 @@ envVarGroups:
         value: "false"
       - key: AUTH_SHOW_OTP
         value: "true"
+      - key: RESEND_API_KEY
+        sync: false
+      - key: AUTH_FROM_EMAIL
+        value: JobbPulse <onboarding@resend.dev>
+      - key: PUBLIC_API_BASE_URL
+        sync: false
       - key: COOKIE_SECURE
         value: "true"
       - key: COOKIE_SAMESITE

@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from sqlalchemy import ForeignKey, String, Text, UniqueConstraint
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
+from sqlalchemy import DateTime, ForeignKey, String, UniqueConstraint
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -71,7 +73,11 @@ class Contractor(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         String(32), nullable=False, default=ContractorRole.owner.value
     )
     status: Mapped[str] = mapped_column(
-        String(32), nullable=False, default=ContractorStatus.active.value
+        String(32), nullable=False, default=ContractorStatus.pending.value
+    )
+    password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    email_verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
     )
 
     company: Mapped[Company] = relationship(back_populates="contractors")
