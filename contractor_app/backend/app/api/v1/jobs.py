@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Query
+from sqlalchemy import inspect as sa_inspect
 from sqlalchemy import select
 
 from app.core.deps import CurrentAuth, DbSession
@@ -65,6 +66,10 @@ def _cover_url(media: list[MediaAsset], storage: ObjectStorage) -> str | None:
 
 
 async def _to_job_out(db: DbSession, job: Job, storage: ObjectStorage | None = None) -> JobOut:
+    # UPDATE ... onupdate=now() expires timestamp columns. Reading them in the
+    # mapper without a refresh raises MissingGreenlet (HTTP 500) on async SQLAlchemy.
+    if sa_inspect(job).expired_attributes:
+        await db.refresh(job)
     storage = storage or ObjectStorage()
     media = await _job_media(db, job.id, job.company_id)
     return job_to_out(
