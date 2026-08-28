@@ -75,6 +75,7 @@ services:
       APP_ENV: development
       AUTH_DEV_CODES: "true"
       PROVIDER_MODE: fake
+      PIPELINE_STAGE_DELAY_SECONDS: "2.5"
     ports:
       - "8000:8000"
     depends_on:
@@ -109,6 +110,7 @@ services:
       APP_ENV: development
       AUTH_DEV_CODES: "true"
       PROVIDER_MODE: fake
+      PIPELINE_STAGE_DELAY_SECONDS: "2.5"
     depends_on:
       postgres:
         condition: service_healthy

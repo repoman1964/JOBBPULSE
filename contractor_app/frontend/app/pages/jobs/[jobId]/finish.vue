@@ -16,6 +16,13 @@ const playError = ref('')
 const submitting = ref(false)
 const submitted = ref(false)
 
+useJobPoll(job)
+
+const documenting = computed(() => {
+  const status = job.value?.publicStatus
+  return status === 'active' || status === 'ready_to_finish'
+})
+
 const recorderState = ref<'idle' | 'recording' | 'complete'>('idle')
 const elapsed = ref(0)
 const audioUrl = ref<string | null>(null)
@@ -31,7 +38,11 @@ const photosOk = computed(() =>
   job.value ? meetsMinimums(job.value.counts, minimums.value) : false,
 )
 const canSubmit = computed(
-  () => photosOk.value && (recorderState.value === 'complete' || !!voice.value) && !submitting.value,
+  () =>
+    documenting.value &&
+    photosOk.value &&
+    (recorderState.value === 'complete' || !!voice.value) &&
+    !submitting.value,
 )
 
 const playableUrl = computed(() => audioUrl.value || voice.value?.url || null)
@@ -241,16 +252,23 @@ async function submit() {
   error.value = ''
   try {
     const key = `submit-${jobId.value}-${Date.now()}`
-    await api.submitJob(jobId.value, { idempotencyKey: key })
-    await api.submitJob(jobId.value, { idempotencyKey: key })
+    job.value = await api.submitJob(jobId.value, { idempotencyKey: key })
     submitted.value = true
-    setTimeout(() => navigateTo('/jobs'), 1200)
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Submission failed. Try again.'
   } finally {
     submitting.value = false
   }
 }
+
+watch(
+  () => job.value?.publicStatus,
+  (status) => {
+    if (submitted.value && status === 'ready_for_approval') {
+      setTimeout(() => navigateTo(`/jobs/${jobId.value}/approval`), 900)
+    }
+  },
+)
 
 onMounted(load)
 onBeforeUnmount(() => {
@@ -267,13 +285,30 @@ onBeforeUnmount(() => {
       <template v-if="job">
         <p class="job-name">{{ job.name }}</p>
         <p class="muted loc">📍 {{ job.locationText }}</p>
-        <StatusPill :label="photosOk ? 'Ready to Finish' : 'In Progress'" />
+        <StatusPill
+          :label="
+            job.publicStatus === 'processing'
+              ? 'Processing'
+              : job.publicStatus === 'ready_for_approval'
+                ? 'Awaiting Approval'
+                : photosOk
+                  ? 'Ready to Finish'
+                  : 'In Progress'
+          "
+        />
 
         <div v-if="error" class="banner banner-error" role="alert" style="margin-top: 12px">{{ error }}</div>
-        <div v-if="submitted" class="banner" style="margin-top: 12px">
-          Job submitted. JobbPulse is creating your content…
+        <JobProcessingPanel v-if="job.publicStatus === 'processing'" :job="job" style="margin-top: 16px" />
+        <div
+          v-else-if="job.publicStatus === 'ready_for_approval'"
+          class="banner"
+          style="margin-top: 12px"
+        >
+          Content is ready.
+          <NuxtLink class="link-lime" :to="`/jobs/${jobId}/approval`">Review content →</NuxtLink>
         </div>
 
+        <template v-if="documenting">
         <section class="card" style="margin-top: 16px">
           <h2 class="section-label">Photo check</h2>
           <div
@@ -359,6 +394,7 @@ onBeforeUnmount(() => {
           <template v-else-if="!photosOk">Add required photos before submitting</template>
           <template v-else>Record a short description to submit</template>
         </p>
+        </template>
       </template>
       <p v-else-if="loading" class="muted">Loading…</p>
 

@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import base64
 import json
+import logging
 from datetime import UTC, datetime
 from uuid import UUID
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, BackgroundTasks, Query, Request
 from sqlalchemy import inspect as sa_inspect
 from sqlalchemy import select
 
@@ -25,6 +26,23 @@ from app.services.mappers import counts_from_media, has_complete_voice, job_to_o
 from app.tasks.pipeline import process_job_submission
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
+logger = logging.getLogger(__name__)
+
+
+async def _run_pipeline_background(
+    job_id: UUID, submission_id: UUID, session_factory: object | None
+) -> None:
+    from app.db.session import AsyncSessionLocal
+    from app.services.engine import run_content_pipeline
+
+    factory = session_factory or AsyncSessionLocal
+    async with factory() as session:  # type: ignore[operator]
+        try:
+            await run_content_pipeline(session, job_id, submission_id)
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            logger.exception("in-process pipeline failed job=%s", job_id)
 
 
 def _encode_cursor(created_at: datetime, job_id: UUID) -> str:
@@ -217,6 +235,8 @@ async def submit_job(
     body: SubmitJobRequest,
     auth: CurrentAuth,
     db: DbSession,
+    request: Request,
+    background_tasks: BackgroundTasks,
 ) -> JobOut:
     job = await _get_job(db, job_id, auth.company_id)
 
@@ -312,14 +332,18 @@ async def submit_job(
         )
     )
     await db.flush()
+    # Commit before the worker/background task so it can see the submission.
+    await db.commit()
 
-    # Enqueue durable pipeline (Celery); fall back to inline fake engine if broker down
+    # Same enqueue path in demo and production. Fake vs live providers are server-side.
     try:
         process_job_submission.delay(str(job.id), str(submission.id))
     except Exception:
-        from app.services.engine import run_content_pipeline
-
-        await run_content_pipeline(db, job.id, submission.id)
+        logger.warning("Celery unavailable; running content pipeline in-process")
+        factory = getattr(request.app.state, "test_session_factory", None)
+        background_tasks.add_task(
+            _run_pipeline_background, job.id, submission.id, factory
+        )
 
     return await _to_job_out(db, job)
 

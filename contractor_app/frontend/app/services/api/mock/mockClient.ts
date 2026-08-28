@@ -28,7 +28,12 @@ import { formatSocialAccountName } from '~/utils/socialAccounts'
 
 const STORAGE_KEY = 'jobbpulse.mock.v4'
 const SEED_PASSWORD = 'devpassword'
-const PROCESS_DELAY_MS = 2500
+const PIPELINE_STAGES: { status: Job['internalStatus']; ms: number }[] = [
+  { status: 'transcribing', ms: 2500 },
+  { status: 'curating_media', ms: 2000 },
+  { status: 'generating_description', ms: 3000 },
+  { status: 'generating_destinations', ms: 3500 },
+]
 
 interface MockAccount {
   name: string
@@ -250,18 +255,43 @@ export function createMockApiClient(): ApiClient {
     return job
   }
 
+  const inFlight = new Set<string>()
+
   const scheduleProcessing = (jobId: string) => {
-    setTimeout(() => {
-      const job = state.jobs.find((j) => j.id === jobId)
-      if (!job || job.deletedAt || job.publicStatus !== 'processing') return
-      // Replace any existing package for this job
-      state.packages = state.packages.filter((p) => p.jobId !== jobId)
-      const pkg = buildGeneratedPackage(state, job)
-      state.packages.push(pkg)
-      job.publicStatus = 'ready_for_approval'
-      job.updatedAt = new Date().toISOString()
-      save()
-    }, PROCESS_DELAY_MS)
+    if (inFlight.has(jobId)) return
+    inFlight.add(jobId)
+    void (async () => {
+      try {
+        const order = PIPELINE_STAGES.map((s) => s.status)
+        for (const stage of PIPELINE_STAGES) {
+          const current = state.jobs.find((j) => j.id === jobId)
+          if (!current || current.deletedAt || current.publicStatus !== 'processing') return
+          const already = order.indexOf(current.internalStatus)
+          const target = order.indexOf(stage.status)
+          if (already >= target && already >= 0) continue
+          await delay(stage.ms)
+          const job = state.jobs.find((j) => j.id === jobId)
+          if (!job || job.deletedAt || job.publicStatus !== 'processing') return
+          job.internalStatus = stage.status
+          job.updatedAt = new Date().toISOString()
+          save()
+        }
+        const job = state.jobs.find((j) => j.id === jobId)
+        if (!job || job.deletedAt || job.publicStatus !== 'processing') return
+        state.packages = state.packages.filter((p) => p.jobId !== jobId)
+        state.packages.push(buildGeneratedPackage(state, job))
+        job.publicStatus = 'ready_for_approval'
+        job.internalStatus = 'ready_for_approval'
+        job.updatedAt = new Date().toISOString()
+        save()
+      } finally {
+        inFlight.delete(jobId)
+      }
+    })()
+  }
+
+  for (const job of state.jobs) {
+    if (job.publicStatus === 'processing') scheduleProcessing(job.id)
   }
 
   const client: ApiClient = {
@@ -508,6 +538,7 @@ export function createMockApiClient(): ApiClient {
       }
       state.submitKeys.add(input.idempotencyKey)
       job.publicStatus = 'processing'
+      job.internalStatus = 'queued'
       job.submittedAt = new Date().toISOString()
       job.updatedAt = job.submittedAt
       save()

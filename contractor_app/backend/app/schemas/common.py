@@ -89,6 +89,7 @@ class JobOut(APIModel):
     internal_note: str = Field(default="", alias="internalNote")
     assigned_crew_member: str = Field(default="", alias="assignedCrewMember")
     public_status: str = Field(alias="publicStatus")
+    internal_status: str = Field(alias="internalStatus")
     cover_url: str | None = Field(default=None, alias="coverUrl")
     counts: dict[str, int]
     has_voice: bool = Field(alias="hasVoice")

@@ -7,6 +7,8 @@ import {
   meetsMinimums,
   missingMinimums,
   previewKind,
+  processingStageLabel,
+  processingStepState,
   statusLabel,
 } from '../app/utils/jobStatus'
 import type { Job, MediaAsset } from '../app/types/domain'
@@ -52,6 +54,34 @@ describe('statusLabel', () => {
     } as Job
     expect(statusLabel('active', job)).toBe('Needs After Photos')
     expect(statusLabel('ready_for_approval')).toBe('Awaiting Approval')
+  })
+})
+
+describe('processingStepState', () => {
+  it('spins the first step while queued', () => {
+    expect(processingStepState('queued', 'transcribing')).toBe('active')
+    expect(processingStepState('queued', 'curating_media')).toBe('pending')
+  })
+
+  it('advances through server internal statuses', () => {
+    expect(processingStepState('transcribing', 'transcribing')).toBe('active')
+    expect(processingStepState('curating_media', 'transcribing')).toBe('done')
+    expect(processingStepState('generating_description', 'curating_media')).toBe('done')
+    expect(processingStepState('generating_destinations', 'generating_description')).toBe('done')
+    expect(processingStepState('generating_destinations', 'generating_destinations')).toBe('active')
+    expect(processingStepState('ready_for_approval', 'generating_destinations')).toBe('done')
+  })
+
+  it('treats legacy generating as the description step', () => {
+    expect(processingStepState('generating', 'generating_description')).toBe('active')
+  })
+})
+
+describe('processingStageLabel', () => {
+  it('uses the active pipeline step while processing', () => {
+    expect(
+      processingStageLabel({ publicStatus: 'processing', internalStatus: 'transcribing' }),
+    ).toBe('Transcribing your voice note')
   })
 })
 

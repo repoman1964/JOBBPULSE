@@ -12,6 +12,24 @@ export type PublicJobStatus =
   | 'published'
   | 'publish_issue'
 
+export type InternalJobStatus =
+  | 'draft'
+  | 'submitted'
+  | 'queued'
+  | 'transcribing'
+  | 'curating_media'
+  | 'generating'
+  | 'generating_description'
+  | 'generating_destinations'
+  | 'ready_for_approval'
+  | 'revision_requested'
+  | 'regenerating'
+  | 'approved'
+  | 'publishing'
+  | 'published'
+  | 'partially_failed'
+  | 'failed'
+
 export type SocialPlatform = 'facebook' | 'instagram' | 'google_business'
 
 export type SocialConnectionStatus =
@@ -91,6 +109,7 @@ export interface Job {
   internalNote: string
   assignedCrewMember: string
   publicStatus: PublicJobStatus
+  internalStatus?: InternalJobStatus | string
   coverUrl: string | null
   counts: Record<PhotoCategory, number>
   hasVoice: boolean

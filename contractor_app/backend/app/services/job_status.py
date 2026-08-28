@@ -86,6 +86,8 @@ def public_for_internal(internal: str) -> str:
         InternalJobStatus.transcribing.value: PublicJobStatus.processing.value,
         InternalJobStatus.curating_media.value: PublicJobStatus.processing.value,
         InternalJobStatus.generating.value: PublicJobStatus.processing.value,
+        InternalJobStatus.generating_description.value: PublicJobStatus.processing.value,
+        InternalJobStatus.generating_destinations.value: PublicJobStatus.processing.value,
         InternalJobStatus.ready_for_approval.value: PublicJobStatus.ready_for_approval.value,
         InternalJobStatus.revision_requested.value: PublicJobStatus.needs_revision.value,
         InternalJobStatus.regenerating.value: PublicJobStatus.needs_revision.value,

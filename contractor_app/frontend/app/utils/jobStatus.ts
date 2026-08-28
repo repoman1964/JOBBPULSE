@@ -40,6 +40,75 @@ export function computePublicStatus(
   return 'active'
 }
 
+export const PROCESSING_STEPS = [
+  { id: 'transcribing', label: 'Transcribing your voice note' },
+  { id: 'curating_media', label: 'Selecting before and after photos' },
+  { id: 'generating_description', label: 'Writing the project story' },
+  { id: 'generating_destinations', label: 'Drafting posts for each platform' },
+] as const
+
+export type ProcessingStepId = (typeof PROCESSING_STEPS)[number]['id']
+export type ProcessingStepState = 'pending' | 'active' | 'done'
+
+function stageRank(internalStatus: string | undefined): number {
+  switch (internalStatus) {
+    case 'transcribing':
+      return 1
+    case 'curating_media':
+      return 2
+    case 'generating':
+    case 'generating_description':
+      return 3
+    case 'generating_destinations':
+      return 4
+    case 'ready_for_approval':
+    case 'revision_requested':
+    case 'regenerating':
+    case 'approved':
+    case 'publishing':
+    case 'published':
+    case 'partially_failed':
+    case 'failed':
+      return 5
+    default:
+      return 0
+  }
+}
+
+function stepRank(stepId: ProcessingStepId): number {
+  switch (stepId) {
+    case 'transcribing':
+      return 1
+    case 'curating_media':
+      return 2
+    case 'generating_description':
+      return 3
+    case 'generating_destinations':
+      return 4
+  }
+}
+
+/** Maps server internalStatus onto the four visible pipeline steps. */
+export function processingStepState(
+  internalStatus: string | undefined,
+  stepId: ProcessingStepId,
+): ProcessingStepState {
+  const current = stageRank(internalStatus)
+  const step = stepRank(stepId)
+  if (current === 0) return step === 1 ? 'active' : 'pending'
+  if (current > step) return 'done'
+  if (current === step) return 'active'
+  return 'pending'
+}
+
+export function processingStageLabel(job: Pick<Job, 'publicStatus' | 'internalStatus'>): string {
+  if (job.publicStatus !== 'processing') return statusLabel(job.publicStatus as PublicJobStatus, job as Job)
+  const active = PROCESSING_STEPS.find(
+    (step) => processingStepState(job.internalStatus, step.id) === 'active',
+  )
+  return active?.label || 'Creating your content'
+}
+
 export function statusLabel(status: PublicJobStatus, job?: Job): string {
   switch (status) {
     case 'active': {

@@ -24,7 +24,14 @@ const missing = computed(() =>
   job.value ? missingMinimums(job.value.counts, minimums.value) : [],
 )
 
-const canFinish = computed(() => job.value && missing.value.length === 0)
+const documenting = computed(() => {
+  const status = job.value?.publicStatus
+  return status === 'active' || status === 'ready_to_finish'
+})
+
+const canFinish = computed(() => documenting.value && missing.value.length === 0)
+
+useJobPoll(job)
 
 const suggested = computed<PhotoCategory>(() => {
   if (!job.value) return 'before'
@@ -166,29 +173,31 @@ onMounted(load)
         </div>
 
         <div style="margin-top: 16px">
+          <JobProcessingPanel v-if="job.publicStatus === 'processing'" :job="job" />
           <NuxtLink
-            v-if="canFinish"
+            v-else-if="job.publicStatus === 'ready_for_approval' || job.publicStatus === 'needs_revision'"
+            class="btn btn-primary"
+            :to="`/jobs/${job.id}/approval`"
+          >
+            Review Content
+          </NuxtLink>
+          <NuxtLink
+            v-else-if="canFinish"
             class="btn btn-primary"
             :to="`/jobs/${job.id}/finish`"
           >
             Finish Job
           </NuxtLink>
-          <button v-else type="button" class="btn btn-secondary" disabled>
+          <button v-else-if="documenting" type="button" class="btn btn-secondary" disabled>
             Finish Job
           </button>
-          <p v-if="!canFinish" class="helper-text">
+          <p v-if="documenting && !canFinish" class="helper-text">
             <template v-if="missing.includes('before') && missing.includes('after')">
               Add before and after photos to finish
             </template>
             <template v-else-if="missing.includes('before')">Add before photos to finish</template>
             <template v-else-if="missing.includes('after')">Add after photos to finish</template>
             <template v-else-if="missing.includes('progress')">Add In-Progress photos to finish</template>
-          </p>
-          <p v-else-if="job.publicStatus === 'processing'" class="helper-text">
-            JobbPulse is creating your content. We’ll let you know when it’s ready for approval.
-          </p>
-          <p v-else-if="job.publicStatus === 'ready_for_approval'" class="helper-text">
-            <NuxtLink class="link-lime" :to="`/jobs/${job.id}/approval`">Review content →</NuxtLink>
           </p>
         </div>
 

@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import type { Job } from '~/types/domain'
-import { contextualAction, statusLabel } from '~/utils/jobStatus'
+import { contextualAction, processingStageLabel, statusLabel } from '~/utils/jobStatus'
 
 const props = defineProps<{ job: Job }>()
 
 const action = computed(() => contextualAction(props.job))
 const label = computed(() => statusLabel(props.job.publicStatus, props.job))
+const processing = computed(() => props.job.publicStatus === 'processing')
+const stageLine = computed(() =>
+  processing.value ? processingStageLabel(props.job) : '',
+)
 </script>
 
 <template>
@@ -19,6 +23,9 @@ const label = computed(() => statusLabel(props.job.publicStatus, props.job))
       />
       <div v-else class="job-card__cover-empty" aria-hidden="true" />
       <div class="job-card__pill">
+        <span v-if="processing" class="job-card__busy">
+          <JpSpinner size="sm" />
+        </span>
         <StatusPill :label="label" />
       </div>
     </div>
@@ -30,6 +37,10 @@ const label = computed(() => statusLabel(props.job.publicStatus, props.job))
       <p class="job-card__loc muted">
         <span aria-hidden="true">📍</span>
         {{ job.locationText || `${job.city}, ${job.region}` }}
+      </p>
+      <p v-if="stageLine" class="job-card__stage muted">
+        <JpSpinner size="sm" />
+        {{ stageLine }}
       </p>
 
       <div class="job-card__counts" aria-label="Photo counts">
@@ -86,6 +97,13 @@ const label = computed(() => statusLabel(props.job.publicStatus, props.job))
   position: absolute;
   top: 12px;
   left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.job-card__busy {
+  display: inline-flex;
 }
 
 .job-card__body {
@@ -105,6 +123,14 @@ const label = computed(() => statusLabel(props.job.publicStatus, props.job))
 .job-card__loc {
   margin: 0 0 14px;
   font-size: 0.9rem;
+}
+
+.job-card__stage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -8px 0 14px;
+  font-size: 0.82rem;
 }
 
 .job-card__counts {

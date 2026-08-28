@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import UTC, datetime
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+
+from app.core.config import get_settings
 
 from app.models.company import Company
 from app.models.content import (
@@ -59,6 +62,15 @@ FIRST_PARTY_DESTINATIONS = (
     DestinationType.portfolio_site.value,
 )
 
+# Relative hold time per visible stage (multiplied by pipeline_stage_delay_seconds).
+_STAGE_HOLD = {
+    InternalJobStatus.queued.value: 0.6,
+    InternalJobStatus.transcribing.value: 1.1,
+    InternalJobStatus.curating_media.value: 0.8,
+    InternalJobStatus.generating_description.value: 1.2,
+    InternalJobStatus.generating_destinations.value: 1.4,
+}
+
 
 def content_destinations(*, connected: set[str]) -> list[str]:
     dests = list(CORE_REVIEW_SOCIAL)
@@ -67,6 +79,53 @@ def content_destinations(*, connected: set[str]) -> list[str]:
             dests.append(platform)
     dests.extend(FIRST_PARTY_DESTINATIONS)
     return dests
+
+
+async def _pause_stage(stage: str) -> None:
+    """Hold so GET /jobs/{id} can show this stage. Demo and prod share this path."""
+    seconds = get_settings().pipeline_stage_delay_seconds * _STAGE_HOLD.get(stage, 1.0)
+    if seconds > 0:
+        await asyncio.sleep(seconds)
+
+
+async def _set_stage(
+    session: AsyncSession,
+    job: Job,
+    status: str,
+    *,
+    event_type: str,
+    payload: dict | None = None,
+) -> None:
+    job.internal_status = status
+    session.add(
+        JobEvent(
+            company_id=job.company_id,
+            job_id=job.id,
+            event_type=event_type,
+            actor_type="system",
+            actor_id=None,
+            payload_json=payload or {"internalStatus": status},
+        )
+    )
+    await session.commit()
+    await _pause_stage(status)
+
+
+def _transcription_provider():
+    from app.integrations.transcription.fake import FakeTranscriptionProvider
+
+    # Live STT is a server-side swap. The contractor app always polls the same statuses.
+    if get_settings().provider_mode == "live":
+        logger.info("live transcription not configured; using simulated transcript")
+    return FakeTranscriptionProvider()
+
+
+def _content_generator():
+    from app.integrations.content_gen.fake import FakeContentGenerator
+
+    if get_settings().provider_mode == "live":
+        logger.info("live content generation not configured; using simulated copy")
+    return FakeContentGenerator()
 
 
 async def run_content_pipeline(
@@ -82,8 +141,26 @@ async def run_content_pipeline(
     if company is None:
         return
 
-    job.internal_status = InternalJobStatus.transcribing.value
-    await session.flush()
+    existing = await session.execute(
+        select(ContentPackage)
+        .where(ContentPackage.submission_id == submission.id)
+        .options(selectinload(ContentPackage.assets))
+    )
+    existing_pkg = existing.scalar_one_or_none()
+    if existing_pkg is not None and existing_pkg.assets:
+        job.public_status = PublicJobStatus.ready_for_approval.value
+        job.internal_status = InternalJobStatus.ready_for_approval.value
+        await session.flush()
+        return
+
+    await _pause_stage(InternalJobStatus.queued.value)
+
+    await _set_stage(
+        session,
+        job,
+        InternalJobStatus.transcribing.value,
+        event_type="pipeline.transcribing",
+    )
 
     result = await session.execute(
         select(MediaAsset).where(
@@ -98,25 +175,30 @@ async def run_content_pipeline(
     befores = [m for m in photos if m.photo_category == "before"]
     afters = [m for m in photos if m.photo_category == "after"]
 
-    # Prefer favorites
-    featured_before = next((m for m in befores if m.is_favorite), befores[0] if befores else None)
-    featured_after = next((m for m in afters if m.is_favorite), afters[0] if afters else None)
-
-    job.internal_status = InternalJobStatus.generating.value
-    await session.flush()
-
-    from app.integrations.content_gen.fake import FakeContentGenerator
-    from app.integrations.transcription.fake import FakeTranscriptionProvider
-
     voice = next((m for m in media if m.kind == "audio" and m.is_active_voice), None)
     transcript = ""
     if voice:
-        transcript = await FakeTranscriptionProvider().transcribe(
+        transcript = await _transcription_provider().transcribe(
             object_key=voice.original_object_key or "",
             mime_type=voice.mime_type,
         )
 
-    generator = FakeContentGenerator()
+    await _set_stage(
+        session,
+        job,
+        InternalJobStatus.curating_media.value,
+        event_type="pipeline.curating_media",
+    )
+    featured_before = next((m for m in befores if m.is_favorite), befores[0] if befores else None)
+    featured_after = next((m for m in afters if m.is_favorite), afters[0] if afters else None)
+
+    await _set_stage(
+        session,
+        job,
+        InternalJobStatus.generating_description.value,
+        event_type="pipeline.generating_description",
+    )
+    generator = _content_generator()
     description = await generator.project_description(
         job_name=job.name,
         service_type=job.service_type,
@@ -125,7 +207,6 @@ async def run_content_pipeline(
         transcript=transcript,
     )
 
-    # Connected social platforms
     result = await session.execute(
         select(SocialConnection).where(
             SocialConnection.company_id == job.company_id,
@@ -133,8 +214,15 @@ async def run_content_pipeline(
         )
     )
     connected = {c.platform for c in result.scalars().all()}
-
     destinations = content_destinations(connected=connected)
+
+    await _set_stage(
+        session,
+        job,
+        InternalJobStatus.generating_destinations.value,
+        event_type="pipeline.generating_destinations",
+        payload={"destinations": destinations},
+    )
 
     package = ContentPackage(
         company_id=job.company_id,
@@ -150,6 +238,7 @@ async def run_content_pipeline(
     await session.flush()
 
     source_ids = [str(m.id) for m in [featured_before, featured_after] if m]
+    provider_label = "fake" if get_settings().provider_mode != "live" else "simulated"
 
     for dest in destinations:
         public_name = job.service_type or "Project"
@@ -185,7 +274,10 @@ async def run_content_pipeline(
             body=content["body"],
             payload_json=content.get("payload", {}),
             preview_json=asset.preview_json,
-            generation_metadata_json={"provider": "fake", "transcriptChars": len(transcript)},
+            generation_metadata_json={
+                "provider": provider_label,
+                "transcriptChars": len(transcript),
+            },
         )
         session.add(version)
         await session.flush()

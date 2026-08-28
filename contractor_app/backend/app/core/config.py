@@ -74,6 +74,9 @@ class Settings(BaseSettings):
 
     # Providers
     provider_mode: Literal["fake", "live"] = "fake"
+    # Simulated pipeline pacing so the contractor app can poll stages.
+    # 0 disables pauses (tests). Demo and production use the same stages.
+    pipeline_stage_delay_seconds: float = 2.5
     upload_post_api_key: str | None = None
     upload_post_base_url: str = "https://api.upload-post.com/api"
     upload_post_webhook_token: str | None = None

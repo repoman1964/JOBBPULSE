@@ -83,6 +83,7 @@ def job_to_out(
         internalNote=job.internal_note or "",
         assignedCrewMember=job.assigned_crew_member or "",
         publicStatus=job.public_status,
+        internalStatus=job.internal_status,
         coverUrl=cover_url,
         counts=counts,
         hasVoice=has_voice,

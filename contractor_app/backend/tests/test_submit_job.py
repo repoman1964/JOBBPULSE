@@ -119,6 +119,7 @@ def test_submit_job_returns_processing_when_celery_enqueue_works(
     )
     assert resp.status_code == 200, resp.text
     assert resp.json()["publicStatus"] == "processing"
+    assert resp.json()["internalStatus"] == "queued"
 
 
 def test_submit_job_falls_back_to_inline_pipeline_when_celery_is_down(
@@ -156,7 +157,17 @@ def test_submit_job_falls_back_to_inline_pipeline_when_celery_is_down(
         json={"idempotencyKey": "submit-test-key-0002"},
     )
     assert resp.status_code == 200, resp.text
-    assert resp.json()["publicStatus"] in {"processing", "ready_for_approval"}
+    body = resp.json()
+    assert body["publicStatus"] in {"processing", "ready_for_approval"}
+    assert "internalStatus" in body
+
+    pkg = client.get(f"/api/v1/jobs/{job_id}/package", headers=headers)
+    assert pkg.status_code == 200, pkg.text
+    package = pkg.json()
+    assert package is not None
+    assert package["status"] == "ready_for_approval"
+    assert package["projectDescription"]
+    assert len(package["assets"]) >= 4
 
 
 def test_update_job_does_not_500_after_flush(client: TestClient) -> None:

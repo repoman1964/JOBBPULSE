@@ -23,6 +23,17 @@ def _uuid_sqlite(_type, compiler, **_kw) -> str:  # type: ignore[no-untyped-def]
     return "CHAR(36)"
 
 
+@pytest.fixture(autouse=True)
+def _disable_pipeline_pauses() -> Iterator[None]:
+    from app.core.config import get_settings
+
+    settings = get_settings()
+    previous = settings.pipeline_stage_delay_seconds
+    settings.pipeline_stage_delay_seconds = 0
+    yield
+    settings.pipeline_stage_delay_seconds = previous
+
+
 @pytest.fixture
 def client() -> Iterator[TestClient]:
     import app.models  # noqa: F401 — register metadata

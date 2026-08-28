@@ -5,9 +5,26 @@ const api = useApi()
 const jobs = ref<Job[]>([])
 const loading = ref(true)
 const error = ref('')
+let poll: ReturnType<typeof setInterval> | null = null
 
-async function load() {
-  loading.value = true
+const hasProcessing = computed(() => jobs.value.some((j) => j.publicStatus === 'processing'))
+
+function stopPoll() {
+  if (poll) {
+    clearInterval(poll)
+    poll = null
+  }
+}
+
+function startPoll() {
+  if (poll) return
+  poll = setInterval(() => {
+    void load(true)
+  }, 1000)
+}
+
+async function load(silent = false) {
+  if (!silent) loading.value = true
   error.value = ''
   try {
     const res = await api.listJobs()
@@ -15,11 +32,14 @@ async function load() {
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Could not load jobs.'
   } finally {
-    loading.value = false
+    if (!silent) loading.value = false
+    if (hasProcessing.value) startPoll()
+    else stopPoll()
   }
 }
 
 onMounted(load)
+onBeforeUnmount(stopPoll)
 </script>
 
 <template>
@@ -31,7 +51,7 @@ onMounted(load)
 
       <div v-else class="stack-lg jobs-list">
         <JobCard v-for="job in jobs" :key="job.id" :job="job" />
-        <p v-if="!jobs.length" class="muted">No jobs yet. Create your first job to start documenting work.</p>
+        <p v-if="!jobs.length" class="muted">No jobs yet. Create your first job.</p>
       </div>
 
       <div class="fab-wrap">

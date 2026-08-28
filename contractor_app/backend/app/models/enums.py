@@ -23,6 +23,8 @@ class InternalJobStatus(str, enum.Enum):
     transcribing = "transcribing"
     curating_media = "curating_media"
     generating = "generating"
+    generating_description = "generating_description"
+    generating_destinations = "generating_destinations"
     ready_for_approval = "ready_for_approval"
     revision_requested = "revision_requested"
     regenerating = "regenerating"

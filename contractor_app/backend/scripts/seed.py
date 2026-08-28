@@ -46,6 +46,8 @@ CONTRACTOR_ID = UUID("22222222-2222-2222-2222-222222222222")
 JOB_DECK = UUID("33333333-3333-3333-3333-333333333301")
 JOB_KITCHEN = UUID("33333333-3333-3333-3333-333333333302")
 JOB_PAINT = UUID("33333333-3333-3333-3333-333333333303")
+JOB_FENCE = UUID("33333333-3333-3333-3333-333333333304")
+JOB_TRIM = UUID("33333333-3333-3333-3333-333333333305")
 
 
 def _placeholder_jpeg(seed: str) -> bytes:
@@ -111,9 +113,12 @@ async def seed() -> None:
                 city="Marietta",
                 region="GA",
                 location_text="Marietta, GA",
-                public_status=PublicJobStatus.active.value,
-                internal_status=InternalJobStatus.draft.value,
-                created_at=now - timedelta(days=3),
+                public_status=PublicJobStatus.published.value,
+                internal_status=InternalJobStatus.published.value,
+                submission_version=1,
+                submitted_at=now - timedelta(days=5),
+                published_at=now - timedelta(days=4),
+                created_at=now - timedelta(days=8),
             ),
             Job(
                 id=JOB_KITCHEN,
@@ -124,9 +129,12 @@ async def seed() -> None:
                 city="Roswell",
                 region="GA",
                 location_text="Roswell, GA",
-                public_status=PublicJobStatus.active.value,
-                internal_status=InternalJobStatus.draft.value,
-                created_at=now - timedelta(days=5),
+                public_status=PublicJobStatus.published.value,
+                internal_status=InternalJobStatus.published.value,
+                submission_version=1,
+                submitted_at=now - timedelta(days=6),
+                published_at=now - timedelta(days=5),
+                created_at=now - timedelta(days=10),
             ),
             Job(
                 id=JOB_PAINT,
@@ -137,11 +145,44 @@ async def seed() -> None:
                 city="Decatur",
                 region="GA",
                 location_text="Decatur, GA",
-                public_status=PublicJobStatus.ready_for_approval.value,
-                internal_status=InternalJobStatus.ready_for_approval.value,
+                public_status=PublicJobStatus.published.value,
+                internal_status=InternalJobStatus.published.value,
                 submission_version=1,
                 submitted_at=now - timedelta(days=1),
+                published_at=now - timedelta(hours=2),
                 created_at=now - timedelta(days=10),
+            ),
+            Job(
+                id=JOB_FENCE,
+                company_id=COMPANY_ID,
+                created_by_contractor_id=CONTRACTOR_ID,
+                name="Fence Replacement in Sandy Springs",
+                service_type="Fence",
+                city="Sandy Springs",
+                region="GA",
+                location_text="Sandy Springs, GA",
+                public_status=PublicJobStatus.published.value,
+                internal_status=InternalJobStatus.published.value,
+                submission_version=1,
+                submitted_at=now - timedelta(days=3),
+                published_at=now - timedelta(days=2),
+                created_at=now - timedelta(days=7),
+            ),
+            Job(
+                id=JOB_TRIM,
+                company_id=COMPANY_ID,
+                created_by_contractor_id=CONTRACTOR_ID,
+                name="Trim Work in Brookhaven",
+                service_type="Trim",
+                city="Brookhaven",
+                region="GA",
+                location_text="Brookhaven, GA",
+                public_status=PublicJobStatus.published.value,
+                internal_status=InternalJobStatus.published.value,
+                submission_version=1,
+                submitted_at=now - timedelta(days=2),
+                published_at=now - timedelta(days=1),
+                created_at=now - timedelta(days=5),
             ),
         ]
         for j in jobs:
@@ -177,12 +218,20 @@ async def seed() -> None:
             return items
 
         deck_before = add_photos(JOB_DECK, "before", 4, "deck-b")
-        add_photos(JOB_DECK, "progress", 7, "deck-p")
-        add_photos(JOB_KITCHEN, "before", 5, "kit-b")
+        deck_after = add_photos(JOB_DECK, "after", 3, "deck-a")
+        add_photos(JOB_DECK, "progress", 2, "deck-p")
+        kit_before = add_photos(JOB_KITCHEN, "before", 5, "kit-b")
+        kit_after = add_photos(JOB_KITCHEN, "after", 4, "kit-a")
         add_photos(JOB_KITCHEN, "progress", 3, "kit-p")
         paint_before = add_photos(JOB_PAINT, "before", 6, "paint-b")
         add_photos(JOB_PAINT, "progress", 4, "paint-p")
         paint_after = add_photos(JOB_PAINT, "after", 8, "paint-a")
+        fence_before = add_photos(JOB_FENCE, "before", 4, "fence-b")
+        fence_after = add_photos(JOB_FENCE, "after", 3, "fence-a")
+        add_photos(JOB_FENCE, "progress", 2, "fence-p")
+        trim_before = add_photos(JOB_TRIM, "before", 3, "trim-b")
+        trim_after = add_photos(JOB_TRIM, "after", 3, "trim-a")
+        add_photos(JOB_TRIM, "progress", 2, "trim-p")
 
         # Voice for paint job
         voice_id = uuid4()
@@ -211,7 +260,7 @@ async def seed() -> None:
         # Persist media before packages reference featured media FKs
         await session.flush()
 
-        # Package ready for approval
+        # Package published
         package_id = uuid4()
         fb = paint_before[0].id if paint_before else None
         fa = paint_after[0].id if paint_after else None
@@ -220,7 +269,7 @@ async def seed() -> None:
             company_id=COMPANY_ID,
             job_id=JOB_PAINT,
             version=1,
-            status=PackageStatus.ready_for_approval.value,
+            status=PackageStatus.published.value,
             project_description=(
                 "We completed Thompson Exterior Painting in Decatur, GA. "
                 "The crew documented the full transformation from start to finish."
@@ -233,6 +282,7 @@ async def seed() -> None:
 
         for dest, title, body in [
             ("facebook", "Facebook", "Thompson Exterior Painting: another transformation ready to share."),
+            ("facebook_group", "Facebook Group", "Just finished Thompson Exterior Painting in Decatur! Check out the before and after. #PaintingDone"),
             ("instagram", "Instagram", "Thompson Exterior Painting complete in Decatur. #JobbPulse"),
             (
                 "google_business",
@@ -273,6 +323,73 @@ async def seed() -> None:
             session.add(version)
             await session.flush()
             asset.active_version_id = version_id
+
+        # Helper to create content packages for other jobs
+        async def create_job_package(
+            job_id: UUID,
+            job_name: str,
+            city: str,
+            service_type: str,
+            before_photos: list,
+            after_photos: list,
+        ) -> None:
+            if not before_photos or not after_photos:
+                return
+            pkg_id = uuid4()
+            pkg = ContentPackage(
+                id=pkg_id,
+                company_id=COMPANY_ID,
+                job_id=job_id,
+                version=1,
+                status=PackageStatus.published.value,
+                project_description=f"Completed {job_name} in {city}, GA. {service_type} transformation.",
+                featured_before_media_id=before_photos[0].id,
+                featured_after_media_id=after_photos[0].id,
+            )
+            session.add(pkg)
+            await session.flush()
+            
+            for dest, body in [
+                ("facebook", f"{job_name}: completed in {city}. Beautiful transformation!"),
+                ("facebook_group", f"Check out our latest {service_type.lower()} work in {city}! #LocalBusiness"),
+                ("instagram", f"{job_name} complete. #Transformation #{city}"),
+                ("google_business", f"{job_name} in {city} — quality work, proven results."),
+            ]:
+                asset_id = uuid4()
+                asset = GeneratedAsset(
+                    id=asset_id,
+                    company_id=COMPANY_ID,
+                    package_id=pkg_id,
+                    destination_type=dest,
+                    title=dest.replace("_", " ").title(),
+                    body=body,
+                    payload_json={"destination": dest},
+                    preview_json={},
+                    status=AssetStatus.ready.value,
+                )
+                session.add(asset)
+                await session.flush()
+                version_id = uuid4()
+                version = GeneratedAssetVersion(
+                    id=version_id,
+                    generated_asset_id=asset_id,
+                    version=1,
+                    source_media_ids_json=[str(before_photos[0].id), str(after_photos[0].id)],
+                    title=asset.title,
+                    body=body,
+                    payload_json={"destination": dest},
+                    preview_json={},
+                    generation_metadata_json={"seed": True},
+                )
+                session.add(version)
+                await session.flush()
+                asset.active_version_id = version_id
+
+        # Create packages for other jobs
+        await create_job_package(JOB_DECK, "Deck Rebuild", "Marietta", "Deck work", deck_before, deck_after)
+        await create_job_package(JOB_KITCHEN, "Kitchen Cabinets", "Roswell", "Cabinet installation", kit_before, kit_after)
+        await create_job_package(JOB_FENCE, "Fence Replacement", "Sandy Springs", "Fence installation", fence_before, fence_after)
+        await create_job_package(JOB_TRIM, "Trim Work", "Brookhaven", "Trim installation", trim_before, trim_after)
 
         # Social profile + mixed connections
         profile = SocialProfile(
