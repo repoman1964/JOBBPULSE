@@ -352,7 +352,7 @@ const galleryTrades = [...trades, ...trades]
           <li>No complicated marketing system to operate.</li>
         </ul>
         <p>Just keep doing good work. We’ll help make sure people see it.</p>
-        <p class="hero-note">A few taps. About 30 seconds. Back to work.</p>
+        <p class="hero-note">A few photos. A 30 second description. Back to work.</p>
         <div class="hero-actions">
           <button type="button" class="btn btn-buy" @click="show">Ask us about JobbPulse</button>
         </div>
