@@ -46,6 +46,16 @@ npx wrangler r2 bucket cors set jobbpulse --file api/r2-cors.json
 
 ## 2. Apply the blueprint
 
+`jobbpulse-api` and `jobbpulse-worker` must build from **`api/`**, not `contractor_app/backend` (that folder was removed). If a deploy fails with `lstat .../contractor_app/backend: no such file or directory`, open each service → **Settings → Build & Deploy** and set:
+
+| Field | Value |
+| --- | --- |
+| Root Directory | `api` |
+| Dockerfile Path | `./Dockerfile` |
+| Docker Build Context Directory | `.` |
+
+Then **Manual Deploy**.
+
 1. Push this repo to GitHub (`main`).
 2. Render dashboard → **New** → **Blueprint**.
 3. Select `repoman1964/JOBBPULSE` and `render.yaml`.

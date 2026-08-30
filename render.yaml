@@ -20,8 +20,10 @@ services:
     runtime: docker
     plan: starter
     region: oregon
-    dockerfilePath: ./api/Dockerfile
-    dockerContext: ./api
+    # Existing services still pointed at contractor_app/backend; that directory is gone.
+    rootDir: api
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     dockerCommand: /app/scripts/start_api.sh
     preDeployCommand: alembic upgrade head
     healthCheckPath: /health/live
@@ -52,8 +54,9 @@ services:
     runtime: docker
     plan: starter
     region: oregon
-    dockerfilePath: ./api/Dockerfile
-    dockerContext: ./api
+    rootDir: api
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     dockerCommand: /app/scripts/start_worker.sh
     envVars:
       - fromGroup: jobbpulse-engine
