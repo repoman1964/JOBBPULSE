@@ -60,6 +60,31 @@ async def test_register_login_me_flow(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_login_accepts_local_demo_email(client: AsyncClient):
+    email = "owner+red-clay-cabinet-installers@demo.jobpulse.local"
+    reg = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": email,
+            "password": "password123",
+            "full_name": "Jordan Hale",
+            "company_name": "Red Clay Cabinet Installers",
+        },
+    )
+    assert reg.status_code == 201
+    from urllib.parse import parse_qs, urlparse
+
+    token = parse_qs(urlparse(reg.json()["data"]["verificationUrl"]).query)["token"][0]
+    await client.post("/api/v1/auth/verify-email", json={"token": token})
+    login = await client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": "password123"},
+    )
+    assert login.status_code == 200
+    assert login.json()["data"]["contractor"]["email"] == email
+
+
+@pytest.mark.asyncio
 async def test_register_duplicate_email(client: AsyncClient):
     email = unique_email("dup")
     first = await client.post(

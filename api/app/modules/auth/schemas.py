@@ -3,16 +3,41 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
+from typing import Annotated, Optional
 from uuid import UUID
 
-from pydantic import AliasChoices, BaseModel, EmailStr, Field
+from email_validator import EmailNotValidError, validate_email
+from pydantic import AfterValidator, AliasChoices, BaseModel, Field
+
+
+_LOCAL_DEMO_TLDS = (".local", ".test", ".example", ".invalid", ".localhost")
+
+
+def _normalize_email(value: str) -> str:
+    """Accept real emails and reserved demo domains used by local seed users."""
+    text = (value or "").strip()
+    domain = text.rsplit("@", 1)[-1].lower() if "@" in text else ""
+    if any(domain == tld[1:] or domain.endswith(tld) for tld in _LOCAL_DEMO_TLDS):
+        # email-validator rejects .local even with test_environment=True.
+        if text.count("@") == 1 and " " not in text:
+            local_part, host = text.split("@", 1)
+            if local_part and host:
+                return f"{local_part}@{host.lower()}"
+        raise ValueError("value is not a valid email address")
+    try:
+        info = validate_email(text, check_deliverability=False)
+    except EmailNotValidError as exc:
+        raise ValueError(str(exc)) from exc
+    return info.normalized
+
+
+AppEmail = Annotated[str, AfterValidator(_normalize_email)]
 
 
 class RegisterRequest(BaseModel):
     model_config = {"populate_by_name": True}
 
-    email: EmailStr
+    email: AppEmail
     password: str = Field(min_length=8, max_length=128)
     full_name: str = Field(
         min_length=1,
@@ -33,11 +58,11 @@ class VerifyEmailRequest(BaseModel):
 
 
 class ResendVerificationRequest(BaseModel):
-    email: EmailStr
+    email: AppEmail
 
 
 class ForgotPasswordRequest(BaseModel):
-    email: EmailStr
+    email: AppEmail
 
 
 class ResetPasswordRequest(BaseModel):
@@ -46,7 +71,7 @@ class ResetPasswordRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: AppEmail
     password: str
 
 
@@ -56,7 +81,7 @@ class RefreshRequest(BaseModel):
 
 class UserOut(BaseModel):
     id: UUID
-    email: EmailStr
+    email: AppEmail
     full_name: str
     phone: Optional[str] = None
     is_verified: bool

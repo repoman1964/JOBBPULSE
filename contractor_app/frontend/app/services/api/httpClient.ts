@@ -195,12 +195,20 @@ export function createHttpApiClient(baseUrl: string): ApiClient {
         code?: string
         message?: string
         fieldErrors?: Record<string, string>
-        error?: { code?: string; message?: string; details?: { fieldErrors?: Record<string, string> } }
+        error?: {
+          code?: string
+          message?: string
+          details?: {
+            fieldErrors?: Record<string, string>
+            errors?: Array<{ loc?: unknown; msg?: string }>
+          }
+        }
       }
       const nested = raw.error
+      const firstValidation = nested?.details?.errors?.[0]?.msg
       throw new HttpError(res.status, {
         code: nested?.code || raw.code,
-        message: nested?.message || raw.message,
+        message: firstValidation || nested?.message || raw.message,
         fieldErrors: nested?.details?.fieldErrors || raw.fieldErrors,
       })
     }
