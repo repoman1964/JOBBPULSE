@@ -2,8 +2,20 @@
 
 from functools import lru_cache
 
-from pydantic import AliasChoices, Field
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def normalize_database_url(url: str) -> str:
+    """Render injects postgres://; SQLAlchemy async needs postgresql+asyncpg://."""
+    value = (url or "").strip()
+    if value.startswith("postgres://"):
+        value = "postgresql://" + value[len("postgres://") :]
+    if value.startswith("postgresql+psycopg2://"):
+        value = "postgresql://" + value[len("postgresql+psycopg2://") :]
+    if value.startswith("postgresql://") and "+asyncpg" not in value.split("://", 1)[0]:
+        value = "postgresql+asyncpg://" + value[len("postgresql://") :]
+    return value
 
 
 class Settings(BaseSettings):
@@ -78,6 +90,13 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("EMAIL_FROM", "AUTH_FROM_EMAIL"),
     )
     resend_api_key: str | None = None
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def _asyncpg_database_url(cls, v: object) -> object:
+        if isinstance(v, str):
+            return normalize_database_url(v)
+        return v
 
     @property
     def is_production(self) -> bool:
