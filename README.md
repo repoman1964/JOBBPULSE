@@ -14,7 +14,7 @@ Core loop:
 |---|---|
 | `api/` | FastAPI modular monolith (PostgreSQL, Redis, S3) |
 | `infra/` | Docker Compose for local dependencies |
-| `contractor_app/` | Newest contractor app (Nuxt frontend + its own FastAPI engine) |
+| `contractor_app/` | Contractor phone UI (`frontend/`). `backend/` is reference-only. |
 | `website/portfolio_website/` | Public local project portfolio (Nuxt SSR) |
 | `website/red_clay_website/` | Red Clay Cabinet Installers demo marketing site |
 | `website/marketing_website/` | One-page JobbPulse sales landing page |
@@ -50,11 +50,19 @@ make api-dev
 make portfolio-seed   # Georgia demo inventory (includes Red Clay contractor)
 ```
 
-The **contractor phone app** is `contractor_app/` (August rewrite: frontend + its own engine). See `contractor_app/LOCAL_SETUP.md`. Frontend-only mock: `cd contractor_app/frontend && npm install && npm run dev` → http://localhost:3000
+The **contractor phone app** is `contractor_app/frontend`. Point it at `api/`:
 
-Production hosting is **Render** (static UI + FastAPI + worker + Postgres + Redis, photos on Cloudflare R2). Blueprint: [`render.yaml`](./render.yaml). Steps: [`contractor_app/RENDER.md`](./contractor_app/RENDER.md).
+```bash
+cd contractor_app/frontend
+NUXT_PUBLIC_API_MODE=http NUXT_PUBLIC_API_BASE_URL=http://localhost:8000 npm run dev
+# → http://localhost:3000
+```
 
-Its Docker API also binds **:8000**, same as `make api-dev`. Do not run both APIs at once.
+Frontend-only mock (no API): omit `NUXT_PUBLIC_API_MODE` or set it to `mock`.
+
+`contractor_app/backend` is a **reference implementation** only — see `contractor_app/backend/REFERENCE_ONLY.md`. Do not run it next to `make api-dev`.
+
+Production hosting is **Render** (static UI + FastAPI + worker + Postgres + Redis, photos on Cloudflare R2). Blueprint: [`render.yaml`](./render.yaml). The API image should be `api/` (cut over from `contractor_app/backend`).
 
 The **public project portfolio** is `website/portfolio_website/`. From there: `make install && make dev` → http://localhost:3001
 

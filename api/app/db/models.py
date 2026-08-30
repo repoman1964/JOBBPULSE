@@ -48,6 +48,8 @@ class JobStatus(str, enum.Enum):
     approved = "approved"
     scheduled = "scheduled"
     published = "published"
+    publishing = "publishing"
+    publish_issue = "publish_issue"
     failed = "failed"
     archived = "archived"
 
@@ -192,6 +194,13 @@ class Company(Base):
     timezone: Mapped[str] = mapped_column(String(64), default="America/New_York", nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    contact_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    email: Mapped[Optional[str]] = mapped_column(String(320), nullable=True)
+    service_area: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
+    photo_minimums_json: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    photo_maximums_json: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    notification_settings_json: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    facebook_group_ids: Mapped[Optional[list[Any]]] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -326,6 +335,10 @@ class Job(Base):
     approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     published_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    assigned_crew_member: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    featured_before_media_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
+    featured_after_media_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
+    deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
     privacy_mode: Mapped[str] = mapped_column(String(40), default="city_only", nullable=False)
     generation_version: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     latest_generation_run_id: Mapped[Optional[uuid.UUID]] = mapped_column(
@@ -370,6 +383,11 @@ class Job(Base):
     publication_jobs: Mapped[list["PublicationJob"]] = relationship(
         back_populates="job",
         cascade="all, delete-orphan",
+    )
+    submissions: Mapped[list["JobSubmission"]] = relationship(
+        back_populates="job",
+        cascade="all, delete-orphan",
+        foreign_keys="JobSubmission.job_id",
     )
 
 
@@ -420,6 +438,8 @@ class MediaAsset(Base):
         nullable=False,
     )
     moderation_status: Mapped[str] = mapped_column(String(40), default="unreviewed", nullable=False)
+    is_favorite: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     metadata_json: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -480,6 +500,31 @@ class VoiceSummary(Base):
         back_populates="voice_summary",
         foreign_keys=[audio_asset_id],
     )
+
+
+class JobSubmission(Base):
+    """Idempotent submit / approve-and-publish records for the contractor app."""
+
+    __tablename__ = "job_submissions"
+    __table_args__ = (
+        UniqueConstraint("job_id", "kind", "idempotency_key", name="uq_job_submission_idempotency"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    job_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    kind: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
+    idempotency_key: Mapped[str] = mapped_column(String(200), nullable=False)
+    status: Mapped[str] = mapped_column(String(40), default="completed", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    job: Mapped[Job] = relationship(back_populates="submissions", foreign_keys=[job_id])
 
 
 class GenerationRun(Base):

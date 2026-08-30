@@ -44,6 +44,10 @@ class Settings(BaseSettings):
     founder_admin_emails: str = ""  # comma-separated platform admin emails
     stripe_webhook_secret: str = ""  # optional; verify when set
 
+    # Contractor-app compatibility
+    return_verification_url_to_client: bool = True
+    email_from: str = "JobbPulse <noreply@localhost>"
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]

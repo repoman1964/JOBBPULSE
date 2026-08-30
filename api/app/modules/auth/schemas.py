@@ -6,16 +6,34 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import AliasChoices, BaseModel, EmailStr, Field
 
 
 class RegisterRequest(BaseModel):
+    model_config = {"populate_by_name": True}
+
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
-    full_name: str = Field(min_length=1, max_length=200)
-    company_name: str = Field(min_length=1, max_length=200)
+    full_name: str = Field(
+        min_length=1,
+        max_length=200,
+        validation_alias=AliasChoices("full_name", "name"),
+    )
+    company_name: str = Field(
+        min_length=1,
+        max_length=200,
+        validation_alias=AliasChoices("company_name", "companyName"),
+    )
     trade: Optional[str] = Field(default=None, max_length=100)
     phone: Optional[str] = Field(default=None, max_length=40)
+
+
+class VerifyEmailRequest(BaseModel):
+    token: str = Field(min_length=8, max_length=2000)
+
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
 
 
 class LoginRequest(BaseModel):

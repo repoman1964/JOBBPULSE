@@ -15,6 +15,7 @@ import type {
 
 export interface ListJobsParams {
   status?: string
+  scope?: 'current' | 'published'
   cursor?: string
 }
 

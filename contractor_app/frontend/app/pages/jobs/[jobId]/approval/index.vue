@@ -15,6 +15,7 @@ const media = ref<MediaAsset[]>([])
 const loading = ref(true)
 const error = ref('')
 const publishing = ref(false)
+useJobPoll(job)
 const showFeatured = ref(false)
 const showDescRev = ref(false)
 const descInstruction = ref('')
@@ -39,6 +40,9 @@ async function load() {
     media.value = await api.listMedia(jobId.value)
     featuredBefore.value = pkg.value?.featuredBeforeMediaId || ''
     featuredAfter.value = pkg.value?.featuredAfterMediaId || ''
+    if (job.value?.publicStatus === 'publishing') {
+      job.value = await api.approveAndPublish(jobId.value, `publish-resume-${jobId.value}`)
+    }
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Could not load package.'
   } finally {
@@ -65,9 +69,6 @@ async function approve() {
   try {
     const key = `publish-${jobId.value}-${Date.now()}`
     job.value = await api.approveAndPublish(jobId.value, key)
-    setTimeout(async () => {
-      job.value = await api.getJob(jobId.value)
-    }, 1800)
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Publish failed.'
   } finally {

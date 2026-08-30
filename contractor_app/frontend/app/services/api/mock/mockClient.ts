@@ -429,7 +429,7 @@ export function createMockApiClient(): ApiClient {
       return structuredClone(state.company)
     },
 
-    async listJobs(_params?: ListJobsParams) {
+    async listJobs(params?: ListJobsParams) {
       requireSession()
       await delay()
       const items = state.jobs
@@ -437,6 +437,12 @@ export function createMockApiClient(): ApiClient {
         .map((j) => {
           recomputeJob(state, j.id)
           return structuredClone(j)
+        })
+        .filter((j) => {
+          if (params?.status && j.publicStatus !== params.status) return false
+          if (params?.scope === 'published') return j.publicStatus === 'published'
+          if (params?.scope === 'current') return j.publicStatus !== 'published'
+          return true
         })
         .sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1))
       save()

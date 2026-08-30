@@ -37,7 +37,9 @@ LOCKED_STATUSES = {
     JobStatus.revision_requested,
     JobStatus.approved,
     JobStatus.scheduled,
+    JobStatus.publishing,
     JobStatus.published,
+    JobStatus.publish_issue,
     JobStatus.failed,
     JobStatus.archived,
 }
@@ -49,6 +51,7 @@ OPTIONAL_BEFORE_TIP = "Before photos are optional but recommended for a stronger
 class PhotoCounts:
     total: int = 0
     before: int = 0
+    progress: int = 0
     after: int = 0
 
     @property
@@ -84,6 +87,9 @@ def count_photos(media: Iterable[MediaAsset]) -> PhotoCounts:
             continue
         if item.stage_label == MediaStageLabel.before:
             counts.before += 1
+            counts.total += 1
+        elif item.stage_label == MediaStageLabel.progress:
+            counts.progress += 1
             counts.total += 1
         elif item.stage_label == MediaStageLabel.after:
             counts.after += 1

@@ -186,7 +186,7 @@ async def list_demo_projects(
             Job.company_id == contractor.company_id,
             Job.deleted_at.is_(None),
             Job.public_status.in_(ELIGIBLE_PUBLIC_STATUSES),
-        )
+        ).order_by(Job.published_at.desc().nullslast(), Job.created_at.desc())
     )
     items: list[DemoProjectListItem] = []
     for job in result.scalars().all():
@@ -259,9 +259,16 @@ async def get_demo_project(
         by_dest = {a.destination_type: a for a in assets}
         for dest in SOCIAL_DESTINATIONS:
             asset = by_dest.get(dest)
-            if asset is None:
+            if asset is None and dest != "facebook_group":
                 continue
-            title_txt, body_txt = _asset_copy(asset)
+            if asset is None:
+                title_txt = "Neighborhood group"
+                body_txt = (
+                    f"Wrapped a {title.lower()} in {job.city} this week. "
+                    "If a neighbor needs similar work, we walk the house and send a written number."
+                )
+            else:
+                title_txt, body_txt = _asset_copy(asset)
             group_name = None
             if dest == "facebook_group":
                 group_name = f"{job.city} Neighbors" if job.city else "Metro Atlanta Homeowners"

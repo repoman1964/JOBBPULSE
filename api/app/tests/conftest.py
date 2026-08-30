@@ -32,6 +32,7 @@ TRUNCATE TABLE
   content_variants,
   job_structured_details,
   generation_runs,
+  job_submissions,
   voice_summaries,
   media_assets,
   jobs,
@@ -51,6 +52,24 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
         # create_all adds missing tables; columns on existing tables come from alembic.
         # Run `make api-migrate` after pulling schema changes.
         await conn.run_sync(Base.metadata.create_all)
+        for value in ("publishing", "publish_issue"):
+            await conn.execute(text(f"ALTER TYPE job_status ADD VALUE IF NOT EXISTS '{value}'"))
+        for stmt in (
+            "ALTER TABLE companies ADD COLUMN IF NOT EXISTS contact_name VARCHAR(200)",
+            "ALTER TABLE companies ADD COLUMN IF NOT EXISTS email VARCHAR(320)",
+            "ALTER TABLE companies ADD COLUMN IF NOT EXISTS service_area VARCHAR(300)",
+            "ALTER TABLE companies ADD COLUMN IF NOT EXISTS photo_minimums_json JSONB",
+            "ALTER TABLE companies ADD COLUMN IF NOT EXISTS photo_maximums_json JSONB",
+            "ALTER TABLE companies ADD COLUMN IF NOT EXISTS notification_settings_json JSONB",
+            "ALTER TABLE companies ADD COLUMN IF NOT EXISTS facebook_group_ids JSONB",
+            "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS assigned_crew_member VARCHAR(200)",
+            "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS featured_before_media_id UUID",
+            "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS featured_after_media_id UUID",
+            "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ",
+            "ALTER TABLE media_assets ADD COLUMN IF NOT EXISTS is_favorite BOOLEAN DEFAULT false",
+            "ALTER TABLE media_assets ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ",
+        ):
+            await conn.execute(text(stmt))
         await conn.execute(text(TRUNCATE_SQL))
 
     session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
@@ -87,4 +106,21 @@ async def register_owner(client: AsyncClient, **overrides) -> dict:
     assert res.status_code == 201, res.text
     body = res.json()
     assert body["error"] is None
-    return body["data"]
+    token_url = (body["data"] or {}).get("verificationUrl")
+    assert token_url, body
+    from urllib.parse import parse_qs, urlparse
+
+    token = parse_qs(urlparse(token_url).query).get("token", [None])[0]
+    verified = await client.post("/api/v1/auth/verify-email", json={"token": token})
+    assert verified.status_code == 200, verified.text
+    login = await client.post(
+        "/api/v1/auth/login",
+        json={"email": payload["email"], "password": payload["password"]},
+    )
+    assert login.status_code == 200, login.text
+    data = login.json()["data"]
+    data["user"] = data.get("user") or {
+        "email": payload["email"],
+        "full_name": payload["full_name"],
+    }
+    return data

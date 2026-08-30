@@ -52,6 +52,64 @@ export function resolveEngineApiBase(configured: string, pageOrigin: string): st
   }
 }
 
+function unwrapData(data: unknown): unknown {
+  if (data && typeof data === 'object' && 'data' in (data as object) && 'error' in (data as object)) {
+    return (data as { data: unknown }).data
+  }
+  return data
+}
+
+function sessionFrom(payload: Record<string, unknown>): Session {
+  const access =
+    (payload.accessToken as string) ||
+    (payload.access_token as string) ||
+    ''
+  const user = (payload.user || {}) as Record<string, unknown>
+  const contractor = (payload.contractor || {}) as Record<string, unknown>
+  const company = (payload.company || {}) as Record<string, unknown>
+  return {
+    accessToken: access,
+    contractor: {
+      id: String(contractor.id || user.id || ''),
+      companyId: String(contractor.companyId || company.id || ''),
+      name: String(contractor.name || user.full_name || user.fullName || ''),
+      email: String(contractor.email || user.email || ''),
+      phone: String(contractor.phone || user.phone || ''),
+      role: String(contractor.role || 'owner'),
+    },
+    company: companyFrom(company),
+  }
+}
+
+function companyFrom(company: Record<string, unknown>): Company {
+  const mins = (company.photoMinimums || company.photo_minimums || {}) as Record<string, number>
+  const maxs = (company.photoMaximums || company.photo_maximums || {}) as Record<string, number>
+  const notes = (company.notificationSettings || company.notification_settings || {}) as Record<string, boolean>
+  return {
+    id: String(company.id || ''),
+    name: String(company.name || ''),
+    contactName: String(company.contactName || company.contact_name || ''),
+    phone: String(company.phone || ''),
+    email: String(company.email || ''),
+    website: String(company.website || company.website_url || ''),
+    serviceArea: String(company.serviceArea || company.service_area || ''),
+    photoMinimums: {
+      before: Number(mins.before ?? 1),
+      progress: Number(mins.progress ?? 0),
+      after: Number(mins.after ?? 1),
+    },
+    photoMaximums: {
+      before: Number(maxs.before ?? 15),
+      progress: Number(maxs.progress ?? 30),
+      after: Number(maxs.after ?? 15),
+    },
+    notificationSettings: {
+      contentReadyForApproval: notes.contentReadyForApproval !== false,
+      publishingComplete: notes.publishingComplete !== false,
+    },
+  }
+}
+
 export function createHttpApiClient(baseUrl: string): ApiClient {
   const pageOrigin = import.meta.client ? window.location.origin : 'http://localhost'
   const apiBase = resolveEngineApiBase(baseUrl, pageOrigin)
@@ -133,15 +191,21 @@ export function createHttpApiClient(baseUrl: string): ApiClient {
     }
 
     if (!res.ok) {
-      const errBody = (data || {}) as {
+      const raw = (data || {}) as {
         code?: string
         message?: string
         fieldErrors?: Record<string, string>
+        error?: { code?: string; message?: string; details?: { fieldErrors?: Record<string, string> } }
       }
-      throw new HttpError(res.status, errBody)
+      const nested = raw.error
+      throw new HttpError(res.status, {
+        code: nested?.code || raw.code,
+        message: nested?.message || raw.message,
+        fieldErrors: nested?.details?.fieldErrors || raw.fieldErrors,
+      })
     }
 
-    return data as T
+    return unwrapData(data) as T
   }
 
   return {
@@ -164,10 +228,11 @@ export function createHttpApiClient(baseUrl: string): ApiClient {
     },
 
     async login(email: string, password: string) {
-      const session = await request<Session>('POST', '/auth/login', {
+      const raw = await request<Record<string, unknown>>('POST', '/auth/login', {
         body: { email, password },
         auth: false,
       })
+      const session = sessionFrom(raw)
       persistToken(session.accessToken)
       return session
     },
@@ -197,7 +262,8 @@ export function createHttpApiClient(baseUrl: string): ApiClient {
     async getSession() {
       if (!accessToken) return null
       try {
-        const session = await request<Session>('GET', '/auth/me')
+        const raw = await request<Record<string, unknown>>('GET', '/auth/me')
+        const session = sessionFrom(raw)
         if (session.accessToken) persistToken(session.accessToken)
         return session
       } catch {
@@ -207,21 +273,38 @@ export function createHttpApiClient(baseUrl: string): ApiClient {
     },
 
     async getCompany() {
-      return request<Company>('GET', '/company')
+      const raw = await request<Record<string, unknown>>('GET', '/company')
+      return companyFrom(raw)
     },
 
     async updateCompany(input: UpdateCompanyInput) {
-      return request<Company>('PATCH', '/company', { body: input })
+      const raw = await request<Record<string, unknown>>('PATCH', '/company', { body: input })
+      return companyFrom(raw)
     },
 
     async updateNotificationSettings(settings: Company['notificationSettings']) {
-      return request<Company>('PATCH', '/company/settings', { body: settings })
+      const raw = await request<Record<string, unknown>>('PATCH', '/company/settings', {
+        body: settings,
+      })
+      return companyFrom(raw)
     },
 
     async listJobs(params?: ListJobsParams) {
-      return request<{ items: Job[]; nextCursor: string | null }>('GET', '/jobs', {
-        query: { status: params?.status, cursor: params?.cursor },
-      })
+      const raw = await request<{ items?: Job[]; nextCursor?: string | null } | Job[]>(
+        'GET',
+        '/jobs',
+        {
+          query: {
+            status: params?.status,
+            scope: params?.scope,
+            cursor: params?.cursor,
+          },
+        },
+      )
+      if (Array.isArray(raw)) {
+        return { items: raw, nextCursor: null }
+      }
+      return { items: raw.items || [], nextCursor: raw.nextCursor ?? null }
     },
 
     async getJob(jobId: string) {
@@ -281,7 +364,40 @@ export function createHttpApiClient(baseUrl: string): ApiClient {
     },
 
     async getVoice(jobId: string) {
-      return request<MediaAsset | null>('GET', `/jobs/${jobId}/voice`)
+      try {
+        const raw = await request<MediaAsset | Record<string, unknown> | null>(
+          'GET',
+          `/jobs/${jobId}/voice`,
+        )
+        if (!raw) return null
+        if ((raw as MediaAsset).kind === 'audio' || (raw as MediaAsset).kind === 'photo') {
+          return raw as MediaAsset
+        }
+        const v = raw as Record<string, unknown>
+        const id = String(v.audio_asset_id || v.audioAssetId || v.id || '')
+        if (!id) return null
+        return {
+          id,
+          jobId,
+          kind: 'audio' as const,
+          photoCategory: null,
+          url: String(v.audio_url || v.audioUrl || v.url || ''),
+          thumbnailUrl: '',
+          mimeType: String(v.mimeType || v.mime_type || 'audio/webm'),
+          byteSize: Number(v.byteSize || v.file_size_bytes || 0),
+          durationMs: (v.durationMs as number | null) ?? null,
+          uploadStatus: 'complete' as const,
+          isFavorite: false,
+          isDeleted: false,
+          version: 1,
+          createdAt: String(v.createdAt || v.created_at || new Date().toISOString()),
+        }
+      } catch (err) {
+        if (err instanceof HttpError && (err.status === 404 || err.code === 'VOICE_NOT_FOUND')) {
+          return null
+        }
+        throw err
+      }
     },
 
     async listMedia(jobId: string, category?: PhotoCategory) {

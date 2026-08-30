@@ -216,7 +216,9 @@ def test_ineligible_jobs_omitted_and_eligible_listed(client: TestClient, monkeyp
     body = detail.json()
     assert "HIDDEN" not in str(body)
     dests = {p["destination"] for p in body["socialPosts"]}
-    assert dests == {"facebook", "instagram", "google_business"}
+    assert dests == {"facebook", "facebook_group", "instagram", "google_business"}
+    group = next(p for p in body["socialPosts"] if p["destination"] == "facebook_group")
+    assert group["groupName"] == "Decatur Neighbors"
     assert any(m["stageLabel"] == "before" for m in body["media"])
     assert any(m["stageLabel"] == "after" for m in body["media"])
 

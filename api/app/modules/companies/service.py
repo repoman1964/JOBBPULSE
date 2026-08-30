@@ -149,7 +149,7 @@ async def invite_member(
             email=email,
             full_name=data.full_name.strip(),
             password_hash=hash_password(data.password),
-            is_verified=False,
+            is_verified=True,
             is_active=True,
         )
         db.add(user)

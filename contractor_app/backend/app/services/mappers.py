@@ -138,7 +138,19 @@ def version_to_out(version: GeneratedAssetVersion) -> GeneratedAssetVersionOut:
     )
 
 
-def asset_to_out(asset: GeneratedAsset) -> GeneratedAssetOut:
+def _merged_preview(
+    preview: dict[str, Any] | None, urls: dict[str, str | None] | None
+) -> dict[str, Any]:
+    out = dict(preview or {})
+    for key, value in (urls or {}).items():
+        if value:
+            out[key] = value
+    return out
+
+
+def asset_to_out(
+    asset: GeneratedAsset, *, preview_urls: dict[str, str | None] | None = None
+) -> GeneratedAssetOut:
     versions = sorted(asset.versions, key=lambda v: v.version)
     active_id = asset.active_version_id
     if active_id is None and versions:
@@ -155,11 +167,13 @@ def asset_to_out(asset: GeneratedAsset) -> GeneratedAssetOut:
         status=asset.status,
         activeVersionId=active_id,
         versions=[version_to_out(v) for v in versions],
-        preview=asset.preview_json or {},
+        preview=_merged_preview(asset.preview_json, preview_urls),
     )
 
 
-def package_to_out(package: ContentPackage) -> ContentPackageOut:
+def package_to_out(
+    package: ContentPackage, *, preview_urls: dict[str, str | None] | None = None
+) -> ContentPackageOut:
     assets = sorted(package.assets, key=lambda a: a.destination_type)
     return ContentPackageOut(
         id=package.id,
@@ -169,7 +183,7 @@ def package_to_out(package: ContentPackage) -> ContentPackageOut:
         projectDescription=package.project_description,
         featuredBeforeMediaId=package.featured_before_media_id,
         featuredAfterMediaId=package.featured_after_media_id,
-        assets=[asset_to_out(a) for a in assets],
+        assets=[asset_to_out(a, preview_urls=preview_urls) for a in assets],
     )
 
 

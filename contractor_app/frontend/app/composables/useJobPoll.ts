@@ -1,14 +1,16 @@
 import type { Job } from '~/types/domain'
 
-/** Poll GET /jobs/{id} while the server reports processing. Same path in demo and prod. */
+const IN_FLIGHT = new Set(['processing', 'publishing'])
+
+/** Poll GET /jobs/{id} while the server reports processing or publishing. */
 export function useJobPoll(job: Ref<Job | null>) {
   const api = useApi()
   let timer: ReturnType<typeof setInterval> | null = null
 
-  const processing = computed(() => job.value?.publicStatus === 'processing')
+  const processing = computed(() => IN_FLIGHT.has(job.value?.publicStatus || ''))
 
   async function tick() {
-    if (!job.value || job.value.publicStatus !== 'processing') return
+    if (!job.value || !IN_FLIGHT.has(job.value.publicStatus)) return
     try {
       job.value = await api.getJob(job.value.id)
     } catch {

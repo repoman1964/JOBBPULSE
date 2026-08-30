@@ -1,6 +1,8 @@
-# JobbPulse — Local spin-up (frontend + backend)
+# JobbPulse — Local spin-up (frontend + api/)
 
-Step-by-step guide to run the **Contractor App** (Nuxt) against the **JobbPulse Engine** (FastAPI) on your machine.
+Step-by-step guide to run the **Contractor App** (Nuxt) against the **JobbPulse API** in `api/` (FastAPI).
+
+`contractor_app/backend` is reference-only. Do not start it — it fights `api/` for port 8000.
 
 ---
 

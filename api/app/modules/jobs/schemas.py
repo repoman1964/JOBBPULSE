@@ -6,24 +6,50 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import AliasChoices, BaseModel, Field, field_validator
 
 # Contractor-facing photo stages for Phase 2 (progress deferred).
-STAGE_LABEL_PATTERN = "^(before|after)$"
+STAGE_LABEL_PATTERN = "^(before|progress|after)$"
 
 
 class JobCreate(BaseModel):
     """Create a Job. `title` is required and private (contractor reference only)."""
 
-    title: str = Field(min_length=1, max_length=200)
-    service_key: Optional[str] = Field(default=None, max_length=100)
+    model_config = {"populate_by_name": True}
+
+    title: str = Field(
+        min_length=1,
+        max_length=200,
+        validation_alias=AliasChoices("title", "name"),
+    )
+    service_key: Optional[str] = Field(
+        default=None,
+        max_length=100,
+        validation_alias=AliasChoices("service_key", "serviceType"),
+    )
     # Coarse area only — never street address (client may fill from quiet geolocation).
-    location_display: Optional[str] = Field(default=None, max_length=200)
+    location_display: Optional[str] = Field(
+        default=None,
+        max_length=200,
+        validation_alias=AliasChoices("location_display", "locationText"),
+    )
     city: Optional[str] = Field(default=None, max_length=150)
-    state: Optional[str] = Field(default=None, max_length=100)
+    state: Optional[str] = Field(
+        default=None,
+        max_length=100,
+        validation_alias=AliasChoices("state", "region"),
+    )
     postal_code: Optional[str] = Field(default=None, max_length=20)
     customer_name_private: Optional[str] = Field(default=None, max_length=200)
-    notes: Optional[str] = None
+    notes: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("notes", "internalNote"),
+    )
+    assigned_crew_member: Optional[str] = Field(
+        default=None,
+        max_length=200,
+        validation_alias=AliasChoices("assigned_crew_member", "assignedCrewMember"),
+    )
 
     @field_validator("title")
     @classmethod
@@ -35,14 +61,41 @@ class JobCreate(BaseModel):
 
 
 class JobUpdate(BaseModel):
-    title: Optional[str] = Field(default=None, min_length=1, max_length=200)
-    service_key: Optional[str] = Field(default=None, max_length=100)
-    location_display: Optional[str] = Field(default=None, max_length=200)
+    model_config = {"populate_by_name": True}
+
+    title: Optional[str] = Field(
+        default=None,
+        min_length=1,
+        max_length=200,
+        validation_alias=AliasChoices("title", "name"),
+    )
+    service_key: Optional[str] = Field(
+        default=None,
+        max_length=100,
+        validation_alias=AliasChoices("service_key", "serviceType"),
+    )
+    location_display: Optional[str] = Field(
+        default=None,
+        max_length=200,
+        validation_alias=AliasChoices("location_display", "locationText"),
+    )
     city: Optional[str] = Field(default=None, max_length=150)
-    state: Optional[str] = Field(default=None, max_length=100)
+    state: Optional[str] = Field(
+        default=None,
+        max_length=100,
+        validation_alias=AliasChoices("state", "region"),
+    )
     postal_code: Optional[str] = Field(default=None, max_length=20)
     customer_name_private: Optional[str] = Field(default=None, max_length=200)
-    notes: Optional[str] = None
+    notes: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("notes", "internalNote"),
+    )
+    assigned_crew_member: Optional[str] = Field(
+        default=None,
+        max_length=200,
+        validation_alias=AliasChoices("assigned_crew_member", "assignedCrewMember"),
+    )
     privacy_mode: Optional[str] = Field(default=None, max_length=40)
 
     @field_validator("title")
@@ -67,6 +120,7 @@ class NextActionOut(BaseModel):
 class PhotoCountsOut(BaseModel):
     total: int
     before: int
+    progress: int = 0
     after: int
     has_before_after_pair: bool
 

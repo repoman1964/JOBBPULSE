@@ -31,7 +31,11 @@ from app.modules.jobs.schemas import (
     MediaUploadUrlRequest,
 )
 
-ALLOWED_STAGE_LABELS = {MediaStageLabel.before, MediaStageLabel.after}
+ALLOWED_STAGE_LABELS = {
+    MediaStageLabel.before,
+    MediaStageLabel.progress,
+    MediaStageLabel.after,
+}
 
 
 def _ensure_can_capture(role: MembershipRole) -> None:
@@ -45,13 +49,13 @@ def _parse_stage_label(value: str) -> MediaStageLabel:
     except ValueError as exc:
         raise AppError(
             "INVALID_STAGE",
-            "Stage must be 'before' or 'after'.",
+            "Stage must be 'before', 'progress', or 'after'.",
             status_code=400,
         ) from exc
     if stage not in ALLOWED_STAGE_LABELS:
         raise AppError(
             "INVALID_STAGE",
-            "Only before and after photos are supported.",
+            "Only before, progress, and after photos are supported.",
             status_code=400,
         )
     return stage
@@ -83,6 +87,7 @@ async def create_job(
         postal_code=data.postal_code,
         customer_name_private=data.customer_name_private,
         notes=data.notes,
+        assigned_crew_member=data.assigned_crew_member,
         status=JobStatus.draft,
     )
     db.add(job)
@@ -105,11 +110,13 @@ async def list_jobs(
         .options(
             selectinload(Job.media_assets),
             selectinload(Job.voice_summary).selectinload(VoiceSummary.audio_asset),
+            selectinload(Job.directory_listing),
         )
         .order_by(Job.updated_at.desc())
         .limit(min(limit, 100))
         .offset(max(offset, 0))
     )
+    stmt = stmt.where(Job.deleted_at.is_(None))
     if not include_archived:
         stmt = stmt.where(Job.status != JobStatus.archived)
     result = await db.execute(stmt)
@@ -123,10 +130,11 @@ async def get_job(db: AsyncSession, company_id: UUID, job_id: UUID) -> Job:
         .options(
             selectinload(Job.media_assets),
             selectinload(Job.voice_summary).selectinload(VoiceSummary.audio_asset),
+            selectinload(Job.directory_listing),
         )
     )
     job = result.scalar_one_or_none()
-    if job is None:
+    if job is None or job.deleted_at is not None:
         raise not_found("JOB_NOT_FOUND", "Job not found.")
     return job
 
@@ -168,12 +176,19 @@ async def archive_job(
 async def delete_job(
     db: AsyncSession, *, company_id: UUID, job_id: UUID, role: MembershipRole
 ) -> None:
+    """Soft-delete: hide from contractor lists; unpublish directory listing; keep media."""
+    from datetime import datetime, timezone
+
+    from app.db.models import DirectoryListingStatus
+
     _ensure_can_capture(role)
     job = await get_job(db, company_id, job_id)
-    # Best-effort storage cleanup
-    for media in list(job.media_assets):
-        storage_svc.delete_object(media.storage_key)
-    await db.delete(job)
+    now = datetime.now(timezone.utc)
+    job.deleted_at = now
+    listing = job.directory_listing
+    if listing is not None and listing.status == DirectoryListingStatus.published:
+        listing.status = DirectoryListingStatus.unpublished
+        listing.unpublished_at = now
     await db.commit()
 
 
@@ -182,6 +197,7 @@ def _ready_media(job: Job) -> list[MediaAsset]:
         m
         for m in job.media_assets
         if m.processing_status != MediaProcessingStatus.pending_upload
+        and m.deleted_at is None
     ]
 
 
@@ -190,6 +206,7 @@ def serialize_photo_counts(job: Job) -> dict:
     return {
         "total": counts.total,
         "before": counts.before,
+        "progress": counts.progress,
         "after": counts.after,
         "has_before_after_pair": counts.has_before_after_pair,
     }
@@ -256,7 +273,8 @@ def serialize_job_detail(job: Job) -> dict:
         [
             m
             for m in _ready_media(job)
-            if m.stage_label in (MediaStageLabel.before, MediaStageLabel.after)
+            if m.stage_label
+            in (MediaStageLabel.before, MediaStageLabel.progress, MediaStageLabel.after)
         ],
         key=lambda m: (m.display_order, m.created_at),
     )

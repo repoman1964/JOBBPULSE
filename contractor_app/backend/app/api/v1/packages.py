@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks, Request
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
+from app.core.config import get_settings
 from app.core.deps import CurrentAuth, DbSession
 from app.core.errors import AppError
+from app.integrations.storage.s3 import ObjectStorage
 from app.models.content import (
     ContentPackage,
     GeneratedAsset,
@@ -41,10 +44,83 @@ from app.services.mappers import asset_to_out, package_to_out
 from app.tasks.pipeline import process_approve_and_publish, process_revision
 
 router = APIRouter(tags=["packages"])
+logger = logging.getLogger(__name__)
+
+
+async def _run_publish_background(
+    job_id: UUID,
+    package_id: UUID,
+    idempotency_key: str,
+    session_factory: object | None,
+) -> None:
+    from app.db.session import AsyncSessionLocal
+    from app.services.engine import apply_publish
+
+    factory = session_factory or AsyncSessionLocal
+    async with factory() as session:  # type: ignore[operator]
+        try:
+            await apply_publish(session, job_id, package_id, idempotency_key)
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            logger.exception("in-process publish failed job=%s", job_id)
+
+
+def _enqueue_publish(
+    *,
+    job_id: UUID,
+    package_id: UUID,
+    idempotency_key: str,
+    request: Request,
+    background_tasks: BackgroundTasks,
+) -> None:
+    """Run the same publisher in demo and production.
+
+    Fake/demo mode publishes in the API process so a worker is not required.
+    Live mode uses Celery and falls back in-process if the broker is down.
+    """
+    settings = get_settings()
+    if settings.provider_mode != "fake":
+        try:
+            process_approve_and_publish.delay(
+                str(job_id), str(package_id), idempotency_key
+            )
+            return
+        except Exception:
+            logger.warning("Celery unavailable; publishing in-process")
+
+    factory = getattr(request.app.state, "test_session_factory", None)
+    background_tasks.add_task(
+        _run_publish_background, job_id, package_id, idempotency_key, factory
+    )
 
 
 async def _get_job(db: DbSession, job_id: UUID, company_id: UUID) -> Job:
     return await get_visible_job(db, job_id, company_id)
+
+
+def _media_preview_url(media: MediaAsset, storage: ObjectStorage) -> str | None:
+    key = media.thumbnail_object_key or media.preview_object_key or media.original_object_key
+    if not key:
+        return None
+    return storage.presign_get(key)
+
+
+async def _preview_urls(db: DbSession, package: ContentPackage) -> dict[str, str | None]:
+    storage = ObjectStorage()
+    urls: dict[str, str | None] = {"beforeUrl": None, "afterUrl": None, "coverUrl": None}
+    for media_id, field in (
+        (package.featured_before_media_id, "beforeUrl"),
+        (package.featured_after_media_id, "afterUrl"),
+    ):
+        if media_id is None:
+            continue
+        media = await db.get(MediaAsset, media_id)
+        if media is None:
+            continue
+        urls[field] = _media_preview_url(media, storage)
+    urls["coverUrl"] = urls["afterUrl"] or urls["beforeUrl"]
+    return urls
 
 
 async def _latest_package(
@@ -75,7 +151,7 @@ async def get_package(
     package = await _latest_package(db, job_id, auth.company_id)
     if package is None:
         return None
-    return package_to_out(package)
+    return package_to_out(package, preview_urls=await _preview_urls(db, package))
 
 
 @router.patch("/jobs/{job_id}/package/featured-media", response_model=ContentPackageOut)
@@ -116,7 +192,7 @@ async def update_featured_media(
     await db.flush()
     package = await _latest_package(db, job_id, auth.company_id)
     assert package is not None
-    return package_to_out(package)
+    return package_to_out(package, preview_urls=await _preview_urls(db, package))
 
 
 @router.post(
@@ -172,7 +248,7 @@ async def request_description_revision(
 
     package = await _latest_package(db, job_id, auth.company_id)
     assert package is not None
-    return package_to_out(package)
+    return package_to_out(package, preview_urls=await _preview_urls(db, package))
 
 
 @router.get("/jobs/{job_id}/generated-assets", response_model=list[GeneratedAssetOut])
@@ -184,7 +260,8 @@ async def list_generated_assets(
     package = await _latest_package(db, job_id, auth.company_id)
     if package is None:
         return []
-    return [asset_to_out(a) for a in package.assets]
+    urls = await _preview_urls(db, package)
+    return [asset_to_out(a, preview_urls=urls) for a in package.assets]
 
 
 @router.get("/generated-assets/{asset_id}", response_model=GeneratedAssetOut)
@@ -204,7 +281,9 @@ async def get_generated_asset(
     asset = result.scalar_one_or_none()
     if asset is None:
         raise AppError("not_found", "Content asset not found.", status_code=404)
-    return asset_to_out(asset)
+    package = await db.get(ContentPackage, asset.package_id)
+    urls = await _preview_urls(db, package) if package else None
+    return asset_to_out(asset, preview_urls=urls)
 
 
 @router.post(
@@ -267,7 +346,8 @@ async def request_asset_revision(
         .options(selectinload(GeneratedAsset.versions))
     )
     asset = result.scalar_one()
-    return asset_to_out(asset)
+    urls = await _preview_urls(db, package)
+    return asset_to_out(asset, preview_urls=urls)
 
 
 @router.post(
@@ -303,7 +383,9 @@ async def select_asset_version(
     asset.payload_json = version.payload_json
     asset.status = AssetStatus.ready.value
     await db.flush()
-    return asset_to_out(asset)
+    package = await db.get(ContentPackage, asset.package_id)
+    urls = await _preview_urls(db, package) if package else None
+    return asset_to_out(asset, preview_urls=urls)
 
 
 @router.post("/jobs/{job_id}/approve-and-publish", response_model=JobOut)
@@ -312,12 +394,22 @@ async def approve_and_publish(
     body: ApprovePublishRequest,
     auth: CurrentAuth,
     db: DbSession,
+    request: Request,
+    background_tasks: BackgroundTasks,
 ) -> JobOut:
     from app.api.v1.jobs import _to_job_out
 
     job = await _get_job(db, job_id, auth.company_id)
     if job.public_status == PublicJobStatus.publishing.value:
-        # Idempotent-ish: already publishing
+        package = await _latest_package(db, job_id, auth.company_id)
+        if package is not None:
+            _enqueue_publish(
+                job_id=job.id,
+                package_id=package.id,
+                idempotency_key=body.idempotency_key,
+                request=request,
+                background_tasks=background_tasks,
+            )
         return await _to_job_out(db, job)
     if job.public_status not in {
         PublicJobStatus.ready_for_approval.value,
@@ -357,14 +449,16 @@ async def approve_and_publish(
         )
     )
     await db.flush()
+    # Commit before the worker/background task so it can see publishing,
+    # and so this request cannot overwrite a finished publish.
+    await db.commit()
 
-    try:
-        process_approve_and_publish.delay(
-            str(job.id), str(package.id), body.idempotency_key
-        )
-    except Exception:
-        from app.services.engine import apply_publish
-
-        await apply_publish(db, job.id, package.id, body.idempotency_key)
+    _enqueue_publish(
+        job_id=job.id,
+        package_id=package.id,
+        idempotency_key=body.idempotency_key,
+        request=request,
+        background_tasks=background_tasks,
+    )
 
     return await _to_job_out(db, job)

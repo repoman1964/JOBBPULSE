@@ -5,6 +5,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import AuthContext, get_auth_context
@@ -12,6 +13,8 @@ from app.core.exceptions import AppError
 from app.core.responses import success
 from app.db.session import get_db
 from app.modules.jobs import service
+from app.modules.phone import serialize as phone_serialize
+from app.modules.phone import service as phone_service
 from app.modules.jobs import voice as voice_svc
 from app.modules.jobs.schemas import (
     JobCreate,
@@ -35,11 +38,15 @@ router = APIRouter(tags=["jobs"])
 
 
 def _job_summary(job) -> dict:
-    return JobSummaryOut.model_validate(service.serialize_job_summary(job)).model_dump(mode="json")
+    payload = JobSummaryOut.model_validate(service.serialize_job_summary(job)).model_dump(mode="json")
+    payload.update(jsonable_encoder(phone_serialize.job_out(job)))
+    return payload
 
 
 def _job_detail(job) -> dict:
-    return JobDetailOut.model_validate(service.serialize_job_detail(job)).model_dump(mode="json")
+    payload = JobDetailOut.model_validate(service.serialize_job_detail(job)).model_dump(mode="json")
+    payload.update(jsonable_encoder(phone_serialize.job_out(job)))
+    return payload
 
 
 def _media_out(media) -> dict:
@@ -51,9 +58,24 @@ async def list_jobs(
     include_archived: bool = Query(default=False),
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
+    status: str | None = Query(default=None),
+    scope: str | None = Query(default=None),
+    cursor: str | None = Query(default=None),
     ctx: AuthContext = Depends(get_auth_context),
     db: AsyncSession = Depends(get_db),
 ):
+    if status or scope or cursor is not None or offset == 0:
+        jobs, next_cursor = await phone_service.list_jobs_phone(
+            db,
+            ctx.company_id,
+            status=status,
+            scope=scope,
+            cursor=cursor,
+            limit=limit,
+        )
+        items = [_job_summary(j) for j in jobs]
+        # Phone client expects { items, nextCursor }. Existing tests used a bare list.
+        return success({"items": items, "nextCursor": next_cursor, "jobs": items})
     jobs = await service.list_jobs(
         db,
         ctx.company_id,
@@ -61,7 +83,8 @@ async def list_jobs(
         limit=limit,
         offset=offset,
     )
-    return success([_job_summary(j) for j in jobs])
+    items = [_job_summary(j) for j in jobs]
+    return success({"items": items, "nextCursor": None, "jobs": items})
 
 
 @router.post("/jobs", status_code=201)
@@ -176,10 +199,10 @@ async def media_direct_upload(
     Multipart upload fallback (tests + environments where browser→MinIO CORS fails).
     Prefer signed upload-url flow when possible.
     """
-    if stage_label not in {"before", "after"}:
+    if stage_label not in {"before", "progress", "after"}:
         raise AppError(
             "INVALID_STAGE",
-            "Only before and after photos are supported.",
+            "Only before, progress, and after photos are supported.",
             status_code=400,
         )
 
@@ -207,11 +230,20 @@ async def media_direct_upload(
 @router.get("/jobs/{job_id}/media")
 async def list_job_media(
     job_id: UUID,
+    category: str | None = Query(default=None),
     ctx: AuthContext = Depends(get_auth_context),
     db: AsyncSession = Depends(get_db),
 ):
     items = await service.list_media(db, ctx.company_id, job_id)
-    return success([_media_out(m) for m in items])
+    if category:
+        stage = "progress" if category == "progress" else category
+        items = [m for m in items if m.stage_label.value == stage]
+    out = []
+    for m in items:
+        row = _media_out(m)
+        row.update(jsonable_encoder(phone_serialize.media_out(m)))
+        out.append(row)
+    return success(out)
 
 
 @router.post("/jobs/{job_id}/media/reorder")

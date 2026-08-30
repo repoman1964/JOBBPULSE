@@ -37,6 +37,13 @@ def create_access_token(user_id: UUID, company_id: Optional[UUID] = None) -> str
     return _encode(payload, timedelta(minutes=settings.access_token_expire_minutes))
 
 
+def create_email_verify_token(user_id: UUID) -> str:
+    return _encode(
+        {"sub": str(user_id), "type": "email_verify"},
+        timedelta(hours=48),
+    )
+
+
 def create_refresh_token(user_id: UUID) -> str:
     return _encode(
         {"sub": str(user_id), "type": "refresh"},

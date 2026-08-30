@@ -21,11 +21,22 @@ async def test_register_login_me_flow(client: AsyncClient):
     )
     assert reg.status_code == 201
     data = reg.json()["data"]
-    assert data["access_token"]
-    assert data["refresh_token"]
-    assert data["user"]["email"] == email
-    assert data["company"]["name"] == "Jane Paint Pros"
-    assert data["membership"]["role"] == "owner"
+    assert data["email"] == email
+    assert data["companyId"]
+    assert data["verificationUrl"]
+
+    blocked = await client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": "password123"},
+    )
+    assert blocked.status_code == 403
+
+    from urllib.parse import parse_qs, urlparse
+
+    token = parse_qs(urlparse(data["verificationUrl"]).query)["token"][0]
+    verified = await client.post("/api/v1/auth/verify-email", json={"token": token})
+    assert verified.status_code == 200
+    assert verified.json()["data"]["verified"] is True
 
     login = await client.post(
         "/api/v1/auth/login",
@@ -33,6 +44,9 @@ async def test_register_login_me_flow(client: AsyncClient):
     )
     assert login.status_code == 200
     token = login.json()["data"]["access_token"]
+    assert login.json()["data"]["accessToken"] == token
+    assert login.json()["data"]["contractor"]["email"] == email
+    assert login.json()["data"]["company"]["name"] == "Jane Paint Pros"
 
     me = await client.get(
         "/api/v1/auth/me",

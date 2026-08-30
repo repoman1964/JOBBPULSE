@@ -12,6 +12,7 @@ from app.core.responses import success
 from app.db.models import MembershipRole
 from app.db.session import get_db
 from app.modules.companies import service
+from app.modules.phone.serialize import company_out as phone_company_out
 from app.modules.companies.schemas import (
     CompanyOut,
     CompanyUpdate,
@@ -42,7 +43,9 @@ def _member_out(m) -> dict:
 
 @router.get("")
 async def get_company(ctx: AuthContext = Depends(get_auth_context)):
-    return success(CompanyOut.model_validate(ctx.company).model_dump(mode="json"))
+    payload = CompanyOut.model_validate(ctx.company).model_dump(mode="json")
+    payload.update(phone_company_out(ctx.company, owner=ctx.user))
+    return success(payload)
 
 
 @router.patch("")
@@ -52,7 +55,9 @@ async def patch_company(
     db: AsyncSession = Depends(get_db),
 ):
     company = await service.update_company(db, ctx.company, body)
-    return success(CompanyOut.model_validate(company).model_dump(mode="json"))
+    payload = CompanyOut.model_validate(company).model_dump(mode="json")
+    payload.update(phone_company_out(company, owner=ctx.user))
+    return success(payload)
 
 
 @router.get("/services")

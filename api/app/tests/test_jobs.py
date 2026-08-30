@@ -91,7 +91,7 @@ async def test_list_and_get_job(client: AsyncClient):
 
     listed = await client.get("/api/v1/jobs", headers=_auth(token))
     assert listed.status_code == 200
-    items = listed.json()["data"]
+    items = listed.json()["data"]["items"]
     assert len(items) == 1
     assert items[0]["id"] == job_id
     assert items[0]["next_action"]["action"] == "add_after_photos"
@@ -123,7 +123,7 @@ async def test_update_and_archive_job(client: AsyncClient):
     assert archived.json()["data"]["next_action"]["action"] == "none"
 
     listed = await client.get("/api/v1/jobs", headers=_auth(token))
-    assert listed.json()["data"] == []
+    assert listed.json()["data"]["items"] == []
 
 
 @pytest.mark.asyncio
@@ -198,11 +198,11 @@ async def test_upload_before_after_photos_and_next_action(client: AsyncClient):
     assert len(job["media"]) == 3
 
     listed = await client.get("/api/v1/jobs", headers=_auth(token))
-    assert listed.json()["data"][0]["next_action"]["action"] == "record_voice_summary"
+    assert listed.json()["data"]["items"][0]["next_action"]["action"] == "record_voice_summary"
 
 
 @pytest.mark.asyncio
-async def test_progress_stage_rejected(client: AsyncClient):
+async def test_progress_stage_accepted(client: AsyncClient):
     token, _ = await _owner_client(client)
     job_id = (await _create_job(client, token))["id"]
 
@@ -212,8 +212,8 @@ async def test_progress_stage_rejected(client: AsyncClient):
         files={"file": ("p.png", io.BytesIO(PNG), "image/png")},
         data={"stage_label": "progress"},
     )
-    assert res.status_code == 400
-    assert res.json()["error"]["code"] == "INVALID_STAGE"
+    assert res.status_code == 201, res.text
+    assert res.json()["data"]["photo_counts"]["progress"] == 1
 
     url_res = await client.post(
         f"/api/v1/jobs/{job_id}/media/upload-url",
@@ -224,7 +224,7 @@ async def test_progress_stage_rejected(client: AsyncClient):
         },
         headers=_auth(token),
     )
-    assert url_res.status_code == 422
+    assert url_res.status_code == 201, url_res.text
 
 
 @pytest.mark.asyncio

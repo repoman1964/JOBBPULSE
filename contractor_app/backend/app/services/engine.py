@@ -256,9 +256,8 @@ async def run_content_pipeline(
             body=content["body"],
             payload_json=content.get("payload", {}),
             preview_json={
-                "beforeUrl": None,
-                "afterUrl": None,
-                "coverUrl": None,
+                "beforeMediaId": str(featured_before.id) if featured_before else None,
+                "afterMediaId": str(featured_after.id) if featured_after else None,
                 **content.get("preview", {}),
             },
             status=AssetStatus.ready.value,

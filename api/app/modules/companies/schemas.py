@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import AliasChoices, BaseModel, EmailStr, Field
 
 
 class CompanyOut(BaseModel):
@@ -31,11 +31,28 @@ class CompanyOut(BaseModel):
 
 
 class CompanyUpdate(BaseModel):
+    model_config = {"populate_by_name": True}
+
     name: Optional[str] = Field(default=None, min_length=1, max_length=200)
     trade: Optional[str] = Field(default=None, max_length=100)
     description: Optional[str] = None
     phone: Optional[str] = Field(default=None, max_length=40)
-    website_url: Optional[str] = Field(default=None, max_length=500)
+    website_url: Optional[str] = Field(
+        default=None,
+        max_length=500,
+        validation_alias=AliasChoices("website_url", "website"),
+    )
+    contact_name: Optional[str] = Field(
+        default=None,
+        max_length=200,
+        validation_alias=AliasChoices("contact_name", "contactName"),
+    )
+    email: Optional[EmailStr] = None
+    service_area: Optional[str] = Field(
+        default=None,
+        max_length=300,
+        validation_alias=AliasChoices("service_area", "serviceArea"),
+    )
     default_tone: Optional[str] = Field(default=None, max_length=50)
     default_call_to_action: Optional[str] = Field(default=None, max_length=300)
     timezone: Optional[str] = Field(default=None, max_length=64)

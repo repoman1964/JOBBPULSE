@@ -168,6 +168,58 @@ def test_submit_job_falls_back_to_inline_pipeline_when_celery_is_down(
     assert package["status"] == "ready_for_approval"
     assert package["projectDescription"]
     assert len(package["assets"]) >= 4
+    destinations = {asset["destinationType"] for asset in package["assets"]}
+    assert {"facebook", "instagram", "google_business", "conversion_site"} <= destinations
+    assert package["featuredBeforeMediaId"]
+    assert package["featuredAfterMediaId"]
+    assert any(
+        asset["preview"].get("beforeUrl") or asset["preview"].get("afterUrl")
+        for asset in package["assets"]
+    )
+
+
+def test_submit_job_simulates_pipeline_without_celery_in_fake_mode(
+    client: TestClient,
+) -> None:
+    token, session = _authed_client(client)
+    headers = {"Authorization": f"Bearer {token}"}
+    created = client.post(
+        "/api/v1/jobs",
+        headers=headers,
+        json={
+            "name": "Porch paint",
+            "serviceType": "Painting",
+            "city": "Decatur",
+            "region": "GA",
+        },
+    )
+    assert created.status_code == 201, created.text
+    job_id = created.json()["id"]
+    _add_ready_media(
+        client,
+        job_id=job_id,
+        company_id=session["company"]["id"],
+        contractor_id=session["contractor"]["id"],
+    )
+
+    resp = client.post(
+        f"/api/v1/jobs/{job_id}/submit",
+        headers=headers,
+        json={"idempotencyKey": "submit-test-key-0003"},
+    )
+    assert resp.status_code == 200, resp.text
+
+    status = client.get(f"/api/v1/jobs/{job_id}", headers=headers)
+    assert status.status_code == 200, status.text
+    assert status.json()["publicStatus"] == "ready_for_approval"
+    assert status.json()["internalStatus"] == "ready_for_approval"
+
+    pkg = client.get(f"/api/v1/jobs/{job_id}/package", headers=headers)
+    assert pkg.status_code == 200, pkg.text
+    package = pkg.json()
+    assert package["projectDescription"]
+    assert "Customer needed the work done carefully" in package["projectDescription"]
+    assert len(package["assets"]) >= 4
 
 
 def test_update_job_does_not_500_after_flush(client: TestClient) -> None:

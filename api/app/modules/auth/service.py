@@ -9,10 +9,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.exceptions import conflict, unauthorized
+from app.core.config import get_settings
+from app.core.exceptions import AppError, conflict, unauthorized
 from app.core.permissions import can_approve_and_publish, can_create_jobs, can_manage_team
 from app.core.security import (
     create_access_token,
+    create_email_verify_token,
     create_refresh_token,
     hash_password,
     safe_decode_token,
@@ -55,12 +57,25 @@ async def register_user(db: AsyncSession, data: RegisterRequest) -> tuple[User, 
         role=MembershipRole.owner,
         status=MembershipStatus.active,
     )
+    company.contact_name = user.full_name
+    company.email = user.email
     db.add_all([user, company, membership])
     await db.commit()
     await db.refresh(user)
     await db.refresh(company)
     await db.refresh(membership)
     return user, company, membership
+
+
+def verification_url_for(user: User) -> str:
+    settings = get_settings()
+    token = create_email_verify_token(user.id)
+    base = settings.frontend_url.rstrip("/")
+    return f"{base}/verify-email?token={token}"
+
+
+def issue_verify_token(user: User) -> str:
+    return create_email_verify_token(user.id)
 
 
 async def authenticate(db: AsyncSession, data: LoginRequest) -> tuple[User, Company | None, CompanyMembership | None]:
@@ -71,6 +86,12 @@ async def authenticate(db: AsyncSession, data: LoginRequest) -> tuple[User, Comp
         raise unauthorized("Invalid email or password.")
     if not user.is_active:
         raise unauthorized("This account is disabled.")
+    if not user.is_verified:
+        raise AppError(
+            "EMAIL_NOT_VERIFIED",
+            "Confirm your email before signing in. Check your inbox for the link.",
+            status_code=403,
+        )
 
     user.last_login_at = datetime.now(timezone.utc)
     membership = await _primary_membership(db, user.id)
@@ -112,6 +133,32 @@ async def _primary_membership(db: AsyncSession, user_id: UUID) -> CompanyMembers
         .limit(1)
     )
     return result.scalar_one_or_none()
+
+
+async def verify_email_token(db: AsyncSession, token: str) -> User:
+    payload = safe_decode_token(token)
+    if not payload or payload.get("type") != "email_verify" or not payload.get("sub"):
+        raise AppError("INVALID_TOKEN", "That verification link is invalid or expired.", status_code=400)
+    try:
+        user_id = UUID(payload["sub"])
+    except (TypeError, ValueError) as exc:
+        raise AppError("INVALID_TOKEN", "That verification link is invalid.", status_code=400) from exc
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise AppError("INVALID_TOKEN", "That verification link is invalid.", status_code=400)
+    user.is_verified = True
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+async def resend_verification(db: AsyncSession, email: str) -> User | None:
+    result = await db.execute(select(User).where(User.email == email.lower().strip()))
+    user = result.scalar_one_or_none()
+    if user is None or user.is_verified:
+        return None
+    return user
 
 
 def issue_tokens(user: User, company: Company | None) -> tuple[str, str]:

@@ -6,12 +6,14 @@ import base64
 import json
 import logging
 from datetime import UTC, datetime
+from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Query, Request
 from sqlalchemy import inspect as sa_inspect
 from sqlalchemy import select
 
+from app.core.config import get_settings
 from app.core.deps import CurrentAuth, DbSession
 from app.core.errors import AppError
 from app.integrations.storage.s3 import ObjectStorage
@@ -43,6 +45,32 @@ async def _run_pipeline_background(
         except Exception:
             await session.rollback()
             logger.exception("in-process pipeline failed job=%s", job_id)
+
+
+def _enqueue_content_pipeline(
+    *,
+    job_id: UUID,
+    submission_id: UUID,
+    request: Request,
+    background_tasks: BackgroundTasks,
+) -> None:
+    """Run the same pipeline in demo and production.
+
+    Fake/demo mode simulates in the API process so a worker is not required.
+    Live mode uses Celery and falls back in-process if the broker is down.
+    """
+    settings = get_settings()
+    if settings.provider_mode != "fake":
+        try:
+            process_job_submission.delay(str(job_id), str(submission_id))
+            return
+        except Exception:
+            logger.warning("Celery unavailable; running content pipeline in-process")
+
+    factory = getattr(request.app.state, "test_session_factory", None)
+    background_tasks.add_task(
+        _run_pipeline_background, job_id, submission_id, factory
+    )
 
 
 def _encode_cursor(created_at: datetime, job_id: UUID) -> str:
@@ -107,12 +135,17 @@ async def list_jobs(
     auth: CurrentAuth,
     db: DbSession,
     status: str | None = Query(default=None),
+    scope: Literal["current", "published"] | None = Query(default=None),
     cursor: str | None = Query(default=None),
     limit: int = Query(default=20, ge=1, le=100),
 ) -> ListJobsResult:
     stmt = select(Job).where(Job.company_id == auth.company_id, Job.deleted_at.is_(None))
     if status:
         stmt = stmt.where(Job.public_status == status)
+    if scope == "published":
+        stmt = stmt.where(Job.public_status == PublicJobStatus.published.value)
+    elif scope == "current":
+        stmt = stmt.where(Job.public_status != PublicJobStatus.published.value)
     if cursor:
         c_time, c_id = _decode_cursor(cursor)
         stmt = stmt.where(
@@ -335,15 +368,12 @@ async def submit_job(
     # Commit before the worker/background task so it can see the submission.
     await db.commit()
 
-    # Same enqueue path in demo and production. Fake vs live providers are server-side.
-    try:
-        process_job_submission.delay(str(job.id), str(submission.id))
-    except Exception:
-        logger.warning("Celery unavailable; running content pipeline in-process")
-        factory = getattr(request.app.state, "test_session_factory", None)
-        background_tasks.add_task(
-            _run_pipeline_background, job.id, submission.id, factory
-        )
+    _enqueue_content_pipeline(
+        job_id=job.id,
+        submission_id=submission.id,
+        request=request,
+        background_tasks=background_tasks,
+    )
 
     return await _to_job_out(db, job)
 
