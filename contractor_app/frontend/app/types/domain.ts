@@ -142,6 +142,8 @@ export interface UploadSession {
   mediaId: string
   uploadUrl: string
   expiresAt: string
+  /** Signed PUT headers from the engine (especially Content-Type). */
+  headers?: Record<string, string>
 }
 
 export interface GeneratedAssetVersion {

@@ -1,5 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { putToPresignedUrl } from '../app/utils/presignedUpload'
+import { normalizeUploadContentType, putToPresignedUrl } from '../app/utils/presignedUpload'
+
+describe('normalizeUploadContentType', () => {
+  it('strips MediaRecorder codec parameters so they match signed S3 headers', () => {
+    expect(normalizeUploadContentType('audio/webm;codecs=opus')).toBe('audio/webm')
+    expect(normalizeUploadContentType('audio/mp4;codecs=mp4a.40.2')).toBe('audio/mp4')
+    expect(normalizeUploadContentType('audio/webm')).toBe('audio/webm')
+    expect(normalizeUploadContentType('')).toBe('')
+  })
+})
 
 describe('putToPresignedUrl', () => {
   afterEach(() => {
@@ -33,6 +42,19 @@ describe('putToPresignedUrl', () => {
     expect(init.credentials).not.toBe('include')
     expect(init.headers['Content-Type']).toBe('image/jpeg')
     expect(init.headers.Authorization).toBeUndefined()
+  })
+
+  it('strips codec parameters from the signed Content-Type header', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200 })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await putToPresignedUrl(
+      'http://127.0.0.1:9000/jobpulse/voice.webm?X-Amz-Signature=sig',
+      new Blob(['opus']),
+      'audio/webm;codecs=opus',
+    )
+
+    expect(fetchMock.mock.calls[0][1].headers['Content-Type']).toBe('audio/webm')
   })
 
   it('throws when R2 rejects the upload', async () => {

@@ -553,6 +553,18 @@ async def create_voice_session(
     duration_ms: int,
 ) -> dict:
     duration_seconds = max(1, int(round(duration_ms / 1000))) if duration_ms else None
+    mime = (mime_type or "audio/webm").lower().split(";")[0].strip() or "audio/webm"
+    ext = {
+        "audio/mp4": "m4a",
+        "audio/m4a": "m4a",
+        "audio/x-m4a": "m4a",
+        "audio/mpeg": "mp3",
+        "audio/mp3": "mp3",
+        "audio/wav": "wav",
+        "audio/x-wav": "wav",
+        "audio/ogg": "ogg",
+        "audio/opus": "opus",
+    }.get(mime, "webm")
     payload = await voice_svc.create_voice_upload_url(
         db,
         company_id=company_id,
@@ -560,8 +572,8 @@ async def create_voice_session(
         user_id=user_id,
         role=role,
         data=VoiceUploadUrlRequest(
-            filename="voice.webm",
-            mime_type=mime_type,
+            filename=f"voice.{ext}",
+            mime_type=mime,
             file_size_bytes=byte_size,
             duration_seconds=duration_seconds,
         ),

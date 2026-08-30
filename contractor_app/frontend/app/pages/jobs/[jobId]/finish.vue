@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Job, MediaAsset } from '~/types/domain'
 import { categoryLabel, meetsMinimums } from '~/utils/jobStatus'
-import { putToPresignedUrl } from '~/utils/presignedUpload'
+import { normalizeUploadContentType, putToPresignedUrl } from '~/utils/presignedUpload'
 
 const route = useRoute()
 const api = useApi()
@@ -37,6 +37,7 @@ const minimums = computed(() => session.value?.company.photoMinimums || { before
 const photosOk = computed(() =>
   job.value ? meetsMinimums(job.value.counts, minimums.value) : false,
 )
+const afterPhotosOk = computed(() => (job.value?.counts.after || 0) >= 1)
 const canSubmit = computed(
   () =>
     documenting.value &&
@@ -44,6 +45,14 @@ const canSubmit = computed(
     (recorderState.value === 'complete' || !!voice.value) &&
     !submitting.value,
 )
+
+function signedPutContentType(sessionUpload: { headers?: Record<string, string> }, fallback: string): string {
+  const headers = sessionUpload.headers || {}
+  return (
+    normalizeUploadContentType(headers['Content-Type'] || headers['content-type'] || fallback) ||
+    'audio/webm'
+  )
+}
 
 const playableUrl = computed(() => audioUrl.value || voice.value?.url || null)
 
@@ -100,6 +109,10 @@ function formatTime(sec: number) {
 async function startRecording() {
   error.value = ''
   playError.value = ''
+  if (!afterPhotosOk.value) {
+    error.value = 'Add at least one after photo before recording a voice summary.'
+    return
+  }
   if (!import.meta.client || !navigator.mediaDevices?.getUserMedia) {
     error.value = 'Audio recording is not supported on this browser. Upload an audio file instead.'
     fileFallback.value?.click()
@@ -217,12 +230,13 @@ async function playRecording() {
 }
 
 async function uploadVoice(blob: Blob, mimeType: string, durableUrl?: string) {
+  const mime = normalizeUploadContentType(mimeType) || 'audio/webm'
   const sessionUpload = await api.createVoiceUploadSession(jobId.value, {
-    mimeType,
+    mimeType: mime,
     byteSize: blob.size,
     durationMs: elapsed.value * 1000 || 1000,
   })
-  await putToPresignedUrl(sessionUpload.uploadUrl, blob, mimeType)
+  await putToPresignedUrl(sessionUpload.uploadUrl, blob, signedPutContentType(sessionUpload, mime))
   const url = durableUrl || (await blobToDataUrl(blob))
   audioUrl.value = url
   voice.value = await api.completeVoiceUpload(jobId.value, sessionUpload.mediaId, url)
@@ -234,6 +248,11 @@ async function onAudioFile(ev: Event) {
   const file = input.files?.[0]
   if (!file) return
   playError.value = ''
+  if (!afterPhotosOk.value) {
+    error.value = 'Add at least one after photo before recording a voice summary.'
+    input.value = ''
+    return
+  }
   try {
     const dataUrl = await blobToDataUrl(file)
     audioUrl.value = dataUrl
@@ -336,10 +355,18 @@ onBeforeUnmount(() => {
           </p>
 
           <div v-if="recorderState === 'idle'" class="stack">
-            <button type="button" class="btn btn-primary" @click="startRecording">
+            <p v-if="!afterPhotosOk" class="muted" style="margin: 0">
+              Add at least one after photo before recording a voice summary.
+            </p>
+            <button type="button" class="btn btn-primary" :disabled="!afterPhotosOk" @click="startRecording">
               🎙 Start Recording
             </button>
-            <button type="button" class="btn btn-secondary" @click="fileFallback?.click()">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              :disabled="!afterPhotosOk"
+              @click="fileFallback?.click()"
+            >
               Upload audio file instead
             </button>
           </div>

@@ -162,6 +162,68 @@ async def test_soft_delete_hides_job(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_phone_voice_session_strips_codec_and_completes(client: AsyncClient):
+    """Chrome MediaRecorder sends audio/webm;codecs=opus; signed PUT must use audio/webm."""
+    token, _ = await _signup(client)
+    created = await client.post(
+        "/api/v1/jobs",
+        json={"name": "Voice capture", "serviceType": "painting", "city": "Austin"},
+        headers=_auth(token),
+    )
+    job_id = created.json()["data"]["id"]
+    after = await client.post(
+        f"/api/v1/jobs/{job_id}/media/upload",
+        headers=_auth(token),
+        files={"file": ("after.png", io.BytesIO(PNG), "image/png")},
+        data={"stage_label": "after"},
+    )
+    assert after.status_code == 201, after.text
+
+    session = await client.post(
+        f"/api/v1/jobs/{job_id}/voice/upload-sessions",
+        json={
+            "mimeType": "audio/webm;codecs=opus",
+            "byteSize": len(FAKE_AUDIO),
+            "durationMs": 2500,
+        },
+        headers=_auth(token),
+    )
+    assert session.status_code == 201, session.text
+    payload = session.json()["data"]
+    assert payload["mediaId"]
+    assert payload["uploadUrl"]
+    assert payload["headers"]["Content-Type"] == "audio/webm"
+
+    import httpx
+
+    put = httpx.put(
+        payload["uploadUrl"],
+        content=FAKE_AUDIO,
+        headers=payload["headers"],
+        timeout=30.0,
+    )
+    assert put.status_code in {200, 204}, put.text
+
+    complete = await client.post(
+        f"/api/v1/jobs/{job_id}/voice/{payload['mediaId']}/complete",
+        headers=_auth(token),
+    )
+    assert complete.status_code == 200, complete.text
+    media = complete.json()["data"]
+    assert media["kind"] == "audio"
+    assert media["uploadStatus"] == "complete"
+
+    got = await client.get(f"/api/v1/jobs/{job_id}/voice", headers=_auth(token))
+    assert got.status_code == 200, got.text
+    voice = got.json()["data"]
+    assert voice["audio_asset_id"] == media["id"]
+    assert voice["transcription_status"] == "completed"
+
+    job = await client.get(f"/api/v1/jobs/{job_id}", headers=_auth(token))
+    assert job.json()["data"]["hasVoice"] is True
+
+
+@pytest.mark.asyncio
 async def test_list_jobs_cursor_envelope(client: AsyncClient):
     token, _ = await _signup(client)
     await client.post(

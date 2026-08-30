@@ -13,6 +13,11 @@ import type {
   UpdateCompanyInput,
   UploadSession,
 } from '~/types/domain'
+import { normalizeUploadContentType } from '~/utils/presignedUpload'
+
+function normalizeUploadMime(mimeType: string): string {
+  return normalizeUploadContentType(mimeType) || mimeType
+}
 
 class HttpError extends Error {
   code: string
@@ -357,7 +362,7 @@ export function createHttpApiClient(baseUrl: string): ApiClient {
       return request<UploadSession>('POST', `/jobs/${jobId}/media/upload-sessions`, {
         body: {
           category,
-          mimeType: meta.mimeType,
+          mimeType: normalizeUploadMime(meta.mimeType),
           byteSize: meta.byteSize,
           filename: meta.filename,
         },
@@ -374,7 +379,7 @@ export function createHttpApiClient(baseUrl: string): ApiClient {
     ) {
       return request<UploadSession>('POST', `/jobs/${jobId}/voice/upload-sessions`, {
         body: {
-          mimeType: meta.mimeType,
+          mimeType: normalizeUploadMime(meta.mimeType),
           byteSize: meta.byteSize,
           durationMs: meta.durationMs,
         },
