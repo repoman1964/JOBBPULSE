@@ -109,10 +109,27 @@ async def test_submit_creates_package_without_job_name(client: AsyncClient):
     assert pkg.status_code == 200, pkg.text
     data = pkg.json()["data"]
     assert data["assets"]
+    assert data["featuredBeforeMediaId"]
+    assert data["featuredAfterMediaId"]
     assert secret not in str(data.get("projectDescription", ""))
     for asset in data["assets"]:
         assert secret not in (asset.get("title") or "")
         assert secret not in (asset.get("body") or "")
+        preview = asset.get("preview") or {}
+        assert preview.get("afterUrl") or preview.get("coverUrl") or preview.get("beforeUrl")
+        assert preview.get("coverUrl") or preview.get("afterUrl")
+
+    listed = await client.get(f"/api/v1/jobs/{job_id}/media", headers=_auth(token))
+    photos = listed.json()["data"]
+    by_id = {p["id"]: p for p in photos}
+    assert by_id[data["featuredBeforeMediaId"]]["url"]
+    assert by_id[data["featuredAfterMediaId"]]["url"]
+    asset_id = data["assets"][0]["id"]
+    got = await client.get(f"/api/v1/generated-assets/{asset_id}", headers=_auth(token))
+    assert got.status_code == 200, got.text
+    assert (got.json()["data"]["preview"] or {}).get("coverUrl") or (
+        got.json()["data"]["preview"] or {}
+    ).get("afterUrl")
 
     runs = await client.get(f"/api/v1/jobs/{job_id}/generation-runs", headers=_auth(token))
     snapshot = runs.json()["data"][0]["input_snapshot_json"]

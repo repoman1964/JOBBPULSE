@@ -122,19 +122,67 @@ def session_out(
     }
 
 
-def _cover_url(job: Job) -> Optional[str]:
+def _signed_media_url(media: Optional[MediaAsset]) -> Optional[str]:
+    if media is None:
+        return None
+    if media.processing_status == MediaProcessingStatus.pending_upload:
+        return None
+    try:
+        return storage_svc.public_or_signed_url(media.storage_key) or None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def pick_featured_photos(job: Job) -> tuple[Optional[MediaAsset], Optional[MediaAsset]]:
+    """Favorite / primary / first ready photo per stage, honoring saved featured ids."""
     photos = [
         m
         for m in job_service._ready_media(job)
         if m.asset_type == MediaAssetType.image
     ]
-    for stage in (MediaStageLabel.after, MediaStageLabel.progress, MediaStageLabel.before):
+
+    def pick(stage: MediaStageLabel, preferred_id) -> Optional[MediaAsset]:
+        staged = [m for m in photos if m.stage_label == stage]
+        if preferred_id:
+            hit = next((m for m in staged if m.id == preferred_id), None)
+            if hit is not None:
+                return hit
+        return next((m for m in staged if m.is_favorite), None) or next(
+            (m for m in staged if m.is_primary), None
+        ) or (staged[0] if staged else None)
+
+    return (
+        pick(MediaStageLabel.before, job.featured_before_media_id),
+        pick(MediaStageLabel.after, job.featured_after_media_id),
+    )
+
+
+def preview_for_job(job: Optional[Job], *, hashtags: Optional[list[Any]] = None) -> dict[str, Any]:
+    before, after = pick_featured_photos(job) if job is not None else (None, None)
+    before_url = _signed_media_url(before)
+    after_url = _signed_media_url(after)
+    return {
+        "hashtags": hashtags or [],
+        "beforeUrl": before_url,
+        "afterUrl": after_url,
+        "coverUrl": after_url or before_url,
+        "sourceMediaIds": [_uid(m.id) for m in (before, after) if m is not None],
+    }
+
+
+def _cover_url(job: Job) -> Optional[str]:
+    preview = preview_for_job(job)
+    if preview["coverUrl"]:
+        return preview["coverUrl"]
+    photos = [
+        m
+        for m in job_service._ready_media(job)
+        if m.asset_type == MediaAssetType.image
+    ]
+    for stage in (MediaStageLabel.progress,):
         for m in photos:
             if m.stage_label == stage:
-                try:
-                    return storage_svc.public_or_signed_url(m.storage_key)
-                except Exception:  # noqa: BLE001
-                    return None
+                return _signed_media_url(m)
     return None
 
 
@@ -285,24 +333,27 @@ def _dest_for_variant(v: ContentVariant) -> str:
     return DESTINATION_BY_CONTENT_TYPE.get(v.content_type.value, v.content_type.value)
 
 
-def asset_out(variant: ContentVariant, *, siblings: list[ContentVariant]) -> dict[str, Any]:
+def asset_out(variant: ContentVariant, *, siblings: list[ContentVariant], job: Optional[Job] = None) -> dict[str, Any]:
+    job = job or getattr(variant, "job", None)
     versions = sorted(siblings, key=lambda x: (x.version_number, x.created_at))
     version_payloads = []
     for i, s in enumerate(versions, start=1):
         body = (s.body_edited or s.body_generated or "").strip()
+        preview = preview_for_job(job, hashtags=s.hashtags_json or [])
         version_payloads.append(
             {
                 "id": _uid(s.id),
                 "version": s.version_number or i,
                 "title": s.title or "",
                 "body": body,
-                "preview": {"hashtags": s.hashtags_json or []},
-                "sourceMediaIds": [],
+                "preview": preview,
+                "sourceMediaIds": preview["sourceMediaIds"],
                 "createdAt": _iso(s.created_at),
             }
         )
     active = next((s for s in reversed(versions) if s.status != ContentVariantStatus.superseded), variant)
     body = (active.body_edited or active.body_generated or "").strip()
+    preview = preview_for_job(job, hashtags=active.hashtags_json or [])
     return {
         "id": _uid(active.id),
         "packageId": _uid(active.generation_run_id),
@@ -312,7 +363,7 @@ def asset_out(variant: ContentVariant, *, siblings: list[ContentVariant]) -> dic
         "status": active.status.value,
         "activeVersionId": _uid(active.id),
         "versions": version_payloads,
-        "preview": {"hashtags": active.hashtags_json or []},
+        "preview": preview,
     }
 
 
@@ -330,17 +381,21 @@ def package_out(job: Job, variants: list[ContentVariant]) -> Optional[dict[str, 
     for v in source:
         dest = _dest_for_variant(v)
         groups.setdefault(dest, []).append(v)
-    assets = [asset_out(group[-1], siblings=all_for_job.get(dest, group)) for dest, group in groups.items()]
+    assets = [
+        asset_out(group[-1], siblings=all_for_job.get(dest, group), job=job)
+        for dest, group in groups.items()
+    ]
     directory = next((a for a in assets if a["destinationType"] in {"portfolio_site", "directory"}), None)
     description = directory["body"] if directory else (assets[0]["body"] if assets else "")
     version = job.generation_version or 1
+    before, after = pick_featured_photos(job)
     return {
         "id": _uid(run_id),
         "jobId": _uid(job.id),
         "version": version,
         "status": "ready" if job.status.value in {"awaiting_review", "approved"} else job.status.value,
         "projectDescription": description,
-        "featuredBeforeMediaId": str(job.featured_before_media_id) if job.featured_before_media_id else None,
-        "featuredAfterMediaId": str(job.featured_after_media_id) if job.featured_after_media_id else None,
+        "featuredBeforeMediaId": _uid(before.id) if before else None,
+        "featuredAfterMediaId": _uid(after.id) if after else None,
         "assets": assets,
     }

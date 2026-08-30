@@ -39,6 +39,7 @@ from app.modules.jobs.privacy import (
     transcript_for_generation,
 )
 from app.modules.notifications import service as notification_service
+from app.modules.phone.serialize import pick_featured_photos
 
 REQUIRED_CONTENT_TYPES = (
     ContentType.primary_social,
@@ -283,6 +284,12 @@ async def _persist_success(
     job.status = JobStatus.awaiting_review
     # Regen always clears job-level approval — contractor must re-approve
     job.approved_at = None
+    if job.featured_before_media_id is None or job.featured_after_media_id is None:
+        before, after = pick_featured_photos(job)
+        if job.featured_before_media_id is None and before is not None:
+            job.featured_before_media_id = before.id
+        if job.featured_after_media_id is None and after is not None:
+            job.featured_after_media_id = after.id
 
     run.status = GenerationRunStatus.completed
     run.model_provider = get_generation_provider().name

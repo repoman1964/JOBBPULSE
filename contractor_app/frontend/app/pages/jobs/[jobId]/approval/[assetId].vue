@@ -70,6 +70,12 @@ const pendingVersion = computed(() =>
 
 const previewComponent = computed(() => previewKind(asset.value?.destinationType || ''))
 
+function assetPreviewUrl(key: 'coverUrl' | 'afterUrl' | 'beforeUrl'): string | null {
+  const preview = asset.value?.preview || {}
+  const value = preview[key]
+  return typeof value === 'string' && value ? value : null
+}
+
 onMounted(load)
 </script>
 
@@ -97,23 +103,23 @@ onMounted(load)
             :company-name="companyName"
             :location="job.locationText"
             :body="activeVersion?.body || asset.body"
-            :cover-url="(asset.preview.coverUrl as string) || null"
-            :after-url="(asset.preview.afterUrl as string) || null"
-            :before-url="(asset.preview.beforeUrl as string) || null"
+            :cover-url="assetPreviewUrl('coverUrl')"
+            :after-url="assetPreviewUrl('afterUrl')"
+            :before-url="assetPreviewUrl('beforeUrl')"
           />
           <InstagramPostPreview
             v-else-if="previewComponent === 'instagram'"
             :company-name="companyName"
             :location="job.locationText"
             :body="activeVersion?.body || asset.body"
-            :image-url="(asset.preview.coverUrl as string) || (asset.preview.afterUrl as string) || null"
+            :image-url="assetPreviewUrl('coverUrl') || assetPreviewUrl('afterUrl')"
           />
           <GoogleBusinessPostPreview
             v-else-if="previewComponent === 'google_business'"
             :company-name="companyName"
             :location="job.locationText"
             :body="activeVersion?.body || asset.body"
-            :image-url="(asset.preview.coverUrl as string) || (asset.preview.afterUrl as string) || null"
+            :image-url="assetPreviewUrl('coverUrl') || assetPreviewUrl('afterUrl')"
           />
           <div v-else class="preview-shell card">
             <div class="web">
@@ -121,8 +127,8 @@ onMounted(load)
               <h2>{{ job.name }}</h2>
               <p class="muted">📍 {{ job.locationText }}</p>
               <div class="web-imgs">
-                <img v-if="(asset.preview.beforeUrl as string)" :src="(asset.preview.beforeUrl as string)" alt="Before" />
-                <img v-if="(asset.preview.afterUrl as string)" :src="(asset.preview.afterUrl as string)" alt="After" />
+                <img v-if="assetPreviewUrl('beforeUrl')" :src="assetPreviewUrl('beforeUrl')!" alt="Before" />
+                <img v-if="assetPreviewUrl('afterUrl')" :src="assetPreviewUrl('afterUrl')!" alt="After" />
               </div>
               <p class="body">{{ activeVersion?.body || asset.body }}</p>
             </div>

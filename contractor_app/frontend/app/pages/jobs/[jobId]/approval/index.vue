@@ -22,13 +22,35 @@ const descInstruction = ref('')
 const featuredBefore = ref('')
 const featuredAfter = ref('')
 
+const befores = computed(() => media.value.filter((m) => m.photoCategory === 'before' && !m.isDeleted))
+const afters = computed(() => media.value.filter((m) => m.photoCategory === 'after' && !m.isDeleted))
+
+function previewUrl(key: 'beforeUrl' | 'afterUrl' | 'coverUrl'): string | null {
+  for (const asset of pkg.value?.assets || []) {
+    const value = asset.preview?.[key]
+    if (typeof value === 'string' && value) return value
+  }
+  return null
+}
+
 const beforeUrl = computed(() => {
   const id = pkg.value?.featuredBeforeMediaId
-  return media.value.find((m) => m.id === id)?.url
+  return (
+    media.value.find((m) => m.id === id)?.url ||
+    previewUrl('beforeUrl') ||
+    befores.value[0]?.url ||
+    null
+  )
 })
 const afterUrl = computed(() => {
   const id = pkg.value?.featuredAfterMediaId
-  return media.value.find((m) => m.id === id)?.url
+  return (
+    media.value.find((m) => m.id === id)?.url ||
+    previewUrl('afterUrl') ||
+    afters.value[0]?.url ||
+    previewUrl('coverUrl') ||
+    null
+  )
 })
 
 async function load() {
@@ -75,9 +97,6 @@ async function approve() {
     publishing.value = false
   }
 }
-
-const befores = computed(() => media.value.filter((m) => m.photoCategory === 'before'))
-const afters = computed(() => media.value.filter((m) => m.photoCategory === 'after'))
 
 onMounted(load)
 </script>
@@ -183,9 +202,16 @@ onMounted(load)
                 :image-url="(asset.preview.coverUrl as string) || (asset.preview.afterUrl as string) || null"
               />
               <div v-else class="preview-frame card">
+                <div
+                  v-if="(asset.preview.beforeUrl as string) && (asset.preview.afterUrl as string)"
+                  class="preview-pair"
+                >
+                  <img :src="(asset.preview.beforeUrl as string)" alt="Before" />
+                  <img :src="(asset.preview.afterUrl as string)" alt="After" />
+                </div>
                 <img
-                  v-if="(asset.preview.coverUrl as string)"
-                  :src="(asset.preview.coverUrl as string)"
+                  v-else-if="(asset.preview.coverUrl as string) || (asset.preview.afterUrl as string)"
+                  :src="((asset.preview.coverUrl as string) || (asset.preview.afterUrl as string)) as string"
                   :alt="`${destinationLabel(asset.destinationType)} preview`"
                 />
                 <p class="preview-body">{{ asset.body }}</p>
@@ -290,6 +316,15 @@ onMounted(load)
   width: 100%;
   height: 140px;
   object-fit: cover;
+}
+
+.preview-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.preview-pair img {
+  height: 140px;
 }
 
 .preview-body {

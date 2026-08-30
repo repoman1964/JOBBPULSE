@@ -250,7 +250,10 @@ async def get_asset(db: AsyncSession, company_id: UUID, asset_id: UUID) -> dict:
         select(ContentVariant)
         .join(Job, Job.id == ContentVariant.job_id)
         .where(ContentVariant.id == asset_id, Job.company_id == company_id)
-        .options(selectinload(ContentVariant.job).selectinload(Job.content_variants))
+        .options(
+            selectinload(ContentVariant.job).selectinload(Job.content_variants),
+            selectinload(ContentVariant.job).selectinload(Job.media_assets),
+        )
     )
     variant = result.scalar_one_or_none()
     if variant is None:
@@ -261,7 +264,7 @@ async def get_asset(db: AsyncSession, company_id: UUID, asset_id: UUID) -> dict:
         for v in (variant.job.content_variants or [])
         if serialize._dest_for_variant(v) == dest
     ]
-    return serialize.asset_out(variant, siblings=siblings)
+    return serialize.asset_out(variant, siblings=siblings, job=variant.job)
 
 
 async def revise_asset(
