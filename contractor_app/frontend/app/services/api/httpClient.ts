@@ -251,6 +251,20 @@ export function createHttpApiClient(baseUrl: string): ApiClient {
       })
     },
 
+    async requestPasswordReset(email: string) {
+      return request<{ resetUrl?: string | null }>('POST', '/auth/forgot-password', {
+        body: { email },
+        auth: false,
+      })
+    },
+
+    async resetPassword(token: string, password: string) {
+      return request<{ email: string; reset: boolean }>('POST', '/auth/reset-password', {
+        body: { token, password },
+        auth: false,
+      })
+    },
+
     async logout() {
       try {
         await request<void>('POST', '/auth/logout', { auth: false })

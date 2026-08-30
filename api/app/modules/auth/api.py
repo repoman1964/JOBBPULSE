@@ -2,23 +2,29 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query, Request
+from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_auth_context, get_current_user, AuthContext
+from app.core.exceptions import AppError
 from app.core.responses import success
 from app.db.models import User
 from app.db.session import get_db
 from app.modules.auth import service
 from app.core.config import get_settings
+from app.core.rate_limit import get_limiter
+from app.modules.auth.email import send_password_reset_email, send_verification_email
 from app.modules.auth.schemas import (
     CompanySummaryOut,
+    ForgotPasswordRequest,
     LoginRequest,
     MeOut,
     MembershipOut,
     RefreshRequest,
     RegisterRequest,
     ResendVerificationRequest,
+    ResetPasswordRequest,
     TokenPairOut,
     UserOut,
     VerifyEmailRequest,
@@ -70,11 +76,26 @@ def _token_response(user: User, company, membership) -> dict:
     return success(payload)
 
 
+def _check_auth_rate(request: Request, name: str) -> None:
+    settings = get_settings()
+    ip = request.client.host if request.client else "unknown"
+    limiter = get_limiter(name, settings.auth_challenge_rate_per_minute)
+    if not limiter.allow(ip):
+        raise AppError(
+            "RATE_LIMITED",
+            "Too many requests. Try again in a minute.",
+            status_code=429,
+        )
+
+
 @router.post("/register", status_code=201)
 async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
     user, company, _membership = await service.register_user(db, body)
     verify_url = service.verification_url_for(user)
     settings = get_settings()
+    await send_verification_email(
+        settings=settings, to_email=user.email, verify_url=verify_url
+    )
     data = {
         "email": user.email,
         "companyId": str(company.id),
@@ -100,9 +121,61 @@ async def resend_verification(
     user = await service.resend_verification(db, str(body.email))
     settings = get_settings()
     data: dict = {}
-    if user is not None and settings.return_verification_url_to_client:
-        data["verificationUrl"] = service.verification_url_for(user)
+    if user is not None:
+        verify_url = service.verification_url_for(user)
+        await send_verification_email(
+            settings=settings, to_email=user.email, verify_url=verify_url
+        )
+        if settings.return_verification_url_to_client:
+            data["verificationUrl"] = verify_url
     return success(data or {"ok": True})
+
+
+@router.get("/verify-email")
+async def verify_email_get(
+    db: AsyncSession = Depends(get_db),
+    token: str = Query(min_length=8, max_length=2000),
+):
+    settings = get_settings()
+    base = settings.frontend_url.rstrip("/")
+    try:
+        await service.verify_email_token(db, token)
+    except AppError:
+        return RedirectResponse(url=f"{base}/sign-in?verified=0", status_code=302)
+    return RedirectResponse(url=f"{base}/sign-in?verified=1", status_code=302)
+
+
+@router.post("/forgot-password")
+async def forgot_password(
+    body: ForgotPasswordRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    _check_auth_rate(request, "forgot_password")
+    settings = get_settings()
+    user = await service.user_for_password_reset(db, str(body.email))
+    reset_url = None
+    if user is not None:
+        reset_url = service.password_reset_url_for(user)
+        await send_password_reset_email(
+            settings=settings, to_email=user.email, reset_url=reset_url
+        )
+    return success(
+        {
+            "resetUrl": reset_url if settings.return_verification_url_to_client else None,
+        }
+    )
+
+
+@router.post("/reset-password")
+async def reset_password(
+    body: ResetPasswordRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    _check_auth_rate(request, "reset_password")
+    user = await service.apply_password_reset(db, body.token, body.password)
+    return success({"email": user.email, "reset": True})
 
 
 @router.post("/login")

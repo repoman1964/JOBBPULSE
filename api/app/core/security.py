@@ -44,6 +44,15 @@ def create_email_verify_token(user_id: UUID) -> str:
     )
 
 
+def create_password_reset_token(user_id: UUID) -> str:
+    settings = get_settings()
+    hours = max(1, int(settings.auth_password_reset_ttl_hours))
+    return _encode(
+        {"sub": str(user_id), "type": "password_reset"},
+        timedelta(hours=hours),
+    )
+
+
 def create_refresh_token(user_id: UUID) -> str:
     return _encode(
         {"sub": str(user_id), "type": "refresh"},

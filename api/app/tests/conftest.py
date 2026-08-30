@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 from collections.abc import AsyncGenerator
 
+import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
@@ -18,6 +19,22 @@ from app.db.session import get_db
 from app.main import app
 
 settings = get_settings()
+
+
+@pytest.fixture(autouse=True)
+def _reset_rate_limiters():
+    from app.core.rate_limit import reset_limiters
+
+    reset_limiters()
+    yield
+    reset_limiters()
+
+
+@pytest.fixture(autouse=True)
+def _no_live_resend(monkeypatch):
+    """Never hit Resend from pytest even if api/.env has a real key + domain from-address."""
+    monkeypatch.setattr(settings, "resend_api_key", "")
+    monkeypatch.setattr(settings, "email_from", "JobbPulse <noreply@localhost>")
 
 TRUNCATE_SQL = """
 TRUNCATE TABLE

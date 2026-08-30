@@ -4,15 +4,54 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
+from app.core.exceptions import AppError
+from app.core.rate_limit import get_limiter
 from app.core.responses import success
 from app.db.session import get_db
-from app.modules.directory import service
+from app.modules.directory import public_demo, service
 from app.modules.directory.schemas import LeadCreate
 
 router = APIRouter(prefix="/public", tags=["public-directory"])
+
+
+def _check_demo_rate(request: Request) -> None:
+    settings = get_settings()
+    ip = request.client.host if request.client else "unknown"
+    limiter = get_limiter("public_demo", settings.auth_challenge_rate_per_minute)
+    if not limiter.allow(ip):
+        raise AppError(
+            "RATE_LIMITED",
+            "Too many requests. Try again in a minute.",
+            status_code=429,
+        )
+
+
+@router.get("/demo/projects")
+async def demo_projects(
+    request: Request,
+    email: str | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+):
+    _check_demo_rate(request)
+    normalized = public_demo.require_email(email)
+    items = await public_demo.list_demo_projects(db, normalized)
+    return success({"items": items})
+
+
+@router.get("/demo/projects/{slug}")
+async def demo_project_detail(
+    slug: str,
+    request: Request,
+    email: str | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+):
+    _check_demo_rate(request)
+    normalized = public_demo.require_email(email)
+    return success(await public_demo.get_demo_project(db, slug, normalized))
 
 
 @router.get("/home")

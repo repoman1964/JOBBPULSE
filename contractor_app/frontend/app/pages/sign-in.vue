@@ -125,6 +125,10 @@ async function resend() {
 async function consumeVerifyQuery() {
   const token = typeof route.query.token === 'string' ? route.query.token : ''
   const verified = route.query.verified
+  if (route.query.reset === '1') {
+    notice.value = 'Password updated. Sign in with your new password.'
+    step.value = 'sign-in'
+  }
   if (verified === '1') {
     notice.value = 'Email confirmed. Sign in with your password.'
     step.value = 'sign-in'
@@ -177,7 +181,7 @@ onMounted(() => {
             Check your inbox to activate the account, then come back here to sign in.
           </template>
           <template v-else>
-            
+            Use the email and password you signed up with.
           </template>
         </p>
       </div>
@@ -204,6 +208,7 @@ onMounted(() => {
             type="password"
             autocomplete="current-password"
           />
+          <NuxtLink class="link-lime field-link" to="/forgot-password">Forgot password?</NuxtLink>
         </div>
         <button class="btn btn-primary" type="submit" :disabled="loading">
           {{ loading ? 'Signing in…' : 'Sign in' }}
@@ -286,5 +291,10 @@ onMounted(() => {
 <style scoped>
 .sign-in {
   min-height: 100dvh;
+}
+
+.field-link {
+  align-self: flex-start;
+  font-size: 0.9rem;
 }
 </style>

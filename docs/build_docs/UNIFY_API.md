@@ -1,7 +1,7 @@
 # JobbPulse single-engine merge spec
 
-**Status:** Canonical engineering decision  
-**Date:** 2026-08-29  
+**Status:** Executed — `contractor_app/backend` has been removed. The only API is `api/`.  
+**Date:** 2026-08-29 (merge completed 2026-08-30)  
 **Repo:** `repoman1964/JOBBPULSE`  
 **Audience:** The agent that executes the merge after the 5:30 reset
 

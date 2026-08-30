@@ -13,7 +13,7 @@ help:
 	@echo "  make dev                 Start infra + print next steps"
 	@echo ""
 	@echo "Apps:"
-	@echo "  contractor_app           Contractor phone UI (HTTP mode talks to api/)"
+	@echo "  contractor_app/frontend  Contractor phone UI (HTTP mode talks to api/)"
 	@echo "                            → cd contractor_app/frontend && NUXT_PUBLIC_API_MODE=http npm run dev"
 	@echo "  website/portfolio_website   Public portfolio site → make -C website/portfolio_website dev"
 	@echo "  website/red_clay_website    Red Clay marketing site → make -C website/red_clay_website dev"

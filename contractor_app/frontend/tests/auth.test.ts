@@ -38,4 +38,37 @@ describe('mock auth', () => {
     expect(session.contractor.email).toBe('alex@example.com')
     expect(session.company.name).toBe('Rivera Painting')
   })
+
+  it('resets a password after a forgot-password request', async () => {
+    const api = createMockApiClient()
+    const registered = await api.register({
+      name: 'Alex Rivera',
+      email: 'alex@example.com',
+      password: 'secret123',
+      companyName: 'Rivera Painting',
+    })
+    const verifyToken = new URL(registered.verificationUrl || '').searchParams.get('token')
+    await api.verifyEmail(verifyToken!)
+
+    const unknown = await api.requestPasswordReset('nobody@example.com')
+    expect(unknown.resetUrl).toBeNull()
+
+    const forgot = await api.requestPasswordReset('alex@example.com')
+    const resetToken = new URL(forgot.resetUrl || '').searchParams.get('token')
+    expect(resetToken).toBeTruthy()
+    const reset = await api.resetPassword(resetToken!, 'newpass99')
+    expect(reset).toEqual({ email: 'alex@example.com', reset: true })
+    await expect(api.login('alex@example.com', 'secret123')).rejects.toMatchObject({
+      code: 'invalid_credentials',
+    })
+    const session = await api.login('alex@example.com', 'newpass99')
+    expect(session.contractor.email).toBe('alex@example.com')
+  })
+
+  it('rejects an invalid reset token', async () => {
+    const api = createMockApiClient()
+    await expect(api.resetPassword('not-a-real-token', 'newpass99')).rejects.toMatchObject({
+      code: 'invalid_token',
+    })
+  })
 })

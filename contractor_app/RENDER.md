@@ -9,8 +9,8 @@ Blueprint file: [`render.yaml`](../render.yaml) at the repo root.
 | Resource | Render name | Role |
 | --- | --- | --- |
 | Static site | `jobbpulse-app` | Contractor UI (`nuxt generate`) |
-| Web service | `jobbpulse-api` | FastAPI (`Dockerfile.prod`) |
-| Worker | `jobbpulse-worker` | Celery (`process_job_submission`) |
+| Web service | `jobbpulse-api` | FastAPI (`api/Dockerfile`) |
+| Worker | `jobbpulse-worker` | Celery (`api/` worker) |
 | Postgres | `jobbpulse-db` | Jobs, users, packages |
 | Key Value | `jobbpulse-redis` | Celery broker |
 
@@ -23,7 +23,7 @@ Suggested custom domains (add in the dashboard after the first deploy):
 
 ## 1. Cloudflare R2 (photos)
 
-Production object storage is **Cloudflare R2** on the Dimension Seven Systems account. The bucket **`jobbpulse`** already exists (WNAM). CORS for the Render app origin and `https://app.jobbpulse.com` is applied from [`backend/r2-cors.json`](./backend/r2-cors.json).
+Production object storage is **Cloudflare R2** on the Dimension Seven Systems account. The bucket **`jobbpulse`** already exists (WNAM). CORS for the Render app origin and `https://app.jobbpulse.com` is applied from [`api/r2-cors.json`](../api/r2-cors.json).
 
 S3 API endpoint (use for both Render `S3_ENDPOINT_URL` and `S3_PUBLIC_ENDPOINT_URL`):
 
@@ -41,7 +41,7 @@ Presigned PUT/GET go to the S3 API host above. They do **not** work on an R2 cus
 To refresh CORS after adding origins:
 
 ```bash
-npx wrangler r2 bucket cors set jobbpulse --file contractor_app/backend/r2-cors.json
+npx wrangler r2 bucket cors set jobbpulse --file api/r2-cors.json
 ```
 
 ## 2. Apply the blueprint

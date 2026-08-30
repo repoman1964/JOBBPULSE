@@ -1,6 +1,5 @@
-# JobbPulse contractor app + engine on Render.
+# JobbPulse: one API (`api/`) + contractor UI + Postgres + Redis.
 # Apply from the Render dashboard: New → Blueprint → this repo (render.yaml at root).
-# After the first deploy, fill the prompted secrets (R2 keys, app/API URLs). See contractor_app/RENDER.md.
 
 databases:
   - name: jobbpulse-db
@@ -21,8 +20,8 @@ services:
     runtime: docker
     plan: starter
     region: oregon
-    dockerfilePath: ./contractor_app/backend/Dockerfile.prod
-    dockerContext: ./contractor_app/backend
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: ./api
     dockerCommand: /app/scripts/start_api.sh
     preDeployCommand: alembic upgrade head
     healthCheckPath: /health/live
@@ -53,8 +52,8 @@ services:
     runtime: docker
     plan: starter
     region: oregon
-    dockerfilePath: ./contractor_app/backend/Dockerfile.prod
-    dockerContext: ./contractor_app/backend
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: ./api
     dockerCommand: /app/scripts/start_worker.sh
     envVars:
       - fromGroup: jobbpulse-engine
@@ -108,7 +107,7 @@ envVarGroups:
       - key: RESEND_API_KEY
         sync: false
       - key: AUTH_FROM_EMAIL
-        value: JobbPulse <onboarding@resend.dev>
+        value: JobbPulse <hello@jobbpulse.com>
       - key: PUBLIC_API_BASE_URL
         sync: false
       - key: COOKIE_SECURE

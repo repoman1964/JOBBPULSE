@@ -1,7 +1,7 @@
 export default defineNuxtRouteMiddleware(async (to) => {
   if (import.meta.server) return
 
-  const publicPaths = ['/sign-in']
+  const publicPaths = ['/sign-in', '/forgot-password', '/reset-password']
   const { session, ready, refresh } = useAuthSession()
 
   if (!ready.value) {

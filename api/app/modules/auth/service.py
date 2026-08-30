@@ -15,6 +15,7 @@ from app.core.permissions import can_approve_and_publish, can_create_jobs, can_m
 from app.core.security import (
     create_access_token,
     create_email_verify_token,
+    create_password_reset_token,
     create_refresh_token,
     hash_password,
     safe_decode_token,
@@ -71,7 +72,14 @@ def verification_url_for(user: User) -> str:
     settings = get_settings()
     token = create_email_verify_token(user.id)
     base = settings.frontend_url.rstrip("/")
-    return f"{base}/verify-email?token={token}"
+    return f"{base}/sign-in?token={token}"
+
+
+def password_reset_url_for(user: User) -> str:
+    settings = get_settings()
+    token = create_password_reset_token(user.id)
+    base = settings.frontend_url.rstrip("/")
+    return f"{base}/reset-password?token={token}"
 
 
 def issue_verify_token(user: User) -> str:
@@ -158,6 +166,45 @@ async def resend_verification(db: AsyncSession, email: str) -> User | None:
     user = result.scalar_one_or_none()
     if user is None or user.is_verified:
         return None
+    return user
+
+
+async def user_for_password_reset(db: AsyncSession, email: str) -> User | None:
+    result = await db.execute(select(User).where(User.email == email.lower().strip()))
+    user = result.scalar_one_or_none()
+    if user is None or not user.is_active or not user.is_verified:
+        return None
+    return user
+
+
+async def apply_password_reset(db: AsyncSession, token: str, password: str) -> User:
+    payload = safe_decode_token(token.strip())
+    if not payload or payload.get("type") != "password_reset" or not payload.get("sub"):
+        raise AppError(
+            "INVALID_TOKEN",
+            "That reset link is not valid.",
+            status_code=400,
+        )
+    try:
+        user_id = UUID(payload["sub"])
+    except (TypeError, ValueError) as exc:
+        raise AppError(
+            "INVALID_TOKEN",
+            "That reset link is not valid.",
+            status_code=400,
+        ) from exc
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if user is None or not user.is_active:
+        raise AppError(
+            "INVALID_TOKEN",
+            "That reset link is not valid.",
+            status_code=400,
+        )
+    user.password_hash = hash_password(password)
+    user.is_verified = True
+    await db.commit()
+    await db.refresh(user)
     return user
 
 

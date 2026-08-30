@@ -56,7 +56,7 @@ const galleryTrades = [...trades, ...trades]
       <div class="container hero-grid">
         <div class="hero-copy">
           <p class="eyebrow">For home-services pros</p>
-          <h1>Turn every finished job into marketing for the next one.</h1>
+          <h1>Every finished job makes the next job easier to close.</h1>
           <p class="lead">Take a few before-and-after photos. Talk for about 30 seconds.</p>
           <p class="lead">
             JobbPulse turns the work you already completed into social content, fresh website
@@ -67,7 +67,7 @@ const galleryTrades = [...trades, ...trades]
             <button type="button" class="btn btn-buy" @click="show">Ask us about JobbPulse</button>
             <a class="btn btn-secondary" href="#watch">Watch the walkthrough</a>
           </div>
-          <p class="hero-note">A few taps. A quick description. Back to work.</p>
+          <p class="hero-note">A few photos. A quick description. Back to work.</p>
         </div>
         <div class="phone">
           <img

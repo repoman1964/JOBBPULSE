@@ -117,7 +117,11 @@ async def start_connection(
     )
     await db.commit()
     await db.refresh(conn)
-    return privacy.serialize_connection(conn)
+    payload = privacy.serialize_connection(conn)
+    if connected.raw and connected.raw.get("authorize_url"):
+        payload["authorize_url"] = connected.raw["authorize_url"]
+        payload["url"] = connected.raw["authorize_url"]
+    return payload
 
 
 async def connection_callback(

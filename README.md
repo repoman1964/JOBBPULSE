@@ -14,7 +14,7 @@ Core loop:
 |---|---|
 | `api/` | FastAPI modular monolith (PostgreSQL, Redis, S3) |
 | `infra/` | Docker Compose for local dependencies |
-| `contractor_app/` | Contractor phone UI (`frontend/`). `backend/` is reference-only. |
+| `contractor_app/frontend/` | Contractor phone UI. Talks to `api/`. |
 | `website/portfolio_website/` | Public local project portfolio (Nuxt SSR) |
 | `website/red_clay_website/` | Red Clay Cabinet Installers demo marketing site |
 | `website/marketing_website/` | One-page JobbPulse sales landing page |
@@ -60,9 +60,9 @@ NUXT_PUBLIC_API_MODE=http NUXT_PUBLIC_API_BASE_URL=http://localhost:8000 npm run
 
 Frontend-only mock (no API): omit `NUXT_PUBLIC_API_MODE` or set it to `mock`.
 
-`contractor_app/backend` is a **reference implementation** only — see `contractor_app/backend/REFERENCE_ONLY.md`. Do not run it next to `make api-dev`.
+There is **one** backend: `api/`. Do not add a second FastAPI app or a second Postgres.
 
-Production hosting is **Render** (static UI + FastAPI + worker + Postgres + Redis, photos on Cloudflare R2). Blueprint: [`render.yaml`](./render.yaml). The API image should be `api/` (cut over from `contractor_app/backend`).
+Production hosting is **Render** (static UI + FastAPI + worker + Postgres + Redis, photos on Cloudflare R2). Blueprint: [`render.yaml`](./render.yaml). The API image is `api/`.
 
 The **public project portfolio** is `website/portfolio_website/`. From there: `make install && make dev` → http://localhost:3001
 

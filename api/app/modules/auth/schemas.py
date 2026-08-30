@@ -36,6 +36,15 @@ class ResendVerificationRequest(BaseModel):
     email: EmailStr
 
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(min_length=8, max_length=2000)
+    password: str = Field(min_length=8, max_length=128)
+
+
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str

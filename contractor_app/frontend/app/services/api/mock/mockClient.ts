@@ -43,6 +43,7 @@ interface MockAccount {
   phone: string
   verified: boolean
   token: string
+  resetToken?: string
 }
 
 interface MockState {
@@ -392,6 +393,36 @@ export function createMockApiClient(): ApiClient {
           `[JobbPulse mock auth] confirm ${account.email}: http://localhost:3000/sign-in?token=${account.token}`,
         )
       }
+    },
+
+    async requestPasswordReset(email: string) {
+      await delay()
+      const account = state.accounts[email.trim().toLowerCase()]
+      if (!account || !account.verified) {
+        return { resetUrl: null }
+      }
+      account.resetToken = uid('reset')
+      save()
+      const resetUrl = `http://localhost:3000/reset-password?token=${account.resetToken}`
+      console.info(`[JobbPulse mock auth] reset ${account.email}: ${resetUrl}`)
+      return { resetUrl }
+    },
+
+    async resetPassword(token: string, password: string) {
+      await delay()
+      const account = Object.values(state.accounts).find(
+        (a) => a.resetToken && a.resetToken === token.trim(),
+      )
+      if (!account || !account.verified) {
+        throw Object.assign(new Error('That reset link is not valid.'), {
+          code: 'invalid_token',
+          status: 400,
+        })
+      }
+      account.password = password
+      account.resetToken = ''
+      save()
+      return { email: account.email, reset: true }
     },
 
     async logout() {

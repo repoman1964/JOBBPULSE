@@ -55,6 +55,8 @@ export interface ApiClient {
   login(email: string, password: string): Promise<Session>
   verifyEmail(token: string): Promise<{ email: string; verified: boolean }>
   resendVerification(email: string): Promise<void>
+  requestPasswordReset(email: string): Promise<{ resetUrl?: string | null }>
+  resetPassword(token: string, password: string): Promise<{ email: string; reset: boolean }>
   logout(): Promise<void>
   getSession(): Promise<Session | null>
 

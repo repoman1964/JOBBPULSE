@@ -1,0 +1,34 @@
+JOBBPULSE — LOCAL RESTART (one API, one database)
+
+1. From the repo root, start shared infra + api/:
+
+   make infra-up
+   make api-migrate
+   make api-dev
+
+   Confirm:
+   curl http://localhost:8000/health/live
+
+2. Contractor UI (second terminal):
+
+   cd contractor_app/frontend
+   NUXT_PUBLIC_API_MODE=http \
+   NUXT_PUBLIC_API_BASE_URL=http://localhost:8000 \
+   npm run dev -- --host 0.0.0.0 --port 3000
+
+3. Optional sites:
+
+   Red Clay:   cd website/red_clay_website && npm run dev -- --port 3002
+   Portfolio:  cd website/portfolio_website && npm run dev -- --port 3001
+   Marketing:  cd website/marketing_website && npm run dev -- --port 3003
+
+Useful URLs
+
+   Contractor app: http://localhost:3000
+   Red Clay site:  http://localhost:3002
+   API:            http://localhost:8000
+   API docs:       http://localhost:8000/docs
+   MinIO:          http://localhost:9001
+   Mailpit:        http://localhost:8025
+
+Do not start contractor_app/backend — that tree has been removed. There is only api/.

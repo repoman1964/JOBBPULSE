@@ -38,11 +38,11 @@ export function useDemoProjects() {
       return []
     }
     try {
-      const data = await $fetch<{ items: Record<string, unknown>[] }>(
-        `${base}/api/v1/public/demo/projects`,
-        { query: { email } },
-      )
-      const items = (data.items || []).map((raw) => ({
+      const payload = await $fetch<{
+        items?: Record<string, unknown>[]
+        data?: { items?: Record<string, unknown>[] }
+      }>(`${base}/api/v1/public/demo/projects`, { query: { email } })
+      const items = (payload.data?.items || payload.items || []).map((raw) => ({
         slug: String(raw.slug || ''),
         publicTitle: String(raw.publicTitle || ''),
         publicSummary: String(raw.publicSummary || ''),
@@ -81,10 +81,11 @@ export function useDemoProjects() {
     const base = apiBase()
     if (!base || !email || !isValidEmail(email)) return null
     try {
-      return await $fetch<LiveProject>(
+      const payload = await $fetch<LiveProject & { data?: LiveProject }>(
         `${base}/api/v1/public/demo/projects/${encodeURIComponent(slug)}`,
         { query: { email } },
       )
+      return payload.data || payload
     } catch {
       return null
     }
