@@ -76,6 +76,7 @@ This app uses the Nitro **`cloudflare-pages`** preset (output: `dist/`).
 | Setting | Value |
 |---|---|
 | Project name | `red-clay-website` |
+| Custom domain | **`demo.jobbpulse.com`** |
 | Production branch | `main` |
 | Build command | `npm run build` |
 | Build output directory | **`dist`** (not `.output` or `dist/public`) |
@@ -86,7 +87,7 @@ This app uses the Nitro **`cloudflare-pages`** preset (output: `dist/`).
 | Name | Example |
 |---|---|
 | `NODE_VERSION` | `22` |
-| `NUXT_PUBLIC_API_BASE_URL` | Optional public JobbPulse API URL (omit for offline demo portfolio) |
+| `NUXT_PUBLIC_API_BASE_URL` | `https://api.jobbpulse.com` |
 | `NUXT_PUBLIC_CONTRACTOR_SLUG` | `red-clay-cabinet-installers` |
 | `NUXT_PUBLIC_DIRECTORY_URL` | Optional directory URL |
 

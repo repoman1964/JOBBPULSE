@@ -108,6 +108,7 @@ class Settings(BaseSettings):
         extra = (
             "https://app.jobbpulse.com",
             "https://jobbpulse-app.onrender.com",
+            "https://demo.jobbpulse.com",
             "https://red-clay-website.pages.dev",
             "http://localhost:3002",
             "http://127.0.0.1:3002",

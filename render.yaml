@@ -124,7 +124,7 @@ envVarGroups:
       - key: FRONTEND_BASE_URL
         value: https://app.jobbpulse.com
       - key: CORS_ORIGINS
-        value: https://app.jobbpulse.com,https://jobbpulse-app.onrender.com,https://red-clay-website.pages.dev
+        value: https://app.jobbpulse.com,https://jobbpulse-app.onrender.com,https://demo.jobbpulse.com,https://red-clay-website.pages.dev
       - key: S3_ENDPOINT_URL
         sync: false
       - key: S3_PUBLIC_ENDPOINT_URL

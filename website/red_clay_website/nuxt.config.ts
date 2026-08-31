@@ -35,7 +35,7 @@ export default defineNuxtConfig({
       apiBase:
         process.env.NUXT_PUBLIC_API_BASE_URL ||
         (process.env.NODE_ENV === 'production'
-          ? 'https://jobbpulse-api.onrender.com'
+          ? 'https://api.jobbpulse.com'
           : 'http://localhost:8000'),
       companyName: 'Red Clay',
       phone: '404-555-0148',

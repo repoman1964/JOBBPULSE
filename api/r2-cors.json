@@ -4,7 +4,9 @@
       "allowed": {
         "origins": [
           "https://jobbpulse-app.onrender.com",
-          "https://app.jobbpulse.com"
+          "https://app.jobbpulse.com",
+          "https://demo.jobbpulse.com",
+          "https://red-clay-website.pages.dev"
         ],
         "methods": ["GET", "PUT", "HEAD"],
         "headers": ["*"]

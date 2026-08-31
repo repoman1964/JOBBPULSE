@@ -66,7 +66,7 @@ Production hosting is **Render** (static UI + FastAPI + worker + Postgres + Redi
 
 The **public project portfolio** is `website/portfolio_website/`. From there: `make install && make dev` → http://localhost:3001
 
-The **Red Clay Cabinet Installers** demo marketing site is `website/red_clay_website/`. It consumes JobbPulse’s public API when both are running.
+The **Red Clay** demo marketing site is `website/red_clay_website/`. It consumes JobbPulse’s public API when both are running. Production: [https://demo.jobbpulse.com](https://demo.jobbpulse.com) (Cloudflare Pages).
 
 The **JobbPulse sales landing page** is `website/marketing_website/`. From there: `make install && make dev` → http://localhost:3003. Production deploys as Cloudflare Worker **`jobbpulse-website`** (`make -C website/marketing_website deploy`).
 

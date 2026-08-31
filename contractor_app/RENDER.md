@@ -20,6 +20,7 @@ Suggested custom domains (add in the dashboard after the first deploy):
 
 - `app.jobbpulse.com` → `jobbpulse-app`
 - `api.jobbpulse.com` → `jobbpulse-api`
+- `demo.jobbpulse.com` → Cloudflare Pages `red-clay-website` (Red Clay sales demo)
 
 ## 1. Cloudflare R2 (photos)
 
@@ -65,7 +66,7 @@ Then **Manual Deploy**.
 | --- | --- | --- |
 | `NUXT_PUBLIC_API_BASE_URL` | `jobbpulse-app` | `https://api.jobbpulse.com` |
 | `FRONTEND_BASE_URL` | engine group | `https://app.jobbpulse.com` |
-| `CORS_ORIGINS` | engine group | `https://app.jobbpulse.com,https://jobbpulse-app.onrender.com,https://red-clay-website.pages.dev` |
+| `CORS_ORIGINS` | engine group | `https://app.jobbpulse.com,https://jobbpulse-app.onrender.com,https://demo.jobbpulse.com,https://red-clay-website.pages.dev` |
 | `S3_ENDPOINT_URL` | engine group | `https://b6120b2d531b6d97dfe538cc57780ea9.r2.cloudflarestorage.com` |
 | `S3_PUBLIC_ENDPOINT_URL` | engine group | Same as `S3_ENDPOINT_URL` |
 | `S3_ACCESS_KEY` | engine group | R2 API token access key id |
@@ -90,7 +91,7 @@ Set these on the `jobbpulse-engine` env group or signup emails will not arrive:
 
 The static site bakes `NUXT_PUBLIC_API_BASE_URL` in at **build** time. If the API URL is wrong on the first pass, set it and **Manual Deploy** the static site.
 
-Custom domains (`app.jobbpulse.com` → `jobbpulse-app`, `api.jobbpulse.com` → `jobbpulse-api`):
+Custom domains (`app.jobbpulse.com` → `jobbpulse-app`, `api.jobbpulse.com` → `jobbpulse-api`; Red Clay demo is `demo.jobbpulse.com` on Cloudflare Pages):
 
 1. Point DNS at Render and wait until both hosts resolve over HTTPS.
 2. Set `CORS_ORIGINS`, `FRONTEND_BASE_URL`, and `NUXT_PUBLIC_API_BASE_URL` as in the table above.
