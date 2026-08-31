@@ -109,6 +109,10 @@ async def test_submit_creates_package_without_job_name(client: AsyncClient):
     assert pkg.status_code == 200, pkg.text
     data = pkg.json()["data"]
     assert data["assets"]
+    dests = [a["destinationType"] for a in data["assets"]]
+    assert dests == ["facebook", "facebook_group", "instagram", "google_business"]
+    group = next(a for a in data["assets"] if a["destinationType"] == "facebook_group")
+    assert group.get("groupName")
     assert data["featuredBeforeMediaId"]
     assert data["featuredAfterMediaId"]
     assert secret not in str(data.get("projectDescription", ""))

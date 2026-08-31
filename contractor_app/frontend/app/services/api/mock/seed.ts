@@ -251,6 +251,15 @@ export function buildPackageForPaintJob(media: MediaAsset[]): ContentPackage {
         'Facebook',
         'From worn to wow in Decatur — full exterior paint refresh for lasting curb appeal.',
       ),
+      {
+        ...makeAsset(
+          'asset-paint-group',
+          'facebook_group',
+          'Facebook Group',
+          'Wrapped an exterior in Decatur this week. If a neighbor needs similar work, we walk the house and send a written number.',
+        ),
+        groupName: 'Decatur Neighbors',
+      },
       makeAsset(
         'asset-paint-ig',
         'instagram',
@@ -262,18 +271,6 @@ export function buildPackageForPaintJob(media: MediaAsset[]): ContentPackage {
         'google_business',
         'Google Business Profile',
         'Just finished a full exterior paint refresh in Decatur. Solid prep, a clean finish, and curb appeal that holds up. Call us if you have a similar project.',
-      ),
-      makeAsset(
-        'asset-paint-site',
-        'conversion_site',
-        'Project Page',
-        description,
-      ),
-      makeAsset(
-        'asset-paint-portfolio',
-        'portfolio_site',
-        'JobbPulse Portfolio',
-        description,
       ),
     ],
   }

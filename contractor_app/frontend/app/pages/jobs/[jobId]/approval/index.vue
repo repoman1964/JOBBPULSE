@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import type { ContentPackage, Job, MediaAsset } from '~/types/domain'
 import GoogleBusinessPostPreview from '~/components/GoogleBusinessPostPreview.vue'
-import { destinationLabel, previewKind, statusLabel } from '~/utils/jobStatus'
+import {
+  CONTRACTOR_REVIEW_DESTINATIONS,
+  destinationLabel,
+  previewKind,
+  statusLabel,
+} from '~/utils/jobStatus'
 
 const route = useRoute()
 const api = useApi()
@@ -17,10 +22,13 @@ const error = ref('')
 const publishing = ref(false)
 useJobPoll(job)
 const showFeatured = ref(false)
-const showDescRev = ref(false)
-const descInstruction = ref('')
 const featuredBefore = ref('')
 const featuredAfter = ref('')
+const reviewAssets = computed(() =>
+  (pkg.value?.assets || []).filter((asset) =>
+    (CONTRACTOR_REVIEW_DESTINATIONS as readonly string[]).includes(asset.destinationType),
+  ),
+)
 
 const befores = computed(() => media.value.filter((m) => m.photoCategory === 'before' && !m.isDeleted))
 const afters = computed(() => media.value.filter((m) => m.photoCategory === 'after' && !m.isDeleted))
@@ -76,13 +84,6 @@ async function saveFeatured() {
   if (!featuredBefore.value || !featuredAfter.value) return
   pkg.value = await api.updateFeaturedMedia(jobId.value, featuredBefore.value, featuredAfter.value)
   showFeatured.value = false
-}
-
-async function requestDescChange() {
-  if (!descInstruction.value.trim()) return
-  pkg.value = await api.requestDescriptionRevision(jobId.value, descInstruction.value.trim())
-  descInstruction.value = ''
-  showDescRev.value = false
 }
 
 async function approve() {
@@ -151,26 +152,11 @@ onMounted(load)
           </div>
         </section>
 
-        <section class="card" style="margin-top: 12px">
-          <h2 class="section-label">Project description</h2>
-          <p class="desc">{{ pkg.projectDescription }}</p>
-          <button type="button" class="btn btn-secondary" @click="showDescRev = !showDescRev">
-            Request Text Change
-          </button>
-          <div v-if="showDescRev" class="stack" style="margin-top: 10px">
-            <div class="field">
-              <label for="descInst">What should change?</label>
-              <textarea id="descInst" v-model="descInstruction" rows="3" placeholder="Describe the correction…" />
-            </div>
-            <button type="button" class="btn btn-primary" @click="requestDescChange">Submit change request</button>
-          </div>
-        </section>
-
         <section style="margin-top: 16px">
-          <h2 class="section-label">Your JobbPulse content</h2>
+          <h2 class="section-label">Your posts</h2>
           <div class="carousel" tabindex="0" aria-label="Generated content">
             <NuxtLink
-              v-for="asset in pkg.assets"
+              v-for="asset in reviewAssets"
               :key="asset.id"
               class="carousel-card"
               :to="`/jobs/${jobId}/approval/${asset.id}`"
@@ -179,6 +165,17 @@ onMounted(load)
                 v-if="previewKind(asset.destinationType) === 'facebook'"
                 compact
                 :company-name="companyName"
+                :location="job?.locationText"
+                :body="asset.body"
+                :cover-url="(asset.preview.coverUrl as string) || null"
+                :before-url="(asset.preview.beforeUrl as string) || null"
+                :after-url="(asset.preview.afterUrl as string) || null"
+              />
+              <FacebookGroupPostPreview
+                v-else-if="previewKind(asset.destinationType) === 'facebook_group'"
+                compact
+                :company-name="companyName"
+                :group-name="asset.groupName || (job?.city ? `${job.city} Neighbors` : 'Neighborhood group')"
                 :location="job?.locationText"
                 :body="asset.body"
                 :cover-url="(asset.preview.coverUrl as string) || null"
@@ -201,21 +198,6 @@ onMounted(load)
                 :body="asset.body"
                 :image-url="(asset.preview.coverUrl as string) || (asset.preview.afterUrl as string) || null"
               />
-              <div v-else class="preview-frame card">
-                <div
-                  v-if="(asset.preview.beforeUrl as string) && (asset.preview.afterUrl as string)"
-                  class="preview-pair"
-                >
-                  <img :src="(asset.preview.beforeUrl as string)" alt="Before" />
-                  <img :src="(asset.preview.afterUrl as string)" alt="After" />
-                </div>
-                <img
-                  v-else-if="(asset.preview.coverUrl as string) || (asset.preview.afterUrl as string)"
-                  :src="((asset.preview.coverUrl as string) || (asset.preview.afterUrl as string)) as string"
-                  :alt="`${destinationLabel(asset.destinationType)} preview`"
-                />
-                <p class="preview-body">{{ asset.body }}</p>
-              </div>
               <div class="carousel-meta">
                 <strong>{{ destinationLabel(asset.destinationType) }}</strong>
                 <span class="link-lime">Tap to Review</span>
@@ -281,11 +263,6 @@ onMounted(load)
   letter-spacing: 0.04em;
 }
 
-.desc {
-  margin: 0 0 12px;
-  line-height: 1.45;
-}
-
 .carousel {
   display: flex;
   gap: 12px;
@@ -303,39 +280,6 @@ onMounted(load)
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-.preview-frame {
-  background: #0f0f0f;
-  border-radius: 12px;
-  overflow: hidden;
-  min-height: 180px;
-}
-
-.preview-frame img {
-  width: 100%;
-  height: 140px;
-  object-fit: cover;
-}
-
-.preview-pair {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-
-.preview-pair img {
-  height: 140px;
-}
-
-.preview-body {
-  margin: 0;
-  padding: 10px;
-  font-size: 0.85rem;
-  color: var(--jp-text-muted);
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .carousel-meta {

@@ -22,13 +22,14 @@ def _normalize_email(value: str) -> str:
         if text.count("@") == 1 and " " not in text:
             local_part, host = text.split("@", 1)
             if local_part and host:
-                return f"{local_part}@{host.lower()}"
+                return f"{local_part.lower()}@{host.lower()}"
         raise ValueError("value is not a valid email address")
     try:
         info = validate_email(text, check_deliverability=False)
     except EmailNotValidError as exc:
         raise ValueError(str(exc)) from exc
-    return info.normalized
+    # Local-part case is preserved by email-validator; accounts are stored lowercase.
+    return info.normalized.lower()
 
 
 AppEmail = Annotated[str, AfterValidator(_normalize_email)]

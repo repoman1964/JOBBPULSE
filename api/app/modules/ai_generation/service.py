@@ -44,9 +44,18 @@ from app.modules.phone.serialize import pick_featured_photos
 REQUIRED_CONTENT_TYPES = (
     ContentType.primary_social,
     ContentType.short_caption,
-    ContentType.before_after,
+    ContentType.facebook_group,
+    ContentType.google_business,
     ContentType.directory_listing,
 )
+
+PLATFORM_TARGET_BY_CONTENT_TYPE = {
+    ContentType.primary_social: "facebook",
+    ContentType.short_caption: "instagram",
+    ContentType.facebook_group: "facebook_group",
+    ContentType.google_business: "google_business",
+    ContentType.directory_listing: None,
+}
 
 
 def _ensure_can_generate(role: MembershipRole) -> None:
@@ -333,7 +342,7 @@ async def _persist_success(
             job_id=job.id,
             generation_run_id=run.id,
             content_type=ctype,
-            platform_target=None,
+            platform_target=PLATFORM_TARGET_BY_CONTENT_TYPE.get(ctype),
             title=piece.title,
             body_generated=body,
             body_edited=None,

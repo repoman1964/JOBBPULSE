@@ -20,7 +20,8 @@ FAKE_AUDIO = b"\x1aE\xdf\xa3" + b"\x00" * 128
 REQUIRED_TYPES = {
     "primary_social",
     "short_caption",
-    "before_after",
+    "facebook_group",
+    "google_business",
     "directory_listing",
 }
 

@@ -461,31 +461,62 @@ async def seed() -> None:
             db.add(gen)
             await db.flush()
 
+            approved = dict(
+                status=ContentVariantStatus.approved,
+                version_number=1,
+                approved_at=published_at - timedelta(hours=2),
+                approved_by=user.id,
+            )
             social_variant = ContentVariant(
                 job_id=job.id,
                 generation_run_id=gen.id,
                 content_type=ContentType.primary_social,
-                status=ContentVariantStatus.approved,
+                platform_target="facebook",
                 title=project["title"],
                 body_generated=project["social"],
                 body_edited=project["social"],
-                version_number=1,
-                approved_at=published_at - timedelta(hours=2),
-                approved_by=user.id,
+                **approved,
+            )
+            group_variant = ContentVariant(
+                job_id=job.id,
+                generation_run_id=gen.id,
+                content_type=ContentType.facebook_group,
+                platform_target="facebook_group",
+                title="Neighborhood group",
+                body_generated=(
+                    f"Wrapped {project['title'].lower()} this week. "
+                    "If a neighbor needs similar work, we walk the house and send a written number."
+                ),
+                **approved,
+            )
+            ig_variant = ContentVariant(
+                job_id=job.id,
+                generation_run_id=gen.id,
+                content_type=ContentType.short_caption,
+                platform_target="instagram",
+                title=project["title"],
+                body_generated=project["social"],
+                **approved,
+            )
+            gbp_variant = ContentVariant(
+                job_id=job.id,
+                generation_run_id=gen.id,
+                content_type=ContentType.google_business,
+                platform_target="google_business",
+                title=project["title"],
+                body_generated=project["summary"],
+                **approved,
             )
             directory_variant = ContentVariant(
                 job_id=job.id,
                 generation_run_id=gen.id,
                 content_type=ContentType.directory_listing,
-                status=ContentVariantStatus.approved,
                 title=project["title"],
                 body_generated=project["summary"],
                 body_edited=project["summary"],
-                version_number=1,
-                approved_at=published_at - timedelta(hours=2),
-                approved_by=user.id,
+                **approved,
             )
-            db.add_all([social_variant, directory_variant])
+            db.add_all([social_variant, group_variant, ig_variant, gbp_variant, directory_variant])
             await db.flush()
 
             service_slug = slugify(project["service_key"])[:40]

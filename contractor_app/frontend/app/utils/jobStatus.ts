@@ -174,6 +174,7 @@ export function categoryLabel(category: PhotoCategory): string {
 export function destinationLabel(type: string): string {
   const map: Record<string, string> = {
     facebook: 'Facebook',
+    facebook_group: 'Facebook Group',
     instagram: 'Instagram',
     google_business: 'Google Business Profile',
     tiktok: 'TikTok',
@@ -186,10 +187,22 @@ export function destinationLabel(type: string): string {
   return map[type] || type
 }
 
-export type PreviewKind = 'facebook' | 'instagram' | 'google_business' | 'website'
+export type PreviewKind = 'facebook' | 'facebook_group' | 'instagram' | 'google_business' | 'website'
+
+export const CONTRACTOR_REVIEW_DESTINATIONS = [
+  'facebook',
+  'facebook_group',
+  'instagram',
+  'google_business',
+] as const
 
 export function previewKind(type: string): PreviewKind {
-  if (type === 'facebook' || type === 'instagram' || type === 'google_business') {
+  if (
+    type === 'facebook' ||
+    type === 'facebook_group' ||
+    type === 'instagram' ||
+    type === 'google_business'
+  ) {
     return type
   }
   return 'website'

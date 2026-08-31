@@ -71,6 +71,8 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
         await conn.run_sync(Base.metadata.create_all)
         for value in ("publishing", "publish_issue"):
             await conn.execute(text(f"ALTER TYPE job_status ADD VALUE IF NOT EXISTS '{value}'"))
+        for value in ("facebook_group", "google_business"):
+            await conn.execute(text(f"ALTER TYPE content_type ADD VALUE IF NOT EXISTS '{value}'"))
         for stmt in (
             "ALTER TABLE companies ADD COLUMN IF NOT EXISTS contact_name VARCHAR(200)",
             "ALTER TABLE companies ADD COLUMN IF NOT EXISTS email VARCHAR(320)",

@@ -51,18 +51,16 @@ class MockContentGenerationProvider:
             f"{service} done{f' in {place}' if place else ''}. "
             f"{transcript_snip} {cta}"
         )
-        if input_data.before_count >= 1:
-            ba_body = (
-                f"Before → after: {service.lower()}{f' in {place}' if place else ''}. "
-                f"We transformed the site and left it ready for everyday use. "
-                f"{transcript_snip}"
-            )
-        else:
-            ba_body = (
-                f"Finished {service.lower()}{f' in {place}' if place else ''}. "
-                f"Here's the completed work — after photos capture the result. "
-                f"{transcript_snip}"
-            )
+        neighborhood = input_data.city or place or "the area"
+        group_body = (
+            f"Wrapped {service.lower()} in {neighborhood} this week. "
+            f"{transcript_snip} "
+            "If a neighbor needs similar work, we walk the house and send a written number."
+        )
+        gbp_body = (
+            f"Finished {service.lower()}{f' in {place}' if place else ''}. "
+            f"{transcript_snip} {cta}"
+        )
         dir_summary = (
             f"{company} completed {service.lower()}"
             f"{f' for a homeowner in {place}' if place else ''}. "
@@ -83,10 +81,16 @@ class MockContentGenerationProvider:
                 hashtags=hashtags[:3],
                 call_to_action=cta,
             ),
-            "before_after": ContentPiece(
-                title=f"Before & after: {public_title}",
-                body=ba_body.strip(),
-                hashtags=hashtags,
+            "facebook_group": ContentPiece(
+                title="Neighborhood group",
+                body=group_body.strip(),
+                hashtags=[],
+                call_to_action=cta,
+            ),
+            "google_business": ContentPiece(
+                title=public_title,
+                body=gbp_body.strip(),
+                hashtags=[],
                 call_to_action=cta,
             ),
             "directory_listing": ContentPiece(

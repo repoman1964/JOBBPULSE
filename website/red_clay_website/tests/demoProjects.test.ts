@@ -31,6 +31,35 @@ describe('dummy jobs', () => {
 })
 
 describe('parseDemoListPayload', () => {
+  it('reads items nested under data (the live API envelope)', () => {
+    const jobs = parseDemoListPayload({
+      data: {
+        items: [
+          {
+            slug: 'exterior-house-in-acworth-ga-c42b',
+            publicTitle: 'Exterior House in Acworth, GA',
+            publicSummary: 'Live job',
+            serviceType: 'exterior_house',
+            city: 'Acworth',
+            hasBefore: true,
+            hasAfter: true,
+          },
+        ],
+      },
+      meta: {},
+      error: null,
+    })
+    expect(jobs).toHaveLength(1)
+    expect(jobs[0].slug).toBe('exterior-house-in-acworth-ga-c42b')
+  })
+
+  it('does not treat a missing top-level items array as empty when data.items exists', () => {
+    const jobs = parseDemoListPayload({
+      data: { items: [{ slug: 'live-job', hasBefore: true, hasAfter: true }] },
+    })
+    expect(jobs.map((j) => j.slug)).toEqual(['live-job'])
+  })
+
   it('reads items from the API envelope and ignores blank slugs', () => {
     const jobs = parseDemoListPayload({
       data: {

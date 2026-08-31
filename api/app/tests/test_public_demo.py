@@ -6,8 +6,11 @@ from uuid import UUID
 import pytest
 from httpx import AsyncClient
 
+from types import SimpleNamespace
+
 from app.core.slug import public_project_slug
-from app.modules.directory.public_demo import ELIGIBLE_PUBLIC_STATUSES
+from app.db.models import ContentType
+from app.modules.directory.public_demo import ELIGIBLE_PUBLIC_STATUSES, _social_posts_for_job
 from app.tests.conftest import unique_email
 
 PNG = (
@@ -98,10 +101,54 @@ def test_eligible_statuses_match_spec():
     }
 
 
+def test_social_posts_reuse_contractor_variants_without_inventing_titles():
+    job = SimpleNamespace(city="Decatur")
+    variants = [
+        SimpleNamespace(
+            content_type=ContentType.primary_social,
+            platform_target=None,
+            title="Exterior painting in Decatur",
+            body_edited=None,
+            body_generated="Prep, prime, two finish coats.",
+        ),
+        SimpleNamespace(
+            content_type=ContentType.short_caption,
+            platform_target=None,
+            title=None,
+            body_edited=None,
+            body_generated="Prep you can see. Finish from the street.",
+        ),
+    ]
+    posts = {p["destination"]: p for p in _social_posts_for_job(
+        job,
+        variants,
+        title="Exterior painting in Decatur",
+        summary="Directory summary",
+        after_url="https://cdn.example/after.jpg",
+    )}
+    assert posts["facebook"]["body"] == "Prep, prime, two finish coats."
+    assert posts["instagram"]["body"] == "Prep you can see. Finish from the street."
+    assert posts["instagram"]["title"] == "Exterior painting in Decatur"
+    assert posts["google_business"]["body"] == posts["facebook"]["body"]
+    assert posts["facebook_group"]["groupName"] == "Decatur Neighbors"
+
+
 @pytest.mark.asyncio
 async def test_public_list_without_email_returns_422(client: AsyncClient):
     resp = await client.get("/api/v1/public/demo/projects")
     assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_public_list_matches_email_case_insensitively(client: AsyncClient):
+    token, email = await _signup(client)
+    job_id = await _ready_job(client, token, city="Decatur")
+    await _submit(client, token, job_id, "submit-case")
+    mixed = email[0].upper() + email[1:]
+    assert mixed != email
+    resp = await client.get("/api/v1/public/demo/projects", params={"email": mixed})
+    assert resp.status_code == 200, resp.text
+    assert len(resp.json()["data"]["items"]) == 1
 
 
 @pytest.mark.asyncio
@@ -162,10 +209,11 @@ async def test_public_list_returns_submitted_job_and_hides_draft(client: AsyncCl
     assert detail.status_code == 200, detail.text
     body = detail.json()["data"]
     assert body["slug"] == items[0]["slug"]
-    dests = {p["destination"] for p in body["socialPosts"]}
-    assert "facebook" in dests
-    assert "instagram" in dests
-    assert "google_business" in dests
+    posts = {p["destination"]: p for p in body["socialPosts"]}
+    assert set(posts) >= {"facebook", "facebook_group", "instagram", "google_business"}
+    assert posts["instagram"]["body"]
+    assert posts["google_business"]["body"]
+    assert posts["facebook_group"]["groupName"]
 
 
 @pytest.mark.asyncio

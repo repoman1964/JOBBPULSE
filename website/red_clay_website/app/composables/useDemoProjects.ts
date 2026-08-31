@@ -13,9 +13,20 @@ export type LiveProject = CarouselJob & {
   }[]
 }
 
+const STALE_API_HOSTS = ['jobbpulse-api.onrender.com']
+const PRODUCTION_API_BASE = 'https://api.jobbpulse.com'
+
 function apiBase() {
   const config = useRuntimeConfig()
-  return String(config.public.apiBase || '').replace(/\/$/, '')
+  const raw = String(config.public.apiBase || '').replace(/\/$/, '')
+  if (!raw) return PRODUCTION_API_BASE
+  try {
+    const host = new URL(raw).host
+    if (STALE_API_HOSTS.includes(host)) return PRODUCTION_API_BASE
+  } catch {
+    return raw
+  }
+  return raw
 }
 
 export function useDemoEmailCookie() {

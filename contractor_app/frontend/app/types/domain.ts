@@ -166,6 +166,7 @@ export interface GeneratedAsset {
   activeVersionId: string
   versions: GeneratedAssetVersion[]
   preview: Record<string, unknown>
+  groupName?: string | null
 }
 
 export interface ContentPackage {

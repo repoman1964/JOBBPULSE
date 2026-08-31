@@ -101,6 +101,8 @@ class ContentType(str, enum.Enum):
     before_after = "before_after"
     directory_listing = "directory_listing"
     educational = "educational"
+    facebook_group = "facebook_group"
+    google_business = "google_business"
 
 
 class ContentVariantStatus(str, enum.Enum):

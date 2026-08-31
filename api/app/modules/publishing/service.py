@@ -225,7 +225,16 @@ async def _get_connection(
     return conn
 
 
-def _pick_social_variant(job: Job) -> ContentVariant:
+def _normalize_publish_platform(platform: str | None) -> str:
+    plat = (platform or "").lower()
+    if plat in {"gbp", "google", "google_business"}:
+        return "google_business"
+    if plat in {"facebook", "facebook_page"}:
+        return "facebook"
+    return plat
+
+
+def _pick_social_variant(job: Job, platform: str | None = None) -> ContentVariant:
     active = [
         v
         for v in (job.content_variants or [])
@@ -238,9 +247,19 @@ def _pick_social_variant(job: Job) -> ContentVariant:
             "No approved social content is available to publish.",
             status_code=400,
         )
-    # Prefer primary_social
-    primary = [v for v in active if v.content_type == ContentType.primary_social]
-    pool = primary or active
+    dest = _normalize_publish_platform(platform)
+    matched: list[ContentVariant] = []
+    if dest:
+        matched = [
+            v
+            for v in active
+            if (v.platform_target or "").lower() in {dest, platform or ""}
+            or (dest == "facebook" and v.content_type == ContentType.primary_social)
+            or (dest == "instagram" and v.content_type == ContentType.short_caption)
+            or (dest == "facebook_group" and v.content_type == ContentType.facebook_group)
+            or (dest == "google_business" and v.content_type == ContentType.google_business)
+        ]
+    pool = matched or [v for v in active if v.content_type == ContentType.primary_social] or active
     pool.sort(key=lambda v: v.approved_at or v.created_at, reverse=True)
     return pool[0]
 
@@ -389,15 +408,14 @@ async def publish_job(
 
     # --- Social ---
     if social_ids:
-        variant = _pick_social_variant(job)
-        payload = privacy.build_social_payload(job, variant)
-        privacy.assert_no_private_title(payload, job.title or "")
-        media_urls = payload.get("media_urls") or []
-
         connections = await _load_active_connections(db, company_id, social_ids)
         provider = get_publishing_provider()
 
         for conn in connections:
+            variant = _pick_social_variant(job, conn.platform)
+            payload = privacy.build_social_payload(job, variant)
+            privacy.assert_no_private_title(payload, job.title or "")
+            media_urls = payload.get("media_urls") or []
             pub = await _publish_to_connection(
                 db,
                 job=job,
@@ -712,7 +730,7 @@ async def retry_publication(
                 variant = v
                 break
     if variant is None:
-        variant = _pick_social_variant(job)
+        variant = _pick_social_variant(job, conn.platform)
 
     payload = privacy.build_social_payload(job, variant)
     privacy.assert_no_private_title(payload, job.title or "")

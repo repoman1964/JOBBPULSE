@@ -109,6 +109,10 @@ describe('previewKind', () => {
     expect(previewKind('instagram')).toBe('instagram')
   })
 
+  it('uses a Facebook group preview for neighborhood posts', () => {
+    expect(previewKind('facebook_group')).toBe('facebook_group')
+  })
+
   it('falls back to website for first-party destinations', () => {
     expect(previewKind('conversion_site')).toBe('website')
     expect(previewKind('portfolio_site')).toBe('website')

@@ -41,13 +41,15 @@ describe('captionParts', () => {
 })
 
 describe('generated content packages', () => {
-  it('includes a Google Business Profile post for the paint job', () => {
+  it('includes four platform posts and no project or directory cards', () => {
     const pkg = buildPackageForPaintJob(buildSeedMedia())
     const dests = pkg.assets.map((a) => a.destinationType)
-    expect(dests).toContain('google_business')
+    expect(dests).toEqual(['facebook', 'facebook_group', 'instagram', 'google_business'])
     const gbp = pkg.assets.find((a) => a.destinationType === 'google_business')
     expect(gbp?.title).toBe('Google Business Profile')
     expect(gbp?.body).toMatch(/Decatur/)
     expect(gbp?.body).not.toMatch(/#/)
+    const group = pkg.assets.find((a) => a.destinationType === 'facebook_group')
+    expect(group?.groupName).toBe('Decatur Neighbors')
   })
 })

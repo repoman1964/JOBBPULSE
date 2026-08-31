@@ -30,6 +30,8 @@ SOCIAL_CONTENT_TYPES = frozenset(
     {
         ContentType.primary_social,
         ContentType.short_caption,
+        ContentType.facebook_group,
+        ContentType.google_business,
         ContentType.before_after,
     }
 )
@@ -153,7 +155,7 @@ def evaluate_job_approval(
         blockers.append("At least one after photo is required before approving this job.")
     if not social_approved:
         blockers.append(
-            "Approve at least one social variant (primary post, short caption, or before/after)."
+            "Approve at least one social post (Facebook, Instagram, Facebook group, or Google Business)."
         )
     if not directory_approved:
         blockers.append("Approve the directory listing before marking the job approved.")

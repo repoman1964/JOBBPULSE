@@ -308,9 +308,22 @@ def voice_as_media(voice: Optional[VoiceSummary]) -> Optional[dict[str, Any]]:
 DESTINATION_BY_CONTENT_TYPE = {
     "primary_social": "facebook",
     "short_caption": "instagram",
+    "facebook_group": "facebook_group",
+    "google_business": "google_business",
     "before_after": "conversion_site",
     "directory_listing": "portfolio_site",
 }
+
+CONTRACTOR_ASSET_DESTINATIONS = (
+    "facebook",
+    "facebook_group",
+    "instagram",
+    "google_business",
+)
+
+
+def neighborhood_group_name(city: str | None) -> str:
+    return f"{city} Neighbors" if city else "Metro Atlanta Homeowners"
 
 PHONE_DEST_FROM_PLATFORM = {
     "facebook": "facebook",
@@ -354,16 +367,19 @@ def asset_out(variant: ContentVariant, *, siblings: list[ContentVariant], job: O
     active = next((s for s in reversed(versions) if s.status != ContentVariantStatus.superseded), variant)
     body = (active.body_edited or active.body_generated or "").strip()
     preview = preview_for_job(job, hashtags=active.hashtags_json or [])
+    dest = _dest_for_variant(active)
+    group_name = neighborhood_group_name(job.city if job else None) if dest == "facebook_group" else None
     return {
         "id": _uid(active.id),
         "packageId": _uid(active.generation_run_id),
-        "destinationType": _dest_for_variant(active),
+        "destinationType": dest,
         "title": active.title or "",
         "body": body,
         "status": active.status.value,
         "activeVersionId": _uid(active.id),
         "versions": version_payloads,
         "preview": preview,
+        "groupName": group_name,
     }
 
 
@@ -384,8 +400,18 @@ def package_out(job: Job, variants: list[ContentVariant]) -> Optional[dict[str, 
     assets = [
         asset_out(group[-1], siblings=all_for_job.get(dest, group), job=job)
         for dest, group in groups.items()
+        if dest in CONTRACTOR_ASSET_DESTINATIONS
     ]
-    directory = next((a for a in assets if a["destinationType"] in {"portfolio_site", "directory"}), None)
+    rank = {d: i for i, d in enumerate(CONTRACTOR_ASSET_DESTINATIONS)}
+    assets.sort(key=lambda a: rank.get(a["destinationType"], len(rank)))
+    directory = next(
+        (
+            asset_out(group[-1], siblings=all_for_job.get(dest, group), job=job)
+            for dest, group in groups.items()
+            if dest in {"portfolio_site", "directory"}
+        ),
+        None,
+    )
     description = directory["body"] if directory else (assets[0]["body"] if assets else "")
     version = job.generation_version or 1
     before, after = pick_featured_photos(job)

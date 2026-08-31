@@ -49,6 +49,15 @@ ELIGIBLE_JOB_STATUSES = {
 
 SOCIAL_DESTINATIONS = ("facebook", "facebook_group", "instagram", "google_business")
 
+# Contractor generation writes content_type, not a dedicated GMB/group asset.
+# Same mapping the contractor app uses when it labels a variant for preview/publish.
+_DESTINATION_VARIANT_KEYS = {
+    "facebook": ("facebook", "facebook_page", "primary_social"),
+    "facebook_group": ("facebook_group",),
+    "instagram": ("instagram", "short_caption"),
+    "google_business": ("google_business",),
+}
+
 
 def require_email(email: str | None) -> str:
     try:
@@ -63,7 +72,7 @@ def require_email(email: str | None) -> str:
 
 
 async def _company_id_for_email(db: AsyncSession, email: str) -> UUID | None:
-    result = await db.execute(select(User).where(User.email == email))
+    result = await db.execute(select(User).where(func.lower(User.email) == email.lower()))
     user = result.scalar_one_or_none()
     if user is None:
         return None
@@ -116,6 +125,43 @@ def _variant_copy(variants: list[ContentVariant], *types: str) -> tuple[str, str
             body = effective_body(variant)
             return title, body
     return "", ""
+
+
+def _social_posts_for_job(
+    job: Job,
+    variants: list[ContentVariant],
+    *,
+    title: str,
+    summary: str,
+    after_url: str | None,
+) -> list[dict[str, Any]]:
+    """Reuse contractor variants for demo social cards; do not invent new copy."""
+    social_posts: list[dict[str, Any]] = []
+    for dest in SOCIAL_DESTINATIONS:
+        dest_title, dest_body = _variant_copy(variants, *_DESTINATION_VARIANT_KEYS[dest])
+        if dest == "google_business" and not dest_title and not dest_body:
+            dest_title, dest_body = _variant_copy(variants, "facebook", "primary_social")
+        if dest == "facebook_group" and not dest_title and not dest_body:
+            dest_title = "Neighborhood group"
+            dest_body = (
+                f"Wrapped a {title.lower()} in {job.city or 'the area'} this week. "
+                "If a neighbor needs similar work, we walk the house and send a written number."
+            )
+        if not dest_title and not dest_body:
+            continue
+        group_name = None
+        if dest == "facebook_group":
+            group_name = f"{job.city} Neighbors" if job.city else "Metro Atlanta Homeowners"
+        social_posts.append(
+            {
+                "destination": dest,
+                "title": dest_title or title,
+                "body": dest_body or summary,
+                "imageUrl": after_url,
+                "groupName": group_name,
+            }
+        )
+    return social_posts
 
 
 def _public_title_summary(job: Job, variants: list[ContentVariant]) -> tuple[str, str]:
@@ -218,36 +264,13 @@ async def get_demo_project(db: AsyncSession, slug: str, email: str) -> dict[str,
             media.append({"stageLabel": "before", "url": _signed_url(before)})
         if after is not None:
             media.append({"stageLabel": "after", "url": after_url})
-        social_posts = []
-        for dest in SOCIAL_DESTINATIONS:
-            dest_title, dest_body = _variant_copy(variants, dest, dest.replace("_", ""))
-            if not dest_title and dest != "facebook_group":
-                if dest == "facebook":
-                    dest_title, dest_body = _variant_copy(variants, "facebook", "primary_social")
-                elif dest == "instagram":
-                    dest_title, dest_body = _variant_copy(variants, "instagram", "short_caption")
-                elif dest == "google_business":
-                    dest_title, dest_body = _variant_copy(variants, "google_business")
-            if not dest_title and dest != "facebook_group":
-                continue
-            if dest == "facebook_group" and not dest_title:
-                dest_title = "Neighborhood group"
-                dest_body = (
-                    f"Wrapped a {title.lower()} in {job.city or 'the area'} this week. "
-                    "If a neighbor needs similar work, we walk the house and send a written number."
-                )
-            group_name = None
-            if dest == "facebook_group":
-                group_name = f"{job.city} Neighbors" if job.city else "Metro Atlanta Homeowners"
-            social_posts.append(
-                {
-                    "destination": dest,
-                    "title": dest_title or title,
-                    "body": dest_body or summary,
-                    "imageUrl": after_url,
-                    "groupName": group_name,
-                }
-            )
+        social_posts = _social_posts_for_job(
+            job,
+            variants,
+            title=title,
+            summary=summary,
+            after_url=after_url,
+        )
         return {
             **serialize_demo_list_item(
                 job,

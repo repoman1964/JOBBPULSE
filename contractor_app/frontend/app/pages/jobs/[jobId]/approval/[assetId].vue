@@ -87,20 +87,26 @@ onMounted(load)
       <div v-else-if="error" class="banner banner-error" role="alert">{{ error }}</div>
       <template v-else-if="asset && job">
         <h1 class="page-title" style="font-size: 1.4rem">
-          {{
-            previewComponent === 'website'
-              ? destinationLabel(asset.destinationType)
-              : `${destinationLabel(asset.destinationType)} Post`
-          }}
+          {{ `${destinationLabel(asset.destinationType)} Post` }}
         </h1>
         <p class="muted" style="margin: 0 0 8px">{{ job.name }}</p>
         <StatusPill :label="statusLabel(job.publicStatus, job)" />
 
         <section class="generated" style="margin-top: 16px">
-          <h2 v-if="previewComponent !== 'website'" class="section-label">Generated post</h2>
+          <h2 class="section-label">Generated post</h2>
           <FacebookPostPreview
             v-if="previewComponent === 'facebook'"
             :company-name="companyName"
+            :location="job.locationText"
+            :body="activeVersion?.body || asset.body"
+            :cover-url="assetPreviewUrl('coverUrl')"
+            :after-url="assetPreviewUrl('afterUrl')"
+            :before-url="assetPreviewUrl('beforeUrl')"
+          />
+          <FacebookGroupPostPreview
+            v-else-if="previewComponent === 'facebook_group'"
+            :company-name="companyName"
+            :group-name="asset.groupName || (job.city ? `${job.city} Neighbors` : 'Neighborhood group')"
             :location="job.locationText"
             :body="activeVersion?.body || asset.body"
             :cover-url="assetPreviewUrl('coverUrl')"
@@ -121,18 +127,6 @@ onMounted(load)
             :body="activeVersion?.body || asset.body"
             :image-url="assetPreviewUrl('coverUrl') || assetPreviewUrl('afterUrl')"
           />
-          <div v-else class="preview-shell card">
-            <div class="web">
-              <p class="section-label">Recent project</p>
-              <h2>{{ job.name }}</h2>
-              <p class="muted">📍 {{ job.locationText }}</p>
-              <div class="web-imgs">
-                <img v-if="assetPreviewUrl('beforeUrl')" :src="assetPreviewUrl('beforeUrl')!" alt="Before" />
-                <img v-if="assetPreviewUrl('afterUrl')" :src="assetPreviewUrl('afterUrl')!" alt="After" />
-              </div>
-              <p class="body">{{ activeVersion?.body || asset.body }}</p>
-            </div>
-          </div>
         </section>
 
         <div v-if="mode === 'view'" class="stack" style="margin-top: 14px">

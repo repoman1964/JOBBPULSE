@@ -87,7 +87,7 @@ This app uses the Nitro **`cloudflare-pages`** preset (output: `dist/`).
 | Name | Example |
 |---|---|
 | `NODE_VERSION` | `22` |
-| `NUXT_PUBLIC_API_BASE_URL` | `https://api.jobbpulse.com` |
+| `NUXT_PUBLIC_API_BASE_URL` | `https://api.jobbpulse.com` (not `https://jobbpulse-api.onrender.com`) |
 | `NUXT_PUBLIC_CONTRACTOR_SLUG` | `red-clay-cabinet-installers` |
 | `NUXT_PUBLIC_DIRECTORY_URL` | Optional directory URL |
 

@@ -26,7 +26,7 @@ import {
 import { computePublicStatus, countsFromMedia, meetsMinimums } from '~/utils/jobStatus'
 import { formatSocialAccountName } from '~/utils/socialAccounts'
 
-const STORAGE_KEY = 'jobbpulse.mock.v4'
+const STORAGE_KEY = 'jobbpulse.mock.v5'
 const SEED_PASSWORD = 'devpassword'
 const PIPELINE_STAGES: { status: Job['internalStatus']; ms: number }[] = [
   { status: 'transcribing', ms: 2500 },
@@ -204,15 +204,22 @@ function buildGeneratedPackage(state: MockState, job: Job): ContentPackage {
   const pkgId = uid('pkg')
   const assets = [
     make('facebook', 'Facebook', `${job.name}: another transformation ready to share.`),
+    make(
+      'facebook_group',
+      'Facebook Group',
+      `Wrapped this job in ${job.city} this week. If a neighbor needs similar work, we walk the house and send a written number.`,
+    ),
     make('instagram', 'Instagram', `${job.name} complete in ${job.city}. #JobbPulse`),
     make(
       'google_business',
       'Google Business Profile',
       `Just finished ${job.name} in ${job.city}. Solid prep, a clean finish, and a crew that shows up ready to work. Call us if you have a similar project.`,
     ),
-    make('conversion_site', 'Project Page', description),
-    make('portfolio_site', 'JobbPulse Portfolio', description),
-  ].map((a) => ({ ...a, packageId: pkgId }))
+  ].map((a) => ({
+    ...a,
+    packageId: pkgId,
+    groupName: a.destinationType === 'facebook_group' ? `${job.city} Neighbors` : null,
+  }))
 
   return {
     id: pkgId,
