@@ -7,7 +7,7 @@ useSeoMeta({
 })
 
 await demo.fetchLiveList()
-const jobs = computed(() => demo.carouselJobs())
+const jobs = demo.jobs
 </script>
 
 <template>

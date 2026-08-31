@@ -21,7 +21,7 @@ router = APIRouter(prefix="/public", tags=["public-directory"])
 def _check_demo_rate(request: Request) -> None:
     settings = get_settings()
     ip = request.client.host if request.client else "unknown"
-    limiter = get_limiter("public_demo", settings.auth_challenge_rate_per_minute)
+    limiter = get_limiter("public_demo", max(settings.auth_challenge_rate_per_minute, 60))
     if not limiter.allow(ip):
         raise AppError(
             "RATE_LIMITED",

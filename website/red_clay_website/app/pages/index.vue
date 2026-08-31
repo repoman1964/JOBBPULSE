@@ -18,7 +18,7 @@ useSeoMeta({
 })
 
 await demo.fetchLiveList()
-const jobs = computed(() => demo.carouselJobs())
+const jobs = demo.jobs
 </script>
 
 <template>
@@ -41,7 +41,7 @@ const jobs = computed(() => demo.carouselJobs())
 
     <TrustBar />
 
-    <section class="section">
+    <section id="recent-work" class="section">
       <div class="container">
         <p class="section__eyebrow">Recent work</p>
         <h2>Jobs from the last few weeks.</h2>

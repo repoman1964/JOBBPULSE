@@ -104,7 +104,22 @@ class Settings(BaseSettings):
 
     @property
     def cors_origin_list(self) -> list[str]:
-        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+        """Env list plus the production contractor hosts so custom domains work."""
+        extra = (
+            "https://app.jobbpulse.com",
+            "https://jobbpulse-app.onrender.com",
+            "https://red-clay-website.pages.dev",
+            "http://localhost:3002",
+            "http://127.0.0.1:3002",
+        )
+        seen: set[str] = set()
+        out: list[str] = []
+        for raw in (*self.cors_origins.split(","), *extra):
+            origin = raw.strip().rstrip("/")
+            if origin and origin not in seen:
+                seen.add(origin)
+                out.append(origin)
+        return out
 
     @property
     def founder_admin_email_set(self) -> set[str]:

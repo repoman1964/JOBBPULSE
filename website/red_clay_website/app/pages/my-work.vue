@@ -13,8 +13,14 @@ async function onSubmit() {
   error.value = ''
   message.value = ''
   const result = await demo.identify(email.value)
-  if (!result.ok) error.value = result.message
-  else message.value = result.message
+  if (!result.ok) {
+    error.value = result.message
+    return
+  }
+  message.value = result.message
+  if (result.count > 0) {
+    await navigateTo('/#recent-work')
+  }
 }
 
 function onClear() {

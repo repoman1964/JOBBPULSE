@@ -19,3 +19,11 @@ def test_normalize_render_postgres_url() -> None:
 def test_settings_rewrites_database_url() -> None:
     settings = Settings(database_url="postgres://jobbpulse:x@dpg-host/jobbpulse")
     assert settings.database_url.startswith("postgresql+asyncpg://")
+
+
+def test_cors_always_includes_custom_app_domain() -> None:
+    settings = Settings(cors_origins="https://jobbpulse-app.onrender.com")
+    assert "https://app.jobbpulse.com" in settings.cors_origin_list
+    assert "https://jobbpulse-app.onrender.com" in settings.cors_origin_list
+    assert "https://red-clay-website.pages.dev" in settings.cors_origin_list
+    assert "http://localhost:3002" in settings.cors_origin_list

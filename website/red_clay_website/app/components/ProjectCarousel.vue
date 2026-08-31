@@ -51,9 +51,10 @@ onBeforeUnmount(() => {
 })
 
 watch(
-  () => props.jobs.length,
+  () => props.jobs[0]?.slug,
   async () => {
     await nextTick()
+    if (track.value) track.value.scrollLeft = 0
     updateNav()
   },
 )

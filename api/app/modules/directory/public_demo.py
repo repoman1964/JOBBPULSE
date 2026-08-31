@@ -5,13 +5,14 @@ from __future__ import annotations
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core import storage as storage_svc
 from app.core.exceptions import AppError
 from app.core.slug import public_project_slug
+from app.modules.auth.schemas import _normalize_email
 from app.db.models import (
     CompanyMembership,
     ContentType,
@@ -29,6 +30,7 @@ from app.modules.content.service import effective_body
 from app.modules.phone.status import to_public
 
 ELIGIBLE_PUBLIC_STATUSES = {
+    "processing",
     "ready_for_approval",
     "publishing",
     "published",
@@ -36,8 +38,10 @@ ELIGIBLE_PUBLIC_STATUSES = {
 }
 
 ELIGIBLE_JOB_STATUSES = {
+    JobStatus.generating,
     JobStatus.awaiting_review,
     JobStatus.approved,
+    JobStatus.scheduled,
     JobStatus.publishing,
     JobStatus.published,
     JobStatus.publish_issue,
@@ -47,15 +51,15 @@ SOCIAL_DESTINATIONS = ("facebook", "facebook_group", "instagram", "google_busine
 
 
 def require_email(email: str | None) -> str:
-    value = (email or "").strip().lower()
-    if "@" not in value or "." not in value.split("@")[-1] or " " in value:
+    try:
+        return _normalize_email(email or "")
+    except ValueError:
         raise AppError(
             "VALIDATION_ERROR",
             "Please check the highlighted fields and try again.",
             status_code=422,
             details={"fieldErrors": {"email": "Enter a valid email."}},
         )
-    return value
 
 
 async def _company_id_for_email(db: AsyncSession, email: str) -> UUID | None:
@@ -165,7 +169,10 @@ async def _jobs_for_company(db: AsyncSession, company_id: UUID) -> list[Job]:
             selectinload(Job.media_assets),
             selectinload(Job.content_variants),
         )
-        .order_by(Job.published_at.desc().nullslast(), Job.created_at.desc())
+        .order_by(
+            func.coalesce(Job.submitted_at, Job.created_at).desc(),
+            Job.created_at.desc(),
+        )
     )
     return list(result.scalars().all())
 

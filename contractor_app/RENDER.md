@@ -63,9 +63,9 @@ Then **Manual Deploy**.
 
 | Variable | Service | Value |
 | --- | --- | --- |
-| `NUXT_PUBLIC_API_BASE_URL` | `jobbpulse-app` | `https://jobbpulse-api.onrender.com` (or `https://api.jobbpulse.com`) |
-| `FRONTEND_BASE_URL` | engine group | `https://jobbpulse-app.onrender.com` (or `https://app.jobbpulse.com`) |
-| `CORS_ORIGINS` | engine group | `https://jobbpulse-app.onrender.com,https://red-clay-website.pages.dev` |
+| `NUXT_PUBLIC_API_BASE_URL` | `jobbpulse-app` | `https://api.jobbpulse.com` |
+| `FRONTEND_BASE_URL` | engine group | `https://app.jobbpulse.com` |
+| `CORS_ORIGINS` | engine group | `https://app.jobbpulse.com,https://jobbpulse-app.onrender.com,https://red-clay-website.pages.dev` |
 | `S3_ENDPOINT_URL` | engine group | `https://b6120b2d531b6d97dfe538cc57780ea9.r2.cloudflarestorage.com` |
 | `S3_PUBLIC_ENDPOINT_URL` | engine group | Same as `S3_ENDPOINT_URL` |
 | `S3_ACCESS_KEY` | engine group | R2 API token access key id |
@@ -79,7 +79,7 @@ Set these on the `jobbpulse-engine` env group or signup emails will not arrive:
 | --- | --- | --- |
 | `RESEND_API_KEY` | engine group | Resend API key (`re_…`) |
 | `AUTH_FROM_EMAIL` | engine group | `JobbPulse <hello@jobbpulse.com>` **after** `jobbpulse.com` is verified in Resend. Leave `onboarding@resend.dev` only for sending to the Resend account owner's inbox. |
-| `PUBLIC_API_BASE_URL` | engine group | `https://jobbpulse-api.onrender.com` (or `https://api.jobbpulse.com`) — this is the host in the confirmation link |
+| `PUBLIC_API_BASE_URL` | engine group | `https://api.jobbpulse.com` |
 
 `onboarding@resend.dev` is Resend's test sender. It **rejects** any recipient other than the email on the Resend account (HTTP 403: “You can only send testing emails to your own email address”). To activate real contractors:
 
@@ -90,18 +90,18 @@ Set these on the `jobbpulse-engine` env group or signup emails will not arrive:
 
 The static site bakes `NUXT_PUBLIC_API_BASE_URL` in at **build** time. If the API URL is wrong on the first pass, set it and **Manual Deploy** the static site.
 
-If you add `app.jobbpulse.com` / `api.jobbpulse.com` later:
+Custom domains (`app.jobbpulse.com` → `jobbpulse-app`, `api.jobbpulse.com` → `jobbpulse-api`):
 
-1. Point DNS at Render.
-2. Update `CORS_ORIGINS`, `FRONTEND_BASE_URL`, R2 CORS, and `NUXT_PUBLIC_API_BASE_URL`.
+1. Point DNS at Render and wait until both hosts resolve over HTTPS.
+2. Set `CORS_ORIGINS`, `FRONTEND_BASE_URL`, and `NUXT_PUBLIC_API_BASE_URL` as in the table above.
 3. Optionally set `COOKIE_DOMAIN=.jobbpulse.com` on the engine group.
-4. Redeploy API + app.
+4. Manual Deploy **jobbpulse-api** (CORS / email links) and **jobbpulse-app** (API URL is baked at build).
 
 ## 3. Smoke check
 
 ```bash
-curl -sS https://jobbpulse-api.onrender.com/health/live
-curl -sS https://jobbpulse-api.onrender.com/health/ready
+curl -sS https://api.jobbpulse.com/health/live
+curl -sS https://api.jobbpulse.com/health/ready
 ```
 
 Open the static site, request a sign-in code for a real contractor email (dev codes are off). Seed data is **not** loaded in production; run seed only against a throwaway database if you need demo jobs.

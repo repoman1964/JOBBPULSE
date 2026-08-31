@@ -96,7 +96,7 @@ services:
       - key: NUXT_PUBLIC_API_MODE
         value: http
       - key: NUXT_PUBLIC_API_BASE_URL
-        sync: false
+        value: https://api.jobbpulse.com
 
 envVarGroups:
   - name: jobbpulse-engine
@@ -112,7 +112,7 @@ envVarGroups:
       - key: AUTH_FROM_EMAIL
         value: JobbPulse <hello@jobbpulse.com>
       - key: PUBLIC_API_BASE_URL
-        sync: false
+        value: https://api.jobbpulse.com
       - key: COOKIE_SECURE
         value: "true"
       - key: COOKIE_SAMESITE
@@ -122,9 +122,9 @@ envVarGroups:
       - key: JWT_SECRET
         generateValue: true
       - key: FRONTEND_BASE_URL
-        sync: false
+        value: https://app.jobbpulse.com
       - key: CORS_ORIGINS
-        sync: false
+        value: https://app.jobbpulse.com,https://jobbpulse-app.onrender.com,https://red-clay-website.pages.dev
       - key: S3_ENDPOINT_URL
         sync: false
       - key: S3_PUBLIC_ENDPOINT_URL

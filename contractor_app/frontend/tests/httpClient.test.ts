@@ -22,7 +22,7 @@ describe('resolveEngineApiBase', () => {
 
   it('keeps a remote engine host unchanged', () => {
     expect(
-      resolveEngineApiBase('https://jobbpulse-api.onrender.com', 'https://app.jobbpulse.com'),
-    ).toBe('https://jobbpulse-api.onrender.com/api/v1')
+      resolveEngineApiBase('https://api.jobbpulse.com', 'https://app.jobbpulse.com'),
+    ).toBe('https://api.jobbpulse.com/api/v1')
   })
 })

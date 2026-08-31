@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { DUMMY_JOBS, NAV_LABELS, PUBLIC_CHROME_COPY } from '../app/utils/siteContent'
-import { isDummySlug, mergeLiveAndDummy, publicChromeHasForbiddenWords } from '../app/utils/demoProjects'
+import {
+  isDummySlug,
+  mergeLiveAndDummy,
+  parseDemoListPayload,
+  publicChromeHasForbiddenWords,
+} from '../app/utils/demoProjects'
 import { isValidEmail } from '../app/utils/demoEmail'
 import { captionParts, companyInitials, instagramHandle } from '../app/utils/socialPreview'
 
@@ -22,6 +27,32 @@ describe('dummy jobs', () => {
       const group = job.socialPosts.find((p) => p.destination === 'facebook_group')
       expect(group?.groupName).toBeTruthy()
     }
+  })
+})
+
+describe('parseDemoListPayload', () => {
+  it('reads items from the API envelope and ignores blank slugs', () => {
+    const jobs = parseDemoListPayload({
+      data: {
+        items: [
+          {
+            slug: 'exterior-painting-in-marietta-abcd',
+            publicTitle: 'Exterior painting in Marietta',
+            publicSummary: 'Live job',
+            serviceType: 'painting',
+            city: 'Marietta',
+            hasBefore: true,
+            hasAfter: true,
+            primaryImageUrl: 'https://cdn.example/after.jpg',
+          },
+          { slug: '', publicTitle: 'skip' },
+        ],
+      },
+      error: null,
+    })
+    expect(jobs).toHaveLength(1)
+    expect(jobs[0].slug).toBe('exterior-painting-in-marietta-abcd')
+    expect(jobs[0].city).toBe('Marietta')
   })
 })
 
